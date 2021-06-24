@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman;
+package jp.cnnc;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,9 +25,9 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import edu.kcg.futurelab.middleman.service.DefaultService;
-import edu.kcg.futurelab.middleman.service.StandardService;
-import edu.kcg.futurelab.middleman.session.WebsocketSession;
+import jp.cnnc.service.DefaultService;
+import jp.cnnc.service.StandardService;
+import jp.cnnc.session.WebsocketSession;
 
 @ServerEndpoint("/sessions/{serviceId}/{roomId}")
 public class WebsocketServer {

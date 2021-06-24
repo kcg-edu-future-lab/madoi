@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.middleman;
+package jp.cnnc;
 
 import java.io.IOException;
 

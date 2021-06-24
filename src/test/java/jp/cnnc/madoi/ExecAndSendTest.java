@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.kcg.futurelab.middleman.service.StandardRoom;
-import edu.kcg.futurelab.middleman.service.message.Invocation;
-import edu.kcg.futurelab.middleman.storage.NullStorage;
+import jp.cnnc.service.StandardRoom;
+import jp.cnnc.service.message.Invocation;
+import jp.cnnc.storage.NullStorage;
 
 public class ExecAndSendTest {
     @Test

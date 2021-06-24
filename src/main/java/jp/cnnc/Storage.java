@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.middleman;
+package jp.cnnc;
 
 public interface Storage {
 	void storeReceiveOpen(String peerId);

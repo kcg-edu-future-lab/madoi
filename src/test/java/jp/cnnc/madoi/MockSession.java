@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.kcg.futurelab.middleman.Peer;
+import jp.cnnc.Peer;
 
 public class MockSession implements Peer {
     public MockSession(String id){

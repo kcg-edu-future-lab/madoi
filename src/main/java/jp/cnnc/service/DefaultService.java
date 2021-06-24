@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman.service;
+package jp.cnnc.service;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import edu.kcg.futurelab.middleman.Room;
-import edu.kcg.futurelab.middleman.Service;
-import edu.kcg.futurelab.middleman.Peer;
+import jp.cnnc.Peer;
+import jp.cnnc.Room;
+import jp.cnnc.Service;
 
 public class DefaultService implements Service {
 	public DefaultService(String serviceId) {

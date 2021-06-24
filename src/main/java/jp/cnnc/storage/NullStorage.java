@@ -1,6 +1,6 @@
-package edu.kcg.futurelab.middleman.storage;
+package jp.cnnc.storage;
 
-import edu.kcg.futurelab.middleman.Storage;
+import jp.cnnc.Storage;
 
 public class NullStorage implements Storage{
 	@Override

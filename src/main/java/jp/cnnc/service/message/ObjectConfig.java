@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.middleman.service.message;
+package jp.cnnc.service.message;
 
 import java.util.ArrayList;
 import java.util.List;

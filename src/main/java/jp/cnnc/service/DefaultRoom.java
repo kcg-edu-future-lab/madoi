@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman.service;
+package jp.cnnc.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +26,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.kcg.futurelab.middleman.Room;
-import edu.kcg.futurelab.middleman.Peer;
+import jp.cnnc.Peer;
+import jp.cnnc.Room;
 import jp.go.nict.langrid.commons.io.FileUtil;
 
 public class DefaultRoom implements Room{

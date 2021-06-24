@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Takao Nakaguchi
+ * Copyright 2020 Takao Nakaguchi
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman;
+package jp.cnnc.service;
 
-public interface Room {
-	void onSessionOpen(String sessionId, Peer session);
-	/**
-	 * Room削除までの猶予をミリ秒で返す。-1の場合は可能な限り削除されない。
-	 * @param session
-	 * @return
-	 */
-	long onSessionClose(String sessionId);
-	void onSessionMessage(String sessionId, String message);
-	boolean canRemove();
-	void onRoomStarted();
-	void onRoomEnded();
+import jp.cnnc.Room;
+import jp.cnnc.storage.NullStorage;
+
+public class StandardService extends DefaultService {
+	public StandardService(String serviceId) {
+		super(serviceId);
+	}
+
+	protected Room newRoom(String roomId){
+		return new StandardRoom(roomId, new NullStorage());
+	}
 }

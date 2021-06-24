@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman;
+package jp.cnnc;
 
 public interface Service {
 	void onOpen(String roomId, String sessionId, Peer session);

@@ -1,8 +1,8 @@
-package edu.kcg.futurelab.middleman.session;
+package jp.cnnc.session;
 
 import java.io.IOException;
 
-import edu.kcg.futurelab.middleman.Peer;
+import jp.cnnc.Peer;
 
 public class WebsocketSession implements Peer{
     public WebsocketSession(javax.websocket.Session session){

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kcg.futurelab.middleman.service;
+package jp.cnnc.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,16 +35,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
-import edu.kcg.futurelab.middleman.Peer;
-import edu.kcg.futurelab.middleman.Room;
-import edu.kcg.futurelab.middleman.Storage;
-import edu.kcg.futurelab.middleman.service.message.Invocation;
-import edu.kcg.futurelab.middleman.service.message.Message;
-import edu.kcg.futurelab.middleman.service.message.MethodConfig;
-import edu.kcg.futurelab.middleman.service.message.MethodConfig.SharingType;
-import edu.kcg.futurelab.middleman.service.message.ObjectConfig;
-import edu.kcg.futurelab.middleman.service.message.ObjectState;
-import edu.kcg.futurelab.middleman.service.message.RoomEnter;
+import jp.cnnc.Peer;
+import jp.cnnc.Room;
+import jp.cnnc.Storage;
+import jp.cnnc.service.message.Invocation;
+import jp.cnnc.service.message.Message;
+import jp.cnnc.service.message.MethodConfig;
+import jp.cnnc.service.message.ObjectConfig;
+import jp.cnnc.service.message.ObjectState;
+import jp.cnnc.service.message.RoomEnter;
+import jp.cnnc.service.message.MethodConfig.SharingType;
 import jp.go.nict.langrid.commons.io.FileUtil;
 
 public class StandardRoom implements Room{
@@ -117,7 +117,7 @@ public class StandardRoom implements Room{
 		try {
 			m = om.readValue(message, Message.class);
 		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERNOTIFY, peer, new edu.kcg.futurelab.middleman.service.message.Error(e.toString()));
+			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
 			return;
 		}
 		CastType ct = CastType.BROADCAST;
@@ -132,7 +132,7 @@ public class StandardRoom implements Room{
 					var oc = om.readValue(message, ObjectConfig.class);
 					objectMethods.put(oc.getObjectIndex(), new LinkedHashSet<>(oc.getMethodIndices()));
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new edu.kcg.futurelab.middleman.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -150,7 +150,7 @@ public class StandardRoom implements Room{
 						execAndSendMethods.add(targetIndex);
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new edu.kcg.futurelab.middleman.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -168,7 +168,7 @@ public class StandardRoom implements Room{
 					}
 					break;
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new edu.kcg.futurelab.middleman.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
 					return;
 				}
 			}
@@ -184,7 +184,7 @@ public class StandardRoom implements Room{
 						ct = CastType.BROADCAST;
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new edu.kcg.futurelab.middleman.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
 					return;
 				}
 				break;

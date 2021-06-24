@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.middleman.service.message;
+package jp.cnnc.service.message;
 
 public class Message {
     public Message(){
