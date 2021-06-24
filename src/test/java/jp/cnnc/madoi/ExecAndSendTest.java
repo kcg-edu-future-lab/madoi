@@ -4,16 +4,16 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jp.cnnc.service.StandardRoom;
+import jp.cnnc.service.DefaultRoom;
 import jp.cnnc.service.message.Invocation;
 import jp.cnnc.storage.NullStorage;
 
 public class ExecAndSendTest {
     @Test
     public void test() throws Throwable{
-        var room = new StandardRoom("room1", new NullStorage());
+        var room = new DefaultRoom("room1", new NullStorage());
         var session = new MockSession("dummy1");
-        room.onSessionOpen(session.getId(), session);
+        room.onPeerArrive(session);
         var mapper = new ObjectMapper();
 
         var methodConfig = mapper.createObjectNode();
@@ -26,11 +26,11 @@ public class ExecAndSendTest {
         option.put("type", "execAndSend");
         option.put("keep", "log");
         option.put("maxLog", 1000);
-        room.onSessionMessage(session.getId(), methodConfig.toString());
+        room.onPeerMessage(session.getId(), methodConfig.toString());
 
         var invocation = mapper.readTree(
             mapper.writeValueAsString(new Invocation(1, 1, new String[]{"arg1"})));
-        room.onSessionMessage(session.getId(), invocation.toString());
+        room.onPeerMessage(session.getId(), invocation.toString());
 
         for(String m : session.getSentMessages()){
             System.out.println(m);

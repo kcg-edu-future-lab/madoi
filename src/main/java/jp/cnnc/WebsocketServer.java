@@ -15,8 +15,12 @@
  */
 package jp.cnnc;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -25,27 +29,40 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import jp.cnnc.service.DefaultService;
-import jp.cnnc.service.StandardService;
+import jp.cnnc.service.DefaultRoom;
 import jp.cnnc.session.WebsocketSession;
+import jp.cnnc.storage.NullStorage;
 
-@ServerEndpoint("/sessions/{serviceId}/{roomId}")
+@ServerEndpoint("/rooms/{roomId}")
 public class WebsocketServer {
+	public WebsocketServer() {
+		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
+			synchronized(roomTtls) {
+				Iterator<Map.Entry<String, Long>> it = roomTtls.entrySet().iterator();
+				long cur = System.currentTimeMillis();
+				while(it.hasNext()) {
+					Map.Entry<String, Long> e = it.next();
+					if(cur > e.getValue()) {
+						it.remove();
+						rooms.remove(e.getKey());
+					}
+				}
+			}
+		}, 10, 10, TimeUnit.SECONDS);
+	}
+
 	@OnOpen
-	public void onOpen(
-			Session session,
-			@PathParam("serviceId") String serviceId,
-			@PathParam("roomId") String roomId) {
-		getService(serviceId).onOpen(roomId, session.getId(), new WebsocketSession(session));
+	public void onOpen(Session session, @PathParam("roomId") String roomId) {
+		getRoom(roomId).onPeerArrive(new WebsocketSession(session));
 	}
 
 	@OnClose
-	public void onClose(
-			Session session,
-			@PathParam("serviceId") String serviceId,
-			@PathParam("roomId") String roomId) {
-		if(getService(serviceId).onClose(roomId, session.getId())) {
-			services.remove(serviceId);
+	public void onClose(Session session, @PathParam("roomId") String roomId) {
+		long ttl = getRoom(roomId).onPeerClose(session.getId());
+		if(ttl == 0) {
+			rooms.remove(roomId).onRoomEnded();
+		} else if(ttl > 0) {
+			roomTtls.put(roomId, System.currentTimeMillis() + ttl);
 		}
 	}
 
@@ -55,19 +72,19 @@ public class WebsocketServer {
 			@PathParam("serviceId") String serviceId,
 			@PathParam("roomId") String roomId,
 			String message) {
-		getService(serviceId).onMessage(roomId, session.getId(), message);
+		getRoom(roomId).onPeerMessage(session.getId(), message);
 	}
 
-	protected Service getService(String serviceId){
-		return services.computeIfAbsent(serviceId, this::newService);
+	protected Room getRoom(String roomId){
+		return rooms.computeIfAbsent(roomId, this::newRoom);
 	}
 
-	protected Service newService(String serviceId){
-		switch(serviceId) {
-		case "standard": return new StandardService(serviceId);
-		default: return new DefaultService(serviceId);
-		}
+	protected Room newRoom(String roomId){
+		Room r = new DefaultRoom(roomId, new NullStorage());
+		r.onRoomStarted();
+		return r;
 	}
 
-	private static Map<String, Service> services = new ConcurrentHashMap<>();
+	private Map<String, Long> roomTtls = new HashMap<>();
+	private static Map<String, Room> rooms = new ConcurrentHashMap<>();
 }

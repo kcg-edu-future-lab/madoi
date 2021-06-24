@@ -16,15 +16,16 @@
 package jp.cnnc;
 
 public interface Room {
-	void onSessionOpen(String sessionId, Peer session);
+	void onPeerArrive(Peer peer);
 	/**
 	 * Room削除までの猶予をミリ秒で返す。-1の場合は可能な限り削除されない。
 	 * @param session
 	 * @return
 	 */
-	long onSessionClose(String sessionId);
-	void onSessionMessage(String sessionId, String message);
-	boolean canRemove();
+	long onPeerClose(String peerId);
+	void onPeerMessage(String peerId, String message);
+	void onPeeerMessage(String peerId, byte[] message);
 	void onRoomStarted();
 	void onRoomEnded();
+	boolean canRemove();
 }
