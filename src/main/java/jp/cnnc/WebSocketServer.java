@@ -31,11 +31,11 @@ import javax.websocket.server.ServerEndpoint;
 
 import jp.cnnc.service.DefaultRoom;
 import jp.cnnc.session.WebsocketSession;
-import jp.cnnc.storage.NullStorage;
+import jp.cnnc.storage.PrintStorage;
 
 @ServerEndpoint("/rooms/{roomId}")
-public class WebsocketServer {
-	public WebsocketServer() {
+public class WebSocketServer {
+	public WebSocketServer() {
 		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
 			synchronized(roomTtls) {
 				Iterator<Map.Entry<String, Long>> it = roomTtls.entrySet().iterator();
@@ -80,7 +80,7 @@ public class WebsocketServer {
 	}
 
 	protected Room newRoom(String roomId){
-		Room r = new DefaultRoom(roomId, new NullStorage());
+		Room r = new DefaultRoom(roomId, new PrintStorage(roomId));
 		r.onRoomStarted();
 		return r;
 	}

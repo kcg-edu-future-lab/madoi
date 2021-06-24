@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
@@ -248,7 +249,7 @@ public class DefaultRoom implements Room{
 	private String roomId;
 	private Storage storage;
 	private PrintWriter roomLog;
-	private ObjectMapper om = new ObjectMapper();
+	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	private AtomicInteger clientId = new AtomicInteger();
 
 	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
