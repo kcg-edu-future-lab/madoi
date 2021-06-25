@@ -1,4 +1,4 @@
-package jp.cnnc.service;
+package jp.cnnc;
 
 public enum CastType{
 	NONE, UNICAST, MULTICAST, BROADCAST, SENDBACK, OTHERCAST, SERVERNOTIFY;

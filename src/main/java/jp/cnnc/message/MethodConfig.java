@@ -1,4 +1,4 @@
-package jp.cnnc.service.message;
+package jp.cnnc.message;
 
 public class MethodConfig extends Message{
 	public enum SharingType{

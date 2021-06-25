@@ -1,4 +1,4 @@
-package jp.cnnc.service.message;
+package jp.cnnc.message;
 
 import java.util.ArrayList;
 import java.util.List;

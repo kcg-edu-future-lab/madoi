@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc.service;
+package jp.cnnc.room;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,16 +36,17 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
+import jp.cnnc.CastType;
 import jp.cnnc.Peer;
 import jp.cnnc.Room;
 import jp.cnnc.Storage;
-import jp.cnnc.service.message.Invocation;
-import jp.cnnc.service.message.Message;
-import jp.cnnc.service.message.MethodConfig;
-import jp.cnnc.service.message.MethodConfig.SharingType;
-import jp.cnnc.service.message.ObjectConfig;
-import jp.cnnc.service.message.ObjectState;
-import jp.cnnc.service.message.RoomEnter;
+import jp.cnnc.message.Invocation;
+import jp.cnnc.message.Message;
+import jp.cnnc.message.MethodConfig;
+import jp.cnnc.message.ObjectConfig;
+import jp.cnnc.message.ObjectState;
+import jp.cnnc.message.RoomEnter;
+import jp.cnnc.message.MethodConfig.SharingType;
 import jp.go.nict.langrid.commons.io.FileUtil;
 
 public class DefaultRoom implements Room{
@@ -67,6 +68,7 @@ public class DefaultRoom implements Room{
 		}
 		storage.storeReceiveOpen(session.getId());
 		RoomEnter re = new RoomEnter();
+		re.setId(this.roomId);
 		re.setPeerId(clientId.incrementAndGet());
 		// statesから状態を送信
 		for(Map.Entry<Integer, String> e : states.entrySet()) {
@@ -118,7 +120,7 @@ public class DefaultRoom implements Room{
 		try {
 			m = om.readValue(message, Message.class);
 		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
+			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
 			return;
 		}
 		CastType ct = CastType.BROADCAST;
@@ -133,7 +135,7 @@ public class DefaultRoom implements Room{
 					var oc = om.readValue(message, ObjectConfig.class);
 					objectMethods.put(oc.getObjectIndex(), new LinkedHashSet<>(oc.getMethodIndices()));
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -151,7 +153,7 @@ public class DefaultRoom implements Room{
 						execAndSendMethods.add(targetIndex);
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -169,7 +171,7 @@ public class DefaultRoom implements Room{
 					}
 					break;
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
 					return;
 				}
 			}
@@ -185,7 +187,7 @@ public class DefaultRoom implements Room{
 						ct = CastType.BROADCAST;
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.service.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
 					return;
 				}
 				break;

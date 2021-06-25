@@ -29,7 +29,7 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import jp.cnnc.service.DefaultRoom;
+import jp.cnnc.room.DefaultRoom;
 import jp.cnnc.session.WebsocketSession;
 import jp.cnnc.storage.PrintStorage;
 

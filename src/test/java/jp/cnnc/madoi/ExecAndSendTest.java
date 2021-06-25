@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jp.cnnc.service.DefaultRoom;
-import jp.cnnc.service.message.Invocation;
+import jp.cnnc.message.Invocation;
+import jp.cnnc.room.DefaultRoom;
 import jp.cnnc.storage.NullStorage;
 
 public class ExecAndSendTest {
