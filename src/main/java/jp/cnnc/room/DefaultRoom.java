@@ -47,7 +47,6 @@ import jp.cnnc.message.MethodConfig.SharingType;
 import jp.cnnc.message.ObjectConfig;
 import jp.cnnc.message.ObjectState;
 import jp.cnnc.message.RoomEnter;
-import jp.go.nict.langrid.commons.io.FileUtil;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, Storage storage) {
@@ -233,9 +232,10 @@ public class DefaultRoom implements Room{
 		File dir = new File(new File("logs"), dates);
 		dir.mkdirs();
 		try {
-			File f = FileUtil.createUniqueFile(
-					dir,
-					getClass().getSimpleName() + "-" + roomId + "-" + times + "-", ".json");
+			File f = Files.createTempFile(
+					dir.toPath(),
+					getClass().getSimpleName() + "-" + roomId + "-" + times + "-",
+					".json").toFile();
 			roomLog = new PrintWriter(Files.newBufferedWriter(f.toPath()));
 			roomLog.print("[{}");
 		} catch(IOException e) {
