@@ -43,10 +43,10 @@ import jp.cnnc.Storage;
 import jp.cnnc.message.Invocation;
 import jp.cnnc.message.Message;
 import jp.cnnc.message.MethodConfig;
+import jp.cnnc.message.MethodConfig.SharingType;
 import jp.cnnc.message.ObjectConfig;
 import jp.cnnc.message.ObjectState;
 import jp.cnnc.message.RoomEnter;
-import jp.cnnc.message.MethodConfig.SharingType;
 import jp.go.nict.langrid.commons.io.FileUtil;
 
 public class DefaultRoom implements Room{
