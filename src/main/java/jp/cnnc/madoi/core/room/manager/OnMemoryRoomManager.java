@@ -1,4 +1,4 @@
-package jp.cnnc.room.manager;
+package jp.cnnc.madoi.core.room.manager;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,11 +7,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import jp.cnnc.Room;
-import jp.cnnc.room.DefaultRoom;
-import jp.cnnc.room.RoomManager;
-import jp.cnnc.room.eventlogger.PrintRoomEventLogger;
-import jp.cnnc.session.WebsocketSession;
+import jp.cnnc.madoi.core.Room;
+import jp.cnnc.madoi.core.room.DefaultRoom;
+import jp.cnnc.madoi.core.room.RoomManager;
+import jp.cnnc.madoi.core.room.eventlogger.PrintRoomEventLogger;
+import jp.cnnc.madoi.core.session.WebsocketSession;
 
 public class OnMemoryRoomManager implements RoomManager{
 	public OnMemoryRoomManager() {

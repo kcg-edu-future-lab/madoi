@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc;
+package jp.cnnc.madoi.core;
 
 public interface Room {
 	void onPeerArrive(Peer peer);

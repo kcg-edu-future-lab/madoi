@@ -1,4 +1,4 @@
-package jp.cnnc.room;
+package jp.cnnc.madoi.core.room;
 
 public interface RoomEventLogger {
 	void receiveOpen(String roomId, String peerId);

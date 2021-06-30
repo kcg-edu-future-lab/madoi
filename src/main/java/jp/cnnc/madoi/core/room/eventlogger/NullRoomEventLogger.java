@@ -1,6 +1,6 @@
-package jp.cnnc.room.eventlogger;
+package jp.cnnc.madoi.core.room.eventlogger;
 
-import jp.cnnc.room.RoomEventLogger;
+import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class NullRoomEventLogger implements RoomEventLogger{
 	@Override

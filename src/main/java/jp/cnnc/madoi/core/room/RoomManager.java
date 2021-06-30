@@ -1,6 +1,6 @@
-package jp.cnnc.room;
+package jp.cnnc.madoi.core.room;
 
-import jp.cnnc.session.WebsocketSession;
+import jp.cnnc.madoi.core.session.WebsocketSession;
 
 public interface RoomManager {
 	void onPeerOpen(String key, String roomId, WebsocketSession sessionPeer);

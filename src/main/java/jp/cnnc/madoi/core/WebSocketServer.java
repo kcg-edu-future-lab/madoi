@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc;
+package jp.cnnc.madoi.core;
 
 import java.util.Arrays;
 
@@ -24,9 +24,9 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import jp.cnnc.room.RoomManager;
-import jp.cnnc.room.manager.OnMemoryRoomManager;
-import jp.cnnc.session.WebsocketSession;
+import jp.cnnc.madoi.core.room.RoomManager;
+import jp.cnnc.madoi.core.room.manager.OnMemoryRoomManager;
+import jp.cnnc.madoi.core.session.WebsocketSession;
 import jp.go.nict.langrid.commons.lang.StringUtil;
 
 @ServerEndpoint("/rooms/{roomId}")

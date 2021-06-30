@@ -1,4 +1,4 @@
-package jp.cnnc;
+package jp.cnnc.madoi.core;
 
 import java.io.IOException;
 

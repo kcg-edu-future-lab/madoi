@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.cnnc.Peer;
+import jp.cnnc.madoi.core.Peer;
 
 public class MockSession implements Peer {
     public MockSession(String id){

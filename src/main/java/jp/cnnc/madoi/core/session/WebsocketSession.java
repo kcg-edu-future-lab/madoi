@@ -1,8 +1,8 @@
-package jp.cnnc.session;
+package jp.cnnc.madoi.core.session;
 
 import java.io.IOException;
 
-import jp.cnnc.Peer;
+import jp.cnnc.madoi.core.Peer;
 
 public class WebsocketSession implements Peer{
     public WebsocketSession(javax.websocket.Session session){

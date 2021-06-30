@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jp.cnnc.message.Invocation;
-import jp.cnnc.room.DefaultRoom;
-import jp.cnnc.room.eventlogger.NullRoomEventLogger;
+import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.room.DefaultRoom;
+import jp.cnnc.madoi.core.room.eventlogger.NullRoomEventLogger;
 
 public class ExecAndSendTest {
     @Test

@@ -1,8 +1,8 @@
-package jp.cnnc.room.eventlogger;
+package jp.cnnc.madoi.core.room.eventlogger;
 
 import java.util.Arrays;
 
-import jp.cnnc.room.RoomEventLogger;
+import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class PrintRoomEventLogger implements RoomEventLogger{
 	@Override

@@ -1,4 +1,4 @@
-package jp.cnnc.message;
+package jp.cnnc.madoi.core.message;
 
 public class Invocation extends Message {
 	private int methodIndex;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc.room;
+package jp.cnnc.madoi.core.room;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,18 +36,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
-import jp.cnnc.CastType;
-import jp.cnnc.Peer;
-import jp.cnnc.Room;
-import jp.cnnc.message.Invocation;
-import jp.cnnc.message.Message;
-import jp.cnnc.message.MethodConfig;
-import jp.cnnc.message.MethodConfig.SharingType;
-import jp.cnnc.message.ObjectConfig;
-import jp.cnnc.message.ObjectState;
-import jp.cnnc.message.PeerJoin;
-import jp.cnnc.message.PeerLeave;
-import jp.cnnc.message.RoomEnter;
+import jp.cnnc.madoi.core.CastType;
+import jp.cnnc.madoi.core.Peer;
+import jp.cnnc.madoi.core.Room;
+import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.message.Message;
+import jp.cnnc.madoi.core.message.MethodConfig;
+import jp.cnnc.madoi.core.message.ObjectConfig;
+import jp.cnnc.madoi.core.message.ObjectState;
+import jp.cnnc.madoi.core.message.PeerJoin;
+import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.cnnc.madoi.core.message.RoomEnter;
+import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
@@ -134,7 +134,7 @@ public class DefaultRoom implements Room{
 		try {
 			m = om.readValue(message, Message.class);
 		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(roomId, peerId, null, message);
 			return;
 		}
@@ -151,7 +151,7 @@ public class DefaultRoom implements Room{
 					var oc = om.readValue(message, ObjectConfig.class);
 					objectMethods.put(oc.getObjectIndex(), new LinkedHashSet<>(oc.getMethodIndices()));
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -169,7 +169,7 @@ public class DefaultRoom implements Room{
 						execAndSendMethods.add(targetIndex);
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -187,7 +187,7 @@ public class DefaultRoom implements Room{
 					}
 					break;
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 			}
@@ -203,7 +203,7 @@ public class DefaultRoom implements Room{
 						ct = CastType.BROADCAST;
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;

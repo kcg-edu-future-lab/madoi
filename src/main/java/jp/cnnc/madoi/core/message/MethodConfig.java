@@ -1,4 +1,4 @@
-package jp.cnnc.message;
+package jp.cnnc.madoi.core.message;
 
 public class MethodConfig extends Message{
 	public enum SharingType{
