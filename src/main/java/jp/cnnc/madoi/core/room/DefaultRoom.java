@@ -16,10 +16,8 @@
 package jp.cnnc.madoi.core.room;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -37,6 +35,7 @@ import jp.cnnc.madoi.core.CastType;
 import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.Peer;
 import jp.cnnc.madoi.core.Room;
+import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.Invocation;
 import jp.cnnc.madoi.core.message.MethodConfig;
 import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
@@ -44,7 +43,6 @@ import jp.cnnc.madoi.core.message.ObjectConfig;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
-import jp.cnnc.madoi.core.message.RoomEnter;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
@@ -72,7 +70,7 @@ public class DefaultRoom implements Room{
 			onRoomStarted();
 		}
 		eventLogger.receiveOpen(roomId, session.getId());
-		RoomEnter re = new RoomEnter();
+		EnterRoom re = new EnterRoom();
 		re.setRoomId(this.roomId);
 		re.setPeerId(clientId.incrementAndGet());
 		re.setPeers(new ArrayList<>(peers.keySet()));
@@ -218,8 +216,6 @@ public class DefaultRoom implements Room{
 				e.printStackTrace();
 			}
 		} else {
-			roomLog.printf(",%n{\"time\": %d, \"sender\": \"%s\", \"message\": %s}",
-					new Date().getTime(), peer.getId(), message);
 			var ids = new ArrayList<>();
 			for(Peer s : peers.values()){
 				boolean sender = peer.getId().equals(s.getId());
@@ -239,15 +235,16 @@ public class DefaultRoom implements Room{
 	public void onPeerMessage(String peerId, byte[] message) {
 	}
 
+	@Override
 	public void onRoomStarted() {
 	}
 
+	@Override
 	public void onRoomEnded() {
 	}
 
 	private String roomId;
 	private RoomEventLogger eventLogger;
-	private PrintWriter roomLog;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	private AtomicInteger clientId = new AtomicInteger();
 

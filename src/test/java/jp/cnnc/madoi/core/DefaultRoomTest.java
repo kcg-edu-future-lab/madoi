@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.RoomEnter;
 import jp.cnnc.madoi.core.room.DefaultRoom;
 import jp.cnnc.madoi.core.room.eventlogger.NullRoomEventLogger;
 import jp.cnnc.madoi.core.util.JsonUtil;
@@ -22,12 +22,12 @@ public class DefaultRoomTest {
 		room.onPeerArrive(peer2);
 		assertEquals(0, peer1.getSentTexts().size());
 		assertEquals(2, peer1.getSentMessages().size());
-		assertEquals("RoomEnter", peer1.getSentMessages().get(0).getType());
+		assertEquals("EnterRoom", peer1.getSentMessages().get(0).getType());
 		assertEquals("PeerJoin", peer1.getSentMessages().get(1).getType());
 		assertEquals(0, peer2.getSentTexts().size());
 		assertEquals(1, peer2.getSentMessages().size());
-		assertEquals("RoomEnter", peer2.getSentMessages().get(0).getType());
-		assertEquals("peer1", ((RoomEnter)peer2.getSentMessages().get(0)).getPeers().get(0));
+		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
+		assertEquals("peer1", ((EnterRoom)peer2.getSentMessages().get(0)).getPeers().get(0));
 	}
 
 	@Test
@@ -42,14 +42,14 @@ public class DefaultRoomTest {
 		room.onPeerArrive(peer3);
 		assertEquals(0, peer1.getSentTexts().size());
 		assertEquals(2, peer1.getSentMessages().size());
-		assertEquals("RoomEnter", peer1.getSentMessages().get(0).getType());
+		assertEquals("EnterRoom", peer1.getSentMessages().get(0).getType());
 		assertEquals("PeerJoin", peer1.getSentMessages().get(1).getType());
 		assertEquals(0, peer2.getSentTexts().size());
 		assertEquals(3, peer2.getSentMessages().size());
-		assertEquals("RoomEnter", peer2.getSentMessages().get(0).getType());
+		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("PeerLeave", peer2.getSentMessages().get(1).getType());
 		assertEquals("PeerJoin", peer2.getSentMessages().get(2).getType());
-		assertEquals("peer2", ((RoomEnter)peer3.getSentMessages().get(0)).getPeers().get(0));
+		assertEquals("peer2", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0));
 	}
 
 	@Test

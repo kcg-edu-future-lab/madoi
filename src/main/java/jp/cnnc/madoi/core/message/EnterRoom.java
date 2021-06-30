@@ -5,11 +5,11 @@ import java.util.List;
 
 import jp.cnnc.madoi.core.Message;
 
-public class RoomEnter extends Message{
-	public RoomEnter() {
+public class EnterRoom extends Message{
+	public EnterRoom() {
 	}
 
-	public RoomEnter(String roomId, String name, int selfId,
+	public EnterRoom(String roomId, String name, int selfId,
 			List<String> peers, List<Message> histories) {
 		this.roomId = roomId;
 		this.name = name;
