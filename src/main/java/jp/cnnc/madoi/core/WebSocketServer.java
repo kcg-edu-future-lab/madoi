@@ -26,7 +26,7 @@ import javax.websocket.server.ServerEndpoint;
 
 import jp.cnnc.madoi.core.room.RoomManager;
 import jp.cnnc.madoi.core.room.manager.OnMemoryRoomManager;
-import jp.cnnc.madoi.core.session.WebsocketSession;
+import jp.cnnc.madoi.core.session.WebsocketSessionPeer;
 import jp.go.nict.langrid.commons.lang.StringUtil;
 
 @ServerEndpoint("/rooms/{roomId}")
@@ -39,7 +39,7 @@ public class WebSocketServer {
 		String key = StringUtil.join(
 				session.getRequestParameterMap().getOrDefault("key", Arrays.asList())
 				.toArray(new String[] {}), "").trim();
-		getRoomManager().onPeerOpen(key, roomId, new WebsocketSession(session));
+		getRoomManager().onPeerOpen(key, roomId, new WebsocketSessionPeer(session));
 	}
 
 	@OnClose

@@ -11,7 +11,7 @@ import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.room.DefaultRoom;
 import jp.cnnc.madoi.core.room.RoomManager;
 import jp.cnnc.madoi.core.room.eventlogger.PrintRoomEventLogger;
-import jp.cnnc.madoi.core.session.WebsocketSession;
+import jp.cnnc.madoi.core.session.WebsocketSessionPeer;
 
 public class OnMemoryRoomManager implements RoomManager{
 	public OnMemoryRoomManager() {
@@ -31,7 +31,7 @@ public class OnMemoryRoomManager implements RoomManager{
 	}
 	
 	@Override
-	public void onPeerOpen(String key, String roomId, WebsocketSession sessionPeer) {
+	public void onPeerOpen(String key, String roomId, WebsocketSessionPeer sessionPeer) {
 		getRoom(roomId).onPeerArrive(sessionPeer);
 	}
 	
