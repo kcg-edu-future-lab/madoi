@@ -4,29 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoomEnter extends Message{
-	private String id;
-	private String name;
-	private int selfId;
-	private List<Message> histories = new ArrayList<Message>();
-
-
 	public RoomEnter() {
 	}
 
-	public RoomEnter(String id, String name, int selfId, List<Message> histories) {
-		this.id = id;
+	public RoomEnter(String roomId, String name, int selfId, List<Message> histories) {
+		this.roomId = roomId;
 		this.name = name;
 		this.selfId = selfId;
 		this.histories = histories;
 	}
 
-	public String getId() {
-		return id;
+	public String getRoomId() {
+		return roomId;
 	}
 
 
-	public void setId(String id) {
-		this.id = id;
+	public void setRoomId(String roomId) {
+		this.roomId = roomId;
 	}
 
 
@@ -58,4 +52,9 @@ public class RoomEnter extends Message{
 	public void setHistories(List<Message> histories) {
 		this.histories = histories;
 	}
+
+	private String roomId;
+	private String name;
+	private int selfId;
+	private List<Message> histories = new ArrayList<Message>();
 }

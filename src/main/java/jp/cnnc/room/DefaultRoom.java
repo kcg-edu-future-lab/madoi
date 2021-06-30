@@ -39,19 +39,20 @@ import com.google.common.collect.EvictingQueue;
 import jp.cnnc.CastType;
 import jp.cnnc.Peer;
 import jp.cnnc.Room;
-import jp.cnnc.Storage;
 import jp.cnnc.message.Invocation;
 import jp.cnnc.message.Message;
 import jp.cnnc.message.MethodConfig;
 import jp.cnnc.message.MethodConfig.SharingType;
 import jp.cnnc.message.ObjectConfig;
 import jp.cnnc.message.ObjectState;
+import jp.cnnc.message.PeerJoin;
+import jp.cnnc.message.PeerLeave;
 import jp.cnnc.message.RoomEnter;
 
 public class DefaultRoom implements Room{
-	public DefaultRoom(String roomId, Storage storage) {
+	public DefaultRoom(String roomId, RoomEventLogger storage) {
 		this.roomId = roomId;
-		this.storage = storage;
+		this.eventLogger = storage;
 	}
 
 	@Override
@@ -61,13 +62,21 @@ public class DefaultRoom implements Room{
 
 	@Override
 	public synchronized void onPeerArrive(Peer session) {
+		for(Peer p : peers.values()) {
+			try {
+				p.sendText(om.writeValueAsString(new PeerJoin(session.getId())));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		peers.put(session.getId(), session);
 		if(peers.size() == 1) {
 			onRoomStarted();
 		}
-		storage.storeReceiveOpen(session.getId());
+		eventLogger.receiveOpen(roomId, session.getId());
 		RoomEnter re = new RoomEnter();
-		re.setId(this.roomId);
+		re.setRoomId(this.roomId);
 		re.setPeerId(clientId.incrementAndGet());
 		// statesから状態を送信
 		for(Map.Entry<Integer, String> e : states.entrySet()) {
@@ -81,7 +90,7 @@ public class DefaultRoom implements Room{
 		}
 		try {
 			String message = om.writeValueAsString(re);
-			storage.storeSendMessage("SERVERNOTIFY", new String[] {session.getId()}, message);
+			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {session.getId()}, re.getType(), message);
 			session.sendText(message);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -92,9 +101,16 @@ public class DefaultRoom implements Room{
 	public synchronized long onPeerClose(String sessionId) {
 		peers.remove(sessionId);
 		if(peers.size() == 0) {
-			storage.storeReceiveClose(sessionId);
+			eventLogger.receiveClose(roomId, sessionId);
 			onRoomEnded();
 			return 10 * 60 * 1000;
+		}
+		for(Peer p : peers.values()) {
+			try {
+				p.sendText(om.writeValueAsString(new PeerLeave(sessionId)));
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return -1;
 	}
@@ -102,7 +118,7 @@ public class DefaultRoom implements Room{
 	private void castMessageTo(CastType type, Peer peer, Message message) {
 		try {
 			String msg = om.writeValueAsString(message);
-			storage.storeSendMessage(CastType.SERVERNOTIFY.name(), peer.getId(), msg);
+			eventLogger.sendMessage(roomId, CastType.SERVERNOTIFY.name(), peer.getId(), message.getType(), msg);
 			peer.sendText(msg);
 		} catch(JsonProcessingException ex) {
 			throw new RuntimeException(ex);
@@ -113,15 +129,16 @@ public class DefaultRoom implements Room{
 	
 	@Override
 	public synchronized void onPeerMessage(String peerId, String message) {
-		storage.storeReceiveMessage(peerId, message);
 		Peer peer = peers.get(peerId);
 		Message m = null;
 		try {
 			m = om.readValue(message, Message.class);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.message.Error(e.toString()));
+			eventLogger.receiveMessage(roomId, peerId, null, message);
 			return;
 		}
+		eventLogger.receiveMessage(roomId, peerId, m.getType(), message);
 		CastType ct = CastType.BROADCAST;
 		switch(m.getType()) {
 			case "ConnectionConfig":{
@@ -197,7 +214,7 @@ public class DefaultRoom implements Room{
 		}
 		if(ct.equals(CastType.NONE)) return;
 		if(ct.equals(CastType.SENDBACK)) {
-			storage.storeSendMessage(ct.name(), peer.getId(), message);
+			eventLogger.sendMessage(roomId, ct.name(), peer.getId(), m.getType(), message);
 			try {
 				peer.sendText(message);
 			} catch (IOException e) {
@@ -217,12 +234,12 @@ public class DefaultRoom implements Room{
 					e.printStackTrace();
 				}
 			}
-			storage.storeSendMessage(ct.name(), ids.toArray(new String[] {}), message);
+			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[] {}), m.getType(), message);
 		}
 	}
 
 	@Override
-	public void onPeeerMessage(String peerId, byte[] message) {
+	public void onPeerMessage(String peerId, byte[] message) {
 	}
 
 	public void onRoomStarted() {
@@ -249,7 +266,7 @@ public class DefaultRoom implements Room{
 	}
 
 	private String roomId;
-	private Storage storage;
+	private RoomEventLogger eventLogger;
 	private PrintWriter roomLog;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	private AtomicInteger clientId = new AtomicInteger();

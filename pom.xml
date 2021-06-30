@@ -41,5 +41,10 @@
       <version>[9.4.29.v20200521,)</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.langrid</groupId>
+      <artifactId>jp.go.nict.langrid.commons</artifactId>
+      <version>1.1.2</version>
+    </dependency>
   </dependencies>
 </project>

@@ -24,7 +24,7 @@ public interface Room {
 	 */
 	long onPeerClose(String peerId);
 	void onPeerMessage(String peerId, String message);
-	void onPeeerMessage(String peerId, byte[] message);
+	void onPeerMessage(String peerId, byte[] message);
 	void onRoomStarted();
 	void onRoomEnded();
 	boolean canRemove();

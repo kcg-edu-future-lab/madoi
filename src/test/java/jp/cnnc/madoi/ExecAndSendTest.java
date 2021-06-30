@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jp.cnnc.message.Invocation;
 import jp.cnnc.room.DefaultRoom;
-import jp.cnnc.storage.NullStorage;
+import jp.cnnc.room.eventlogger.NullRoomEventLogger;
 
 public class ExecAndSendTest {
     @Test
     public void test() throws Throwable{
-        var room = new DefaultRoom("room1", new NullStorage());
+        var room = new DefaultRoom("room1", new NullRoomEventLogger());
         var session = new MockSession("dummy1");
         room.onPeerArrive(session);
         var mapper = new ObjectMapper();

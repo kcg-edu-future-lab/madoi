@@ -1,50 +1,44 @@
-package jp.cnnc.storage;
+package jp.cnnc.room.eventlogger;
 
 import java.util.Arrays;
 
-import jp.cnnc.Storage;
+import jp.cnnc.room.RoomEventLogger;
 
-public class PrintStorage implements Storage{
-	public PrintStorage(String roomId) {
-		this.roomId = roomId;
-	}
-	
+public class PrintRoomEventLogger implements RoomEventLogger{
 	@Override
-	public void storeReceiveOpen(String peerId) {
+	public void receiveOpen(String roomId, String peerId) {
 		System.err.printf("[%s] receiveOpen(%s)%n",
 				roomId, peerId);
 	}
 
 	@Override
-	public void storeReceiveClose(String peerId) {
+	public void receiveClose(String roomId, String peerId) {
 		System.err.printf("[%s] receiveClose(%s)%n",
 				roomId, peerId);
 	}
 
 	@Override
-	public void storeReceiveMessage(String peerId, String message) {
+	public void receiveMessage(String roomId, String peerId, String messageType, String message) {
 		System.err.printf("[%s] receiveMessage(%s, %s)%n",
 				roomId, peerId, message);
 	}
 
 	@Override
-	public void storeReceiveMessage(String peerId, byte[] message) {
+	public void receiveMessage(String roomId, String peerId, String messageType, byte[] message) {
 		System.err.printf("[%s] receiveMessage(%s, [%d bytes bin])%n",
 				roomId, peerId, message.length);
 	}
 
 	@Override
-	public void storeSendMessage(String castType, String[] recipients, String message) {
+	public void sendMessage(String roomId, String castType, String[] recipients, String messageType, String message) {
 		System.err.printf("[%s] sendMessagee(%s, [%s], %s)%n",
 				roomId, castType, Arrays.toString(recipients), message);
 		
 	}
 
 	@Override
-	public void storeSendMessage(String castType, String[] recipients, byte[] message) {
+	public void sendMessage(String roomId, String castType, String[] recipients, String messageType, byte[] message) {
 		System.out.printf("[%s] sendMessage(%s, [%s], [%d bytes bin])%n",
 				roomId, castType, Arrays.toString(recipients), message.length);
 	}
-
-	private String roomId;
 }

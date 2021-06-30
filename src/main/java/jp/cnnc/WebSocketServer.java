@@ -15,12 +15,7 @@
  */
 package jp.cnnc;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -29,42 +24,29 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
-import jp.cnnc.room.DefaultRoom;
+import jp.cnnc.room.RoomManager;
+import jp.cnnc.room.manager.OnMemoryRoomManager;
 import jp.cnnc.session.WebsocketSession;
-import jp.cnnc.storage.PrintStorage;
+import jp.go.nict.langrid.commons.lang.StringUtil;
 
 @ServerEndpoint("/rooms/{roomId}")
 public class WebSocketServer {
 	public WebSocketServer() {
-		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-			synchronized(roomTtls) {
-				Iterator<Map.Entry<String, Long>> it = roomTtls.entrySet().iterator();
-				long cur = System.currentTimeMillis();
-				while(it.hasNext()) {
-					Map.Entry<String, Long> e = it.next();
-					if(cur > e.getValue()) {
-						it.remove();
-						rooms.remove(e.getKey());
-					}
-				}
-			}
-		}, 10, 10, TimeUnit.SECONDS);
 	}
 
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
-		getRoom(roomId).onPeerArrive(new WebsocketSession(session));
+		String key = StringUtil.join(
+				session.getRequestParameterMap().getOrDefault("key", Arrays.asList())
+				.toArray(new String[] {}), "").trim();
+		getRoomManager().onPeerOpen(key, roomId, new WebsocketSession(session));
 	}
 
 	@OnClose
 	public void onClose(Session session, @PathParam("roomId") String roomId) {
-		long ttl = getRoom(roomId).onPeerClose(session.getId());
-		if(ttl == 0) {
-			rooms.remove(roomId).onRoomEnded();
-		} else if(ttl > 0) {
-			roomTtls.put(roomId, System.currentTimeMillis() + ttl);
-		}
+		getRoomManager().onPeerClose(roomId, session.getId());
 	}
+
 
 	@OnMessage(maxMessageSize = 8192*1024)
 	public void onMessage(
@@ -72,19 +54,28 @@ public class WebSocketServer {
 			@PathParam("serviceId") String serviceId,
 			@PathParam("roomId") String roomId,
 			String message) {
-		getRoom(roomId).onPeerMessage(session.getId(), message);
+		getRoomManager().onPeerMessage(roomId, session.getId(), message);
 	}
 
-	protected Room getRoom(String roomId){
-		return rooms.computeIfAbsent(roomId, this::newRoom);
+	@OnMessage(maxMessageSize = 8192*1024)
+	public void onMessage(
+			Session session,
+			@PathParam("serviceId") String serviceId,
+			@PathParam("roomId") String roomId,
+			byte[] message) {
+		getRoomManager().onPeerMessage(roomId, session.getId(), message);
 	}
 
-	protected Room newRoom(String roomId){
-		Room r = new DefaultRoom(roomId, new PrintStorage(roomId));
-		r.onRoomStarted();
-		return r;
+	protected synchronized RoomManager getRoomManager() {
+		if(roomManager == null) {
+			roomManager = createRoomManager();
+		}
+		return roomManager;
 	}
 
-	private Map<String, Long> roomTtls = new HashMap<>();
-	private static Map<String, Room> rooms = new ConcurrentHashMap<>();
+	protected RoomManager createRoomManager() {
+		return new OnMemoryRoomManager();
+	}
+
+	private RoomManager roomManager;
 }
