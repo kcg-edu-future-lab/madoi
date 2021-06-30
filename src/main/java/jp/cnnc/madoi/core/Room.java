@@ -22,7 +22,7 @@ public interface Room {
 	 * @param session
 	 * @return
 	 */
-	long onPeerClose(String peerId);
+	long onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);
 	void onPeerMessage(String peerId, byte[] message);
 	void onRoomStarted();

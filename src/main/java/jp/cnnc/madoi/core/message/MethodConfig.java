@@ -1,5 +1,7 @@
 package jp.cnnc.madoi.core.message;
 
+import jp.cnnc.madoi.core.Message;
+
 public class MethodConfig extends Message{
 	public enum SharingType{
 		SHARE_PROCESS, SHARE_RESULT

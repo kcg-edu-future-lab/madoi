@@ -37,7 +37,7 @@ public class OnMemoryRoomManager implements RoomManager{
 	
 	@Override
 	public void onPeerClose(String roomId, String peerId) {
-		long ttl = getRoom(roomId).onPeerClose(peerId);
+		long ttl = getRoom(roomId).onPeerLeave(peerId);
 		if(ttl == 0) {
 			rooms.remove(roomId).onRoomEnded();
 		} else if(ttl > 0) {

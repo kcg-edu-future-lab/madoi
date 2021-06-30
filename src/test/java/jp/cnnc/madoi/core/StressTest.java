@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc.madoi;
+package jp.cnnc.madoi.core;
 
 import java.io.IOException;
 import java.net.URI;
@@ -40,7 +40,7 @@ public class StressTest {
 		for(int i = 0; i < clientCount; i++){
 			container.connectToServer(
 					new StressTest(gate, goal, clientCount, messageCount),
-					new URI("ws://localhost:8080/middleman/default/lskro4jr"));
+					new URI("ws://localhost:8080/madoi/rooms/lskro4jr"));
 		}
 		synchronized(gate){
 			gate.notifyAll();

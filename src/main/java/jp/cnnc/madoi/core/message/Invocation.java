@@ -1,5 +1,7 @@
 package jp.cnnc.madoi.core.message;
 
+import jp.cnnc.madoi.core.Message;
+
 public class Invocation extends Message {
 	private int methodIndex;
 	private int objectIndex;

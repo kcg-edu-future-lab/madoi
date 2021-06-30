@@ -3,6 +3,8 @@ package jp.cnnc.madoi.core.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import jp.cnnc.madoi.core.Message;
+
 public class ObjectConfig extends Message{
 	public ObjectConfig() {
 	}

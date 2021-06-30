@@ -37,17 +37,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
 import jp.cnnc.madoi.core.CastType;
+import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.Peer;
 import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.Message;
 import jp.cnnc.madoi.core.message.MethodConfig;
+import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
 import jp.cnnc.madoi.core.message.ObjectConfig;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
 import jp.cnnc.madoi.core.message.RoomEnter;
-import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
@@ -64,7 +64,7 @@ public class DefaultRoom implements Room{
 	public synchronized void onPeerArrive(Peer session) {
 		for(Peer p : peers.values()) {
 			try {
-				p.sendText(om.writeValueAsString(new PeerJoin(session.getId())));
+				p.sendMessage(new PeerJoin(session.getId()));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -78,6 +78,7 @@ public class DefaultRoom implements Room{
 		RoomEnter re = new RoomEnter();
 		re.setRoomId(this.roomId);
 		re.setPeerId(clientId.incrementAndGet());
+		re.setPeers(new ArrayList<>(peers.keySet()));
 		// statesから状態を送信
 		for(Map.Entry<Integer, String> e : states.entrySet()) {
 			var state = new ObjectState(e.getKey(), e.getValue());
@@ -89,37 +90,36 @@ public class DefaultRoom implements Room{
 			}
 		}
 		try {
-			String message = om.writeValueAsString(re);
-			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {session.getId()}, re.getType(), message);
-			session.sendText(message);
+			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {session.getId()}, re);
+			session.sendMessage(re);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	public synchronized long onPeerClose(String sessionId) {
-		peers.remove(sessionId);
+	public synchronized long onPeerLeave(String peerId) {
+		peers.remove(peerId);
 		if(peers.size() == 0) {
-			eventLogger.receiveClose(roomId, sessionId);
+			eventLogger.receiveClose(roomId, peerId);
 			onRoomEnded();
 			return 10 * 60 * 1000;
 		}
+		PeerLeave pl = new PeerLeave(peerId);
 		for(Peer p : peers.values()) {
 			try {
-				p.sendText(om.writeValueAsString(new PeerLeave(sessionId)));
+				p.sendMessage(pl);
 			} catch(IOException e) {
 				e.printStackTrace();
 			}
 		}
-		return -1;
+		return peers.size();
 	}
 
 	private void castMessageTo(CastType type, Peer peer, Message message) {
 		try {
-			String msg = om.writeValueAsString(message);
-			eventLogger.sendMessage(roomId, CastType.SERVERNOTIFY.name(), peer.getId(), message.getType(), msg);
-			peer.sendText(msg);
+			eventLogger.sendMessage(roomId, CastType.SERVERNOTIFY.name(), peer.getId(), message);
+			peer.sendMessage(message);
 		} catch(JsonProcessingException ex) {
 			throw new RuntimeException(ex);
 		} catch(IOException e) {
