@@ -15,11 +15,8 @@
  */
 package jp.cnnc.madoi.core.room;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -243,26 +240,9 @@ public class DefaultRoom implements Room{
 	}
 
 	public void onRoomStarted() {
-		Date now = new Date();
-		String dates = new SimpleDateFormat("yyyyMMdd").format(now);
-		String times = new SimpleDateFormat("HHmmss").format(now);
-		File dir = new File(new File("logs"), dates);
-		dir.mkdirs();
-		try {
-			File f = Files.createTempFile(
-					dir.toPath(),
-					getClass().getSimpleName() + "-" + roomId + "-" + times + "-",
-					".json").toFile();
-			roomLog = new PrintWriter(Files.newBufferedWriter(f.toPath()));
-			roomLog.print("[{}");
-		} catch(IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public void onRoomEnded() {
-		roomLog.printf("%n]%n");
-		roomLog.close();
 	}
 
 	private String roomId;
