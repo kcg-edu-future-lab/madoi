@@ -51,7 +51,6 @@ public class WebSocketServer {
 	@OnMessage(maxMessageSize = 8192*1024)
 	public void onMessage(
 			Session session,
-			@PathParam("serviceId") String serviceId,
 			@PathParam("roomId") String roomId,
 			String message) {
 		getRoomManager().onPeerMessage(roomId, session.getId(), message);
@@ -60,7 +59,6 @@ public class WebSocketServer {
 	@OnMessage(maxMessageSize = 8192*1024)
 	public void onMessage(
 			Session session,
-			@PathParam("serviceId") String serviceId,
 			@PathParam("roomId") String roomId,
 			byte[] message) {
 		getRoomManager().onPeerMessage(roomId, session.getId(), message);
