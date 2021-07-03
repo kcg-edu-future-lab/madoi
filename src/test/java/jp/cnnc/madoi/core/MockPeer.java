@@ -15,6 +15,16 @@ public class MockPeer implements Peer {
 	}
 
 	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	@Override
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	@Override
 	public void sendText(String text) throws IOException {
 		texts.add(text);
 	}
@@ -33,6 +43,7 @@ public class MockPeer implements Peer {
 	}
 
 	private String id;
+	private int order;
 	private List<String> texts = new ArrayList<>();
 	private List<Message> messages = new ArrayList<>();
 }

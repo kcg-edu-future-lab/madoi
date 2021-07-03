@@ -18,6 +18,7 @@ package jp.cnnc.madoi.core.room;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -25,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -41,6 +43,7 @@ import jp.cnnc.madoi.core.message.MethodConfig;
 import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
 import jp.cnnc.madoi.core.message.ObjectConfig;
 import jp.cnnc.madoi.core.message.ObjectState;
+import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
 
@@ -64,16 +67,18 @@ public class DefaultRoom implements Room{
 				e.printStackTrace();
 			}
 		}
-		
-		peers.put(session.getId(), session);
-		if(peers.size() == 1) {
+
+		if(peers.size() == 0) {
 			onRoomStarted();
 		}
 		eventLogger.receiveOpen(roomId, session.getId());
 		EnterRoom re = new EnterRoom();
 		re.setRoomId(this.roomId);
 		re.setPeerId(clientId.incrementAndGet());
-		re.setPeers(new ArrayList<>(peers.keySet()));
+		re.setPeers(new ArrayList<>(
+				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder()))
+				.collect(Collectors.toList())
+				));
 		// statesから状態を送信
 		for(Map.Entry<Integer, String> e : states.entrySet()) {
 			var state = new ObjectState(e.getKey(), e.getValue());
@@ -84,6 +89,7 @@ public class DefaultRoom implements Room{
 				re.getHistories().add(i);
 			}
 		}
+		peers.put(session.getId(), session);
 		try {
 			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {session.getId()}, re);
 			session.sendMessage(re);
@@ -176,7 +182,7 @@ public class DefaultRoom implements Room{
 					int objIndex = os.getObjectIndex();
 					String state = os.getState();
 					states.put(objIndex, state);
-					for(int mi : objectMethods.get(objIndex)) {
+					for(int mi : objectMethods.getOrDefault(objIndex, Collections.emptySet())) {
 						EvictingQueue<Invocation> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}

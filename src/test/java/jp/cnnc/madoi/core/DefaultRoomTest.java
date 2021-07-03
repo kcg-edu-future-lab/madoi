@@ -1,6 +1,7 @@
 package jp.cnnc.madoi.core;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -50,6 +51,29 @@ public class DefaultRoomTest {
 		assertEquals("PeerLeave", peer2.getSentMessages().get(1).getType());
 		assertEquals("PeerJoin", peer2.getSentMessages().get(2).getType());
 		assertEquals("peer2", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0));
+	}
+
+	@Test
+	public void test_enterRoom() throws Throwable{
+		var room = new DefaultRoom("room1", new NullRoomEventLogger());
+		var peer1 = new MockPeer("peer1");
+		var peer2 = new MockPeer("peer2");
+		room.onPeerArrive(peer1);
+		room.onPeerArrive(peer2);
+		if(peer1.getSentMessages().get(0) instanceof EnterRoom er1) {
+			assertEquals("EnterRoom", er1.getType());
+			assertEquals(0, er1.getPeers().size());
+		} else {
+			fail();
+		}
+		if(peer2.getSentMessages().get(0) instanceof EnterRoom er2) {
+			assertEquals("EnterRoom", er2.getType());
+			assertEquals(1, er2.getPeers().size());
+			assertEquals(peer1.getId(), er2.getPeers().get(0).getId());
+			assertEquals(peer1.getOrder(), er2.getPeers().get(0).getOrder());
+		} else {
+			fail();
+		}
 	}
 
 	@Test
