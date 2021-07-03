@@ -31,9 +31,6 @@ import jp.go.nict.langrid.commons.lang.StringUtil;
 
 @ServerEndpoint("/rooms/{roomId}")
 public class WebSocketServer {
-	public WebSocketServer() {
-	}
-
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		String key = StringUtil.join(
@@ -64,7 +61,7 @@ public class WebSocketServer {
 		getRoomManager().onPeerMessage(roomId, session.getId(), message);
 	}
 
-	protected synchronized RoomManager getRoomManager() {
+	public synchronized RoomManager getRoomManager() {
 		if(roomManager == null) {
 			roomManager = createRoomManager();
 		}
