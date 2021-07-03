@@ -54,6 +54,16 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
+	public String getRoomId() {
+		return roomId;
+	}
+
+	@Override
+	public int getPeerCount() {
+		return peers.size();
+	}
+
+	@Override
 	public boolean canRemove() {
 		return peers.size() == 0;
 	}
@@ -99,22 +109,19 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public synchronized long onPeerLeave(String peerId) {
+	public synchronized void onPeerLeave(String peerId) {
+		eventLogger.receiveClose(roomId, peerId);
 		peers.remove(peerId);
-		if(peers.size() == 0) {
-			eventLogger.receiveClose(roomId, peerId);
-			onRoomEnded();
-			return 10 * 60 * 1000;
-		}
-		PeerLeave pl = new PeerLeave(peerId);
-		for(Peer p : peers.values()) {
-			try {
-				p.sendMessage(pl);
-			} catch(IOException e) {
-				e.printStackTrace();
+		if(peers.size() > 0) {
+			PeerLeave pl = new PeerLeave(peerId);
+			for(Peer p : peers.values()) {
+				try {
+					p.sendMessage(pl);
+				} catch(IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
-		return peers.size();
 	}
 
 	private void castMessageTo(CastType type, Peer peer, Message message) {

@@ -1,7 +1,6 @@
 package jp.cnnc.madoi.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class DefaultRoomTest {
 		assertEquals(0, peer2.getSentTexts().size());
 		assertEquals(1, peer2.getSentMessages().size());
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
-		assertEquals("peer1", ((EnterRoom)peer2.getSentMessages().get(0)).getPeers().get(0));
+		assertEquals("peer1", ((EnterRoom)peer2.getSentMessages().get(0)).getPeers().get(0).getId());
 	}
 
 	@Test
@@ -50,7 +49,7 @@ public class DefaultRoomTest {
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("PeerLeave", peer2.getSentMessages().get(1).getType());
 		assertEquals("PeerJoin", peer2.getSentMessages().get(2).getType());
-		assertEquals("peer2", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0));
+		assertEquals("peer2", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0).getId());
 	}
 
 	@Test
@@ -60,13 +59,17 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2");
 		room.onPeerArrive(peer1);
 		room.onPeerArrive(peer2);
-		if(peer1.getSentMessages().get(0) instanceof EnterRoom er1) {
+		assertTrue(peer1.getSentMessages().get(0) instanceof EnterRoom);
+		if(peer1.getSentMessages().get(0) instanceof EnterRoom) {
+			EnterRoom er1 = (EnterRoom)peer1.getSentMessages().get(0);
 			assertEquals("EnterRoom", er1.getType());
 			assertEquals(0, er1.getPeers().size());
+			assertTrue(peer2.getSentMessages().get(0) instanceof EnterRoom);
 		} else {
 			fail();
 		}
-		if(peer2.getSentMessages().get(0) instanceof EnterRoom er2) {
+		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
+			EnterRoom er2 = (EnterRoom)peer2.getSentMessages().get(0);
 			assertEquals("EnterRoom", er2.getType());
 			assertEquals(1, er2.getPeers().size());
 			assertEquals(peer1.getId(), er2.getPeers().get(0).getId());

@@ -1,5 +1,8 @@
 package jp.cnnc.madoi.core.room;
 
+import java.util.Collection;
+
+import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.session.WebsocketSessionPeer;
 
 public interface RoomManager {
@@ -7,4 +10,6 @@ public interface RoomManager {
 	void onPeerClose(String roomId, String peerId);
 	void onPeerMessage(String roomId, String peerId, String message);
 	void onPeerMessage(String roomId, String peerId, byte[] message);
+	Collection<Room> getRooms();
+	Room getRoom(String roomId);
 }

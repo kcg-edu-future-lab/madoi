@@ -17,15 +17,12 @@ package jp.cnnc.madoi.core;
 
 public interface Room {
 	void onPeerArrive(Peer peer);
-	/**
-	 * Room削除までの猶予をミリ秒で返す。-1の場合は可能な限り削除されない。
-	 * @param session
-	 * @return
-	 */
-	long onPeerLeave(String peerId);
+	void onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);
 	void onPeerMessage(String peerId, byte[] message);
 	void onRoomStarted();
 	void onRoomEnded();
 	boolean canRemove();
+	int getPeerCount();
+	String getRoomId();
 }
