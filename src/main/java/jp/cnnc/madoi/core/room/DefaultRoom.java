@@ -64,8 +64,8 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public boolean canRemove() {
-		return peers.size() == 0;
+	public Map<Integer, EvictingQueue<Invocation>> getInvocationLogs() {
+		return invocationLogs;
 	}
 
 	@Override

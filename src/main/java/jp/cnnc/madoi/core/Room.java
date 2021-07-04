@@ -15,14 +15,18 @@
  */
 package jp.cnnc.madoi.core;
 
-public interface Room {
+import java.util.Map;
+
+import com.google.common.collect.EvictingQueue;
+
+import jp.cnnc.madoi.core.message.Invocation;public interface Room {
 	void onPeerArrive(Peer peer);
 	void onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);
 	void onPeerMessage(String peerId, byte[] message);
 	void onRoomStarted();
 	void onRoomEnded();
-	boolean canRemove();
 	int getPeerCount();
 	String getRoomId();
+	Map<Integer, EvictingQueue<Invocation>> getInvocationLogs();
 }
