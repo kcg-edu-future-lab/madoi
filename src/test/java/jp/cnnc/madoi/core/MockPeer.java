@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class MockPeer implements Peer {
-	public MockPeer(String id){
+	public MockPeer(String id, Room room){
 		this.id = id;
+		this.room = room;
 	}
 
 	@Override
@@ -34,6 +38,18 @@ public class MockPeer implements Peer {
 		messages.add(message);
 	}
 
+	public void peerArrive() {
+		room.onPeerArrive(this);
+	}
+
+	public void peerLeave() {
+		room.onPeerLeave(id);
+	}
+
+	public void peerMessage(Message m) throws JsonProcessingException {
+		room.onPeerMessage(id, om.writeValueAsString(m));
+	}
+
 	public List<String> getSentTexts() {
 		return texts;
 	}
@@ -43,7 +59,9 @@ public class MockPeer implements Peer {
 	}
 
 	private String id;
+	private Room room;
 	private int order;
 	private List<String> texts = new ArrayList<>();
 	private List<Message> messages = new ArrayList<>();
+	private ObjectMapper om = new ObjectMapper();
 }
