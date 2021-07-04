@@ -142,4 +142,38 @@ public class DefaultRoomTest {
 			fail();
 		}
 	}
+
+	/*
+	 * ObjectStateが送られてきたら，それまでのInvocationのログがクリアされるはず。
+	 */
+	@Test
+	public void test_eliminatLogs2() throws Throwable{
+		var room = new DefaultRoom("room1", new NullRoomEventLogger());
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
+
+		peer1.peerArrive();
+		peer1.peerMessage(new ObjectConfig(0, Arrays.asList(0)));
+		peer1.peerMessage(new ObjectConfig(1, Arrays.asList(1)));
+		peer1.peerMessage(new MethodConfig(0, 1000, SharingType.SHARE_PROCESS));
+		peer1.peerMessage(new MethodConfig(1, 1000, SharingType.SHARE_PROCESS));
+		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		peer1.peerMessage(new Invocation(1, 1, new Object[] {}));
+		assertEquals(2, room.getInvocationLogs().size());
+		assertEquals(1, room.getInvocationLogs().get(0).size());
+		assertEquals(1, room.getInvocationLogs().get(1).size());
+
+		peer1.peerMessage(new ObjectState(0, ""));
+		assertEquals(0, room.getInvocationLogs().get(0).size());
+
+		peer2.peerArrive();
+		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
+			EnterRoom er = (EnterRoom)peer2.getSentMessages().get(0);
+			assertEquals(2, er.getHistories().size());
+			assertEquals("ObjectState", er.getHistories().get(0).getType());
+			assertEquals("Invocation", er.getHistories().get(1).getType());
+		} else {
+			fail();
+		}
+	}
 }

@@ -24,6 +24,12 @@ public class PrintRoomEventLogger implements RoomEventLogger{
 	}
 
 	@Override
+	public void stateChange(String roomId, String state) {
+		System.err.printf("[%s] stateChange(%s, %s)%n",
+				roomId, state);
+	}
+
+	@Override
 	public void sendMessage(String roomId, String castType, String[] recipients, String messageType, String message) {
 		System.err.printf("[%s] sendMessagee(%s, [%s], %s)%n",
 				roomId, castType, Arrays.toString(recipients), message);

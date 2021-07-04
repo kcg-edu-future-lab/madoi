@@ -193,6 +193,7 @@ public class DefaultRoom implements Room{
 						EvictingQueue<Invocation> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}
+					eventLogger.stateChange(roomId, invocationLogs);
 					break;
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));

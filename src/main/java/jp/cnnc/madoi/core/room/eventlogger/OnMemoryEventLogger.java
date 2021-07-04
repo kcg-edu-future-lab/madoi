@@ -26,6 +26,11 @@ public class OnMemoryEventLogger implements RoomEventLogger{
 	}
 
 	@Override
+	public void stateChange(String roomId, String state) {
+		events.add(new Object[] {"stateChange", roomId, state});
+	}
+
+	@Override
 	public void sendMessage(String roomId, String castType, String[] recipients, Message message) {
 		try {
 			events.add(new Object[] {"sendMessage", roomId, castType, recipients,

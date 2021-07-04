@@ -1,6 +1,5 @@
 package jp.cnnc.madoi.core.room.eventlogger;
 
-import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class NullRoomEventLogger implements RoomEventLogger{
@@ -14,7 +13,7 @@ public class NullRoomEventLogger implements RoomEventLogger{
 	public void receiveMessage(String roomId, String sessionId, String messageType, String message) {
 	}
 	@Override
-	public void sendMessage(String roomId, String castType, String[] recipients, Message message) {
+	public void stateChange(String roomId, String state) {
 	}
 	@Override
 	public void sendMessage(String roomId, String name, String[] strings, String messageType, String message) {
