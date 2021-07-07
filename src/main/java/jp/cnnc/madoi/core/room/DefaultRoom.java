@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
@@ -135,12 +136,19 @@ public class DefaultRoom implements Room{
 		}
 	}
 	
+	private <T extends Message> T decode(String sender, String message, Class<T> clazz)
+	throws JsonMappingException, JsonProcessingException{
+		var m = om.readValue(message, clazz);
+		m.setSender(sender);
+		return m;
+	}
 	@Override
 	public synchronized void onPeerMessage(String peerId, String message) {
 		Peer peer = peers.get(peerId);
 		Message m = null;
 		try {
-			m = om.readValue(message, Message.class);
+			m = decode(peerId, message, Message.class);
+			m.setSender(peerId);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(roomId, peerId, null, message);
@@ -156,7 +164,7 @@ public class DefaultRoom implements Room{
 			case "ObjectConfig":{
 				ct = CastType.NONE;
 				try {
-					var oc = om.readValue(message, ObjectConfig.class);
+					var oc = decode(peerId, message, ObjectConfig.class);
 					objectMethods.put(oc.getObjectIndex(), new LinkedHashSet<>(oc.getMethodIndices()));
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
@@ -167,7 +175,7 @@ public class DefaultRoom implements Room{
 			case "MethodConfig":{
 				ct = CastType.NONE;
 				try {
-					var mc = om.readValue(message, MethodConfig.class);
+					var mc = decode(peerId, message, MethodConfig.class);
 					int targetIndex = mc.getMethodIndex();
 					if(mc.getMaxLog() > 0) {
 						invocationLogs.putIfAbsent(targetIndex, EvictingQueue.<Invocation>create(
@@ -185,7 +193,7 @@ public class DefaultRoom implements Room{
 			case "ObjectState": {
 				ct = CastType.NONE;
 				try {
-					var os = om.readValue(message, ObjectState.class);
+					var os = decode(peerId, message, ObjectState.class);
 					int objIndex = os.getObjectIndex();
 					String state = os.getState();
 					states.put(objIndex, state);
@@ -202,7 +210,7 @@ public class DefaultRoom implements Room{
 			}
 			case "Invocation": {
 				try {
-					var iv = om.readValue(message, Invocation.class);
+					var iv = decode(peerId, message, Invocation.class);
 					int index = iv.getMethodIndex();
 					EvictingQueue<Invocation> q = invocationLogs.get(index);
 					if(q != null) q.add(iv);
