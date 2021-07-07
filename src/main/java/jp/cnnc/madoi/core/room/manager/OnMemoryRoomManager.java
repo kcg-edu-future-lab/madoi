@@ -43,6 +43,11 @@ public class OnMemoryRoomManager implements RoomManager{
 	}
 
 	@Override
+	public void onPeerError(String roomId, String peerId, Throwable cause) {
+		getRoom(roomId).onPeerError(peerId, cause);
+	}
+
+	@Override
 	public void onPeerClose(String roomId, String peerId) {
 		Room r = getRoom(roomId);
 		r.onPeerLeave(peerId);

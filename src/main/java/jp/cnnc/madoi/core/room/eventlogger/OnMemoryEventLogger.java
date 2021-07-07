@@ -11,18 +11,23 @@ import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class OnMemoryEventLogger implements RoomEventLogger{
 	@Override
-	public void receiveOpen(String roomId, String id) {
-		events.add(new Object[] {"receiveOpen", roomId, id});
+	public void receiveOpen(String roomId, String peerId) {
+		events.add(new Object[] {"receiveOpen", roomId, peerId});
 	}
 
 	@Override
-	public void receiveClose(String roomId, String sessionId) {
-		events.add(new Object[] {"receiveClose", roomId, sessionId});
+	public void receiveError(String roomId, String peerId, Throwable cause) {
+		events.add(new Object[] {"receiveError", roomId, peerId, cause});
 	}
 
 	@Override
-	public void receiveMessage(String roomId, String sessionId, String messageType, String message) {
-		events.add(new Object[] {"receiveMessage", roomId, sessionId, messageType, message});
+	public void receiveClose(String roomId, String peerId) {
+		events.add(new Object[] {"receiveClose", roomId, peerId});
+	}
+
+	@Override
+	public void receiveMessage(String roomId, String peerId, String messageType, String message) {
+		events.add(new Object[] {"receiveMessage", roomId, peerId, messageType, message});
 	}
 
 	@Override

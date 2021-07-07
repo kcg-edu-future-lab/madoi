@@ -24,11 +24,9 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", room);
 		peer1.peerArrive();
 		peer2.peerArrive();
-		assertEquals(0, peer1.getSentTexts().size());
 		assertEquals(2, peer1.getSentMessages().size());
 		assertEquals("EnterRoom", peer1.getSentMessages().get(0).getType());
 		assertEquals("PeerJoin", peer1.getSentMessages().get(1).getType());
-		assertEquals(0, peer2.getSentTexts().size());
 		assertEquals(1, peer2.getSentMessages().size());
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("peer1", ((EnterRoom)peer2.getSentMessages().get(0)).getPeers().get(0).getId());
@@ -44,11 +42,9 @@ public class DefaultRoomTest {
 		peer2.peerArrive();
 		peer1.peerLeave();
 		peer3.peerArrive();
-		assertEquals(0, peer1.getSentTexts().size());
 		assertEquals(2, peer1.getSentMessages().size());
 		assertEquals("EnterRoom", peer1.getSentMessages().get(0).getType());
 		assertEquals("PeerJoin", peer1.getSentMessages().get(1).getType());
-		assertEquals(0, peer2.getSentTexts().size());
 		assertEquals(3, peer2.getSentMessages().size());
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("PeerLeave", peer2.getSentMessages().get(1).getType());
@@ -94,7 +90,7 @@ public class DefaultRoomTest {
 		peer.peerMessage(new Invocation(1, 1, new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());
-		assertEquals("EnterRoom", peer.getSentMessages().get(0).getType());
+		assertEquals("EnterRoom", ((Message)peer.getSentMessages().get(0)).getType());
 		for(Object[] m : el.getEvents()) {
 			System.out.printf("%s%n", Arrays.deepToString(m));
 		}
@@ -121,7 +117,7 @@ public class DefaultRoomTest {
 	 * ObjectStateが送られてきたら，それまでのInvocationのログがクリアされるはず。
 	 */
 	@Test
-	public void test_eliminatLogs() throws Throwable{
+	public void test_eliminateLogs() throws Throwable{
 		var room = new DefaultRoom("room1", new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArrive();
@@ -147,7 +143,7 @@ public class DefaultRoomTest {
 	 * ObjectStateが送られてきたら，それまでのInvocationのログがクリアされるはず。
 	 */
 	@Test
-	public void test_eliminatLogs2() throws Throwable{
+	public void test_eliminateLogs2() throws Throwable{
 		var room = new DefaultRoom("room1", new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", room);
 		var peer2 = new MockPeer("peer2", room);
@@ -174,6 +170,54 @@ public class DefaultRoomTest {
 			assertEquals("Invocation", er.getHistories().get(1).getType());
 		} else {
 			fail();
+		}
+	}
+
+	@Test
+	public void test_peerLeaveOnIOE() throws Throwable{
+		var el = new OnMemoryEventLogger();
+		var room = new DefaultRoom("room1", el);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
+
+		peer1.peerArrive();
+		peer2.peerArrive();
+		peer1.peerMessage(new ObjectConfig(0, Arrays.asList(0)));
+		peer1.peerMessage(new MethodConfig(0, 1000, SharingType.SHARE_PROCESS));
+		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		peer2.setIoeOnSend(true);
+		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		{
+			var msgs = peer1.getSentMessages();
+			assertEquals(5, msgs.size());
+			assertEquals("EnterRoom", msgs.get(0).getType());
+			assertEquals("PeerJoin", msgs.get(1).getType());
+			assertEquals("Invocation", msgs.get(2).getType());
+			assertEquals("Invocation", msgs.get(3).getType());
+			assertEquals("PeerLeave", msgs.get(4).getType());
+		}
+		{
+			var msgs = peer2.getSentMessages();
+			assertEquals(2, msgs.size());
+			assertEquals("EnterRoom", msgs.get(0).getType());
+			assertEquals("Invocation", msgs.get(1).getType());
+		}
+		{
+			var events = el.getEvents();
+			assertEquals(11, events.size());
+			assertEquals("receiveOpen", events.get(0)[0]);
+			assertEquals("sendMessage", events.get(1)[0]);
+			assertEquals("receiveOpen", events.get(2)[0]);
+			assertEquals("sendMessage", events.get(3)[0]);
+			assertEquals("receiveMessage", events.get(4)[0]);
+			assertEquals("receiveMessage", events.get(5)[0]);
+			assertEquals("receiveMessage", events.get(6)[0]);
+			assertEquals("sendMessage", events.get(7)[0]);
+			assertEquals("receiveMessage", events.get(8)[0]);
+			assertEquals("sendMessage", events.get(9)[0]);
+			assertEquals("Invocation", events.get(9)[4]);
+			assertEquals("sendMessage", events.get(10)[0]);
+			assertEquals("PeerLeave", events.get(10)[4]);
 		}
 	}
 }

@@ -7,10 +7,13 @@ public class NullRoomEventLogger implements RoomEventLogger{
 	public void receiveOpen(String roomId, String id) {
 	}
 	@Override
-	public void receiveClose(String roomId, String sessionId) {
+	public void receiveError(String roomId, String peerId, Throwable cause) {
 	}
 	@Override
-	public void receiveMessage(String roomId, String sessionId, String messageType, String message) {
+	public void receiveClose(String roomId, String peerId) {
+	}
+	@Override
+	public void receiveMessage(String roomId, String peerId, String messageType, String message) {
 	}
 	@Override
 	public void stateChange(String roomId, String state) {

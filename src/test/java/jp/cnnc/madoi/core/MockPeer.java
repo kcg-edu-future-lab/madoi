@@ -5,7 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jp.cnnc.madoi.core.message.EnterRoom;
+import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.message.LeaveRoom;
+import jp.cnnc.madoi.core.message.ObjectState;
+import jp.cnnc.madoi.core.message.PeerJoin;
+import jp.cnnc.madoi.core.message.PeerLeave;
 
 public class MockPeer implements Peer {
 	public MockPeer(String id, Room room){
@@ -27,14 +35,29 @@ public class MockPeer implements Peer {
 	public void setOrder(int order) {
 		this.order = order;
 	}
+	
+	public void setIoeOnSend(boolean ioeOnSend) {
+		this.ioeOnSend = ioeOnSend;
+	}
 
 	@Override
 	public void sendText(String text) throws IOException {
-		texts.add(text);
+		if(ioeOnSend) throw new IOException();
+		Message m = om.readValue(text, Message.class);
+		switch(m.getType()) {
+		case "EnterRoom":{m = om.readValue(text, EnterRoom.class); break;}
+		case "LeaveRoom":{m = om.readValue(text, LeaveRoom.class); break;}
+		case "PeerJoin":{m = om.readValue(text, PeerJoin.class); break;}
+		case "PeerLeave":{m = om.readValue(text, PeerLeave.class); break;}
+		case "Invocation":{m = om.readValue(text, Invocation.class); break;}
+		case "ObjectState":{m = om.readValue(text, ObjectState.class); break;}
+		}
+		messages.add(m);
 	}
 
 	@Override
 	public void sendMessage(Message message) throws IOException {
+		if(ioeOnSend) throw new IOException();
 		messages.add(message);
 	}
 
@@ -50,10 +73,6 @@ public class MockPeer implements Peer {
 		room.onPeerMessage(id, om.writeValueAsString(m));
 	}
 
-	public List<String> getSentTexts() {
-		return texts;
-	}
-
 	public List<Message> getSentMessages() {
 		return messages;
 	}
@@ -61,7 +80,9 @@ public class MockPeer implements Peer {
 	private String id;
 	private Room room;
 	private int order;
-	private List<String> texts = new ArrayList<>();
 	private List<Message> messages = new ArrayList<>();
-	private ObjectMapper om = new ObjectMapper();
+	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+	private boolean ioeOnSend;
 }
+

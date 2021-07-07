@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,6 +48,7 @@ import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.go.nict.langrid.commons.util.Trio;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
@@ -67,6 +69,14 @@ public class DefaultRoom implements Room{
 	@Override
 	public Map<Integer, EvictingQueue<Invocation>> getInvocationLogs() {
 		return invocationLogs;
+	}
+
+	@Override
+	public void onRoomStarted() {
+	}
+
+	@Override
+	public void onRoomEnded() {
 	}
 
 	@Override
@@ -110,38 +120,23 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
+	public void onPeerError(String peerId, Throwable cause) {
+		eventLogger.receiveError(roomId, peerId, cause);
+	}
+
+	@Override
 	public synchronized void onPeerLeave(String peerId) {
 		eventLogger.receiveClose(roomId, peerId);
 		peers.remove(peerId);
 		if(peers.size() > 0) {
-			PeerLeave pl = new PeerLeave(peerId);
-			for(Peer p : peers.values()) {
-				try {
-					p.sendMessage(pl);
-				} catch(IOException e) {
-					e.printStackTrace();
-				}
+			try {
+				castMessage(CastType.BROADCAST, peerId, "PeerLeave", om.writeValueAsString(new PeerLeave(peerId)));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
 			}
 		}
 	}
 
-	private void castMessageTo(CastType type, Peer peer, Message message) {
-		try {
-			eventLogger.sendMessage(roomId, CastType.SERVERNOTIFY.name(), peer.getId(), message);
-			peer.sendMessage(message);
-		} catch(JsonProcessingException ex) {
-			throw new RuntimeException(ex);
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private <T extends Message> T decode(String sender, String message, Class<T> clazz)
-	throws JsonMappingException, JsonProcessingException{
-		var m = om.readValue(message, clazz);
-		m.setSender(sender);
-		return m;
-	}
 	@Override
 	public synchronized void onPeerMessage(String peerId, String message) {
 		Peer peer = peers.get(peerId);
@@ -211,6 +206,7 @@ public class DefaultRoom implements Room{
 			case "Invocation": {
 				try {
 					var iv = decode(peerId, message, Invocation.class);
+					message = om.writeValueAsString(iv);
 					int index = iv.getMethodIndex();
 					EvictingQueue<Invocation> q = invocationLogs.get(index);
 					if(q != null) q.add(iv);
@@ -238,18 +234,7 @@ public class DefaultRoom implements Room{
 				e.printStackTrace();
 			}
 		} else {
-			var ids = new ArrayList<>();
-			for(Peer s : peers.values()){
-				boolean sender = peer.getId().equals(s.getId());
-				if(ct.equals(CastType.OTHERCAST) && sender) continue;
-				ids.add(s.getId());
-				try {
-					s.sendText(message);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[] {}), m.getType(), message);
+			castMessage(ct, peer.getId(), m.getType(), message);
 		}
 	}
 
@@ -257,12 +242,54 @@ public class DefaultRoom implements Room{
 	public void onPeerMessage(String peerId, byte[] message) {
 	}
 
-	@Override
-	public void onRoomStarted() {
+	private void castMessageTo(CastType type, Peer peer, Message message) {
+		try {
+			eventLogger.sendMessage(roomId, CastType.SERVERNOTIFY.name(), peer.getId(), message);
+			peer.sendMessage(message);
+		} catch(JsonProcessingException ex) {
+			throw new RuntimeException(ex);
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	@Override
-	public void onRoomEnded() {
+	private void castMessage(CastType ct, String senderPeerId, String messageType, String message) {
+		var messages = new LinkedList<Trio<CastType, String, String>>();
+		messages.add(Trio.create(ct, messageType, message));
+		while(messages.size() > 0) {
+			var msg = messages.pollFirst();
+			var ids = new ArrayList<>();
+			var it = peers.entrySet().iterator();
+			while(it.hasNext()) {
+				var p = it.next().getValue();
+				if(msg.getFirst().equals(CastType.OTHERCAST) &&
+						p.getId().equals(senderPeerId)) continue;
+				ids.add(p.getId());
+				try {
+					p.sendText(msg.getThird());
+				} catch (IOException e) {
+					it.remove();
+					messages.addLast(Trio.create(CastType.BROADCAST, "PeerLeave", encode(new PeerLeave(p.getId()))));
+					e.printStackTrace();
+				}
+			}
+			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[] {}), msg.getSecond(), message);
+		}
+	}
+
+	private <T extends Message> T decode(String sender, String message, Class<T> clazz)
+	throws JsonMappingException, JsonProcessingException{
+		var m = om.readValue(message, clazz);
+		m.setSender(sender);
+		return m;
+	}
+
+	private String encode(Object o) {
+		try {
+			return om.writeValueAsString(o);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private String roomId;

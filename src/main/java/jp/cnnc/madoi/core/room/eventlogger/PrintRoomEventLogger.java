@@ -12,6 +12,13 @@ public class PrintRoomEventLogger implements RoomEventLogger{
 	}
 
 	@Override
+	public void receiveError(String roomId, String peerId, Throwable cause) {
+		System.err.printf("[%s] receiveError(%s, %s)%n",
+				roomId, peerId, cause.toString());
+		cause.printStackTrace(System.err);
+	}
+
+	@Override
 	public void receiveClose(String roomId, String peerId) {
 		System.err.printf("[%s] receiveClose(%s)%n",
 				roomId, peerId);

@@ -18,6 +18,7 @@ package jp.cnnc.madoi.core;
 import java.util.Arrays;
 
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
@@ -44,6 +45,10 @@ public class WebSocketServer {
 		getRoomManager().onPeerClose(roomId, session.getId());
 	}
 
+	@OnError
+	public void onError(Session session, Throwable cause, @PathParam("roomId") String roomId) {
+		getRoomManager().onPeerError(roomId, session.getId(), cause);
+	}
 
 	@OnMessage(maxMessageSize = 8192*1024)
 	public void onMessage(
