@@ -5,15 +5,15 @@ import jp.cnnc.madoi.core.Message;
 public class ObjectState extends Message {
 	public ObjectState() {
 	}
-	public ObjectState(int objectIndex, String state) {
-		this.objectIndex = objectIndex;
+	public ObjectState(int objId, String state) {
+		this.objId = objId;
 		this.state = state;
 	}
-	public int getObjectIndex() {
-		return objectIndex;
+	public int getObjId() {
+		return objId;
 	}
-	public void setObjectIndex(int objectIndex) {
-		this.objectIndex = objectIndex;
+	public void setObjId(int objId) {
+		this.objId = objId;
 	}
 	public String getState() {
 		return state;
@@ -22,6 +22,6 @@ public class ObjectState extends Message {
 		this.state = state;
 	}
 
-	private int objectIndex;
+	private int objId;
 	private String state;
 }

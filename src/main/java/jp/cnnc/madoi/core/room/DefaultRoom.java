@@ -173,8 +173,6 @@ public class DefaultRoom implements Room{
 							invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
 									Math.min(maxLog, 10000)));
 						}
-						System.out.println(sc.getType());
-						System.out.println(om.writeValueAsString(mi));
 						if(sc.getType().equals(SharingType.afterExec)) {
 							execAndSendMethods.add(funcId);
 						}
@@ -208,10 +206,10 @@ public class DefaultRoom implements Room{
 				ct = CastType.NONE;
 				try {
 					var os = decode(peerId, message, ObjectState.class);
-					int objIndex = os.getObjectIndex();
+					int objId = os.getObjId();
 					String state = os.getState();
-					states.put(objIndex, state);
-					for(int mi : objectMethods.getOrDefault(objIndex, Collections.emptySet())) {
+					states.put(objId, state);
+					for(int mi : objectMethods.getOrDefault(objId, Collections.emptySet())) {
 						EvictingQueue<Invocation> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}
