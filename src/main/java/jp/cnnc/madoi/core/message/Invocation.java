@@ -3,28 +3,36 @@ package jp.cnnc.madoi.core.message;
 import jp.cnnc.madoi.core.Message;
 
 public class Invocation extends Message {
-	private int methodIndex;
-	private int objectIndex;
-	private Object[] args;
-
 	public Invocation(){
 	}
-	public Invocation(int methodIndex, int objectIndex, Object[] args){
-		this.methodIndex = methodIndex;
-		this.objectIndex = objectIndex;
+	public Invocation(Integer objId, int funcId, String funcName, Object[] args){
+		this.objId = objId;
+		this.funcId = funcId;
+		this.funcName = funcName;
 		this.args = args;
 	}
-	public int getMethodIndex() {
-		return methodIndex;
+	public Invocation(int funcId, String funcName, Object[] args){
+		this.funcId = funcId;
+		this.funcName = funcName;
+		this.args = args;
 	}
-	public void setMethodIndex(int methodIndex) {
-		this.methodIndex = methodIndex;
+	public Integer getObjId() {
+		return objId;
 	}
-	public int getObjectIndex() {
-		return objectIndex;
+	public void setObjId(Integer objId) {
+		this.objId = objId;
 	}
-	public void setObjectIndex(int objectIndex) {
-		this.objectIndex = objectIndex;
+	public int getFuncId() {
+		return funcId;
+	}
+	public void setFuncId(int funcId) {
+		this.funcId = funcId;
+	}
+	public String getFuncName() {
+		return funcName;
+	}
+	public void setFuncName(String funcName) {
+		this.funcName = funcName;
 	}
 	public Object[] getArgs() {
 		return args;
@@ -32,4 +40,8 @@ public class Invocation extends Message {
 	public void setArgs(Object[] args) {
 		this.args = args;
 	}
+	private Integer objId;
+	private int funcId;
+	private String funcName;
+	private Object[] args;
 }

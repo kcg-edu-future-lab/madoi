@@ -1,17 +1,22 @@
 package jp.cnnc.madoi.core;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
 import jp.cnnc.madoi.core.message.EnterRoom;
+import jp.cnnc.madoi.core.message.FunctionInfo;
 import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.MethodConfig;
-import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
-import jp.cnnc.madoi.core.message.ObjectConfig;
+import jp.cnnc.madoi.core.message.MethodInfo;
+import jp.cnnc.madoi.core.message.ObjectInfo;
 import jp.cnnc.madoi.core.message.ObjectState;
+import jp.cnnc.madoi.core.message.config.ShareConfig;
+import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 import jp.cnnc.madoi.core.room.DefaultRoom;
 import jp.cnnc.madoi.core.room.eventlogger.NullRoomEventLogger;
 import jp.cnnc.madoi.core.room.eventlogger.OnMemoryEventLogger;
@@ -86,8 +91,8 @@ public class DefaultRoomTest {
 		var peer = new MockPeer("peer1", room);
 
 		peer.peerArrive();
-		peer.peerMessage(new MethodConfig(1, 1000, SharingType.SHARE_RESULT));
-		peer.peerMessage(new Invocation(1, 1, new Object[]{"arg1"}));
+		peer.peerMessage(new FunctionInfo(1, "foo", new ShareConfig(SharingType.afterExec, 0)));
+		peer.peerMessage(new Invocation(1, 1, "foo", new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());
 		assertEquals("EnterRoom", ((Message)peer.getSentMessages().get(0)).getType());
@@ -103,7 +108,7 @@ public class DefaultRoomTest {
 				new Object[] {"sendMessage", "room1", "SERVERNOTIFY", new String[] {"peer1"}, "EnterRoom"},
 				Arrays.copyOf(el.getEvents().get(1), 5));
 		assertArrayEquals(
-				new Object[] {"receiveMessage", "room1", "peer1", "MethodConfig"},
+				new Object[] {"receiveMessage", "room1", "peer1", "FunctionInfo"},
 				Arrays.copyOf(el.getEvents().get(2), 4));
 		assertArrayEquals(
 				new Object[] {"receiveMessage", "room1", "peer1", "Invocation"},
@@ -121,9 +126,10 @@ public class DefaultRoomTest {
 		var room = new DefaultRoom("room1", new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArrive();
-		peer1.peerMessage(new ObjectConfig(0, Arrays.asList(0)));
-		peer1.peerMessage(new MethodConfig(0, 1000, SharingType.SHARE_PROCESS));
-		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		peer1.peerMessage(new ObjectInfo(0, "Test", Arrays.asList(
+				new MethodInfo(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
 		assertEquals(1, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
 		peer1.peerMessage(new ObjectState(0, ""));
@@ -149,18 +155,25 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", room);
 
 		peer1.peerArrive();
-		peer1.peerMessage(new ObjectConfig(0, Arrays.asList(0)));
-		peer1.peerMessage(new ObjectConfig(1, Arrays.asList(1)));
-		peer1.peerMessage(new MethodConfig(0, 1000, SharingType.SHARE_PROCESS));
-		peer1.peerMessage(new MethodConfig(1, 1000, SharingType.SHARE_PROCESS));
-		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
-		peer1.peerMessage(new Invocation(1, 1, new Object[] {}));
-		assertEquals(2, room.getInvocationLogs().size());
+		peer1.peerMessage(new ObjectInfo(0, "Test", Arrays.asList(
+				new MethodInfo(0, "foo", new ShareConfig(SharingType.beforeExec, 1000)),
+				new MethodInfo(1, "bar", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+		peer1.peerMessage(new ObjectInfo(1, "Test2", Arrays.asList(
+				new MethodInfo(2, "foo2", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+		peer1.peerMessage(new Invocation(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new Invocation(0, 1, "bar", new Object[] {}));
+		peer1.peerMessage(new Invocation(1, 2, "foo2", new Object[] {}));
+		assertEquals(3, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
 		assertEquals(1, room.getInvocationLogs().get(1).size());
+		assertEquals(1, room.getInvocationLogs().get(2).size());
 
 		peer1.peerMessage(new ObjectState(0, ""));
 		assertEquals(0, room.getInvocationLogs().get(0).size());
+		assertEquals(0, room.getInvocationLogs().get(1).size());
+		assertEquals(1, room.getInvocationLogs().get(2).size());
 
 		peer2.peerArrive();
 		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
@@ -182,11 +195,12 @@ public class DefaultRoomTest {
 
 		peer1.peerArrive();
 		peer2.peerArrive();
-		peer1.peerMessage(new ObjectConfig(0, Arrays.asList(0)));
-		peer1.peerMessage(new MethodConfig(0, 1000, SharingType.SHARE_PROCESS));
-		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		peer1.peerMessage(new ObjectInfo(0, "Test", Arrays.asList(
+				new MethodInfo(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
 		peer2.setIoeOnSend(true);
-		peer1.peerMessage(new Invocation(0, 0, new Object[] {}));
+		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
 		{
 			var msgs = peer1.getSentMessages();
 			assertEquals(5, msgs.size());
@@ -204,20 +218,19 @@ public class DefaultRoomTest {
 		}
 		{
 			var events = el.getEvents();
-			assertEquals(11, events.size());
+			assertEquals(10, events.size());
 			assertEquals("receiveOpen", events.get(0)[0]);
 			assertEquals("sendMessage", events.get(1)[0]);
 			assertEquals("receiveOpen", events.get(2)[0]);
 			assertEquals("sendMessage", events.get(3)[0]);
 			assertEquals("receiveMessage", events.get(4)[0]);
 			assertEquals("receiveMessage", events.get(5)[0]);
-			assertEquals("receiveMessage", events.get(6)[0]);
-			assertEquals("sendMessage", events.get(7)[0]);
-			assertEquals("receiveMessage", events.get(8)[0]);
+			assertEquals("sendMessage", events.get(6)[0]);
+			assertEquals("receiveMessage", events.get(7)[0]);
+			assertEquals("sendMessage", events.get(8)[0]);
+			assertEquals("Invocation", events.get(8)[4]);
 			assertEquals("sendMessage", events.get(9)[0]);
-			assertEquals("Invocation", events.get(9)[4]);
-			assertEquals("sendMessage", events.get(10)[0]);
-			assertEquals("PeerLeave", events.get(10)[4]);
+			assertEquals("PeerLeave", events.get(9)[4]);
 		}
 	}
 }

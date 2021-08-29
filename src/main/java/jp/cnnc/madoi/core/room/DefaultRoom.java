@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,14 +42,14 @@ import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.Peer;
 import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.message.EnterRoom;
+import jp.cnnc.madoi.core.message.FunctionInfo;
 import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.MethodConfig;
-import jp.cnnc.madoi.core.message.MethodConfig.SharingType;
-import jp.cnnc.madoi.core.message.ObjectConfig;
+import jp.cnnc.madoi.core.message.ObjectInfo;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 import jp.go.nict.langrid.commons.util.Trio;
 
 public class DefaultRoom implements Room{
@@ -152,32 +154,49 @@ public class DefaultRoom implements Room{
 		eventLogger.receiveMessage(roomId, peerId, m.getType(), message);
 		CastType ct = CastType.BROADCAST;
 		switch(m.getType()) {
-			case "ConnectionConfig":{
+			case "ConnectionInfo":{
 				ct = CastType.NONE;
 				break;
 			}
-			case "ObjectConfig":{
+			case "ObjectInfo":{
 				ct = CastType.NONE;
 				try {
-					var oc = decode(peerId, message, ObjectConfig.class);
-					objectMethods.put(oc.getObjectIndex(), new LinkedHashSet<>(oc.getMethodIndices()));
+					var oc = decode(peerId, message, ObjectInfo.class);
+					var methodIndexes = new LinkedHashSet<Integer>();
+					for(var mi : oc.getMethods()) {
+						var sc = mi.getConfig().getShare();
+						if(mi.getFuncId() == null || sc == null) continue;
+						methodIndexes.add(mi.getFuncId());
+						int funcId = mi.getFuncId();
+						int maxLog = sc.getMaxLog();
+						if(maxLog > 0) {
+							invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
+									Math.min(maxLog, 10000)));
+						}
+						System.out.println(sc.getType());
+						System.out.println(om.writeValueAsString(mi));
+						if(sc.getType().equals(SharingType.afterExec)) {
+							execAndSendMethods.add(funcId);
+						}
+					}
+					objectMethods.put(oc.getObjId(), methodIndexes);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
 			}
-			case "MethodConfig":{
+			case "FunctionInfo":{
 				ct = CastType.NONE;
 				try {
-					var mc = decode(peerId, message, MethodConfig.class);
-					int targetIndex = mc.getMethodIndex();
-					if(mc.getMaxLog() > 0) {
-						invocationLogs.putIfAbsent(targetIndex, EvictingQueue.<Invocation>create(
-								Math.max(mc.getMaxLog(), 10000)));
+					var fi = decode(peerId, message, FunctionInfo.class);
+					var funcId = fi.getFuncId();
+					if(fi.getConfig().getMaxLog() > 0) {
+						invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
+								Math.min(fi.getConfig().getMaxLog(), 10000)));
 					}
-					if(mc.getSharingType().equals(SharingType.SHARE_RESULT)) {
-						execAndSendMethods.add(targetIndex);
+					if(fi.getConfig().getType().equals(SharingType.afterExec)) {
+						execAndSendMethods.add(funcId);
 					}
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERNOTIFY, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
@@ -207,10 +226,10 @@ public class DefaultRoom implements Room{
 				try {
 					var iv = decode(peerId, message, Invocation.class);
 					message = om.writeValueAsString(iv);
-					int index = iv.getMethodIndex();
-					EvictingQueue<Invocation> q = invocationLogs.get(index);
+					var fid = iv.getFuncId();
+					EvictingQueue<Invocation> q = invocationLogs.get(fid);
 					if(q != null) q.add(iv);
-					if(execAndSendMethods.contains(index)) {
+					if(execAndSendMethods.contains(fid)) {
 						ct = CastType.OTHERCAST;
 					} else {
 						ct = CastType.BROADCAST;
@@ -270,7 +289,7 @@ public class DefaultRoom implements Room{
 				} catch (IOException e) {
 					it.remove();
 					messages.addLast(Trio.create(CastType.BROADCAST, "PeerLeave", encode(new PeerLeave(p.getId()))));
-					e.printStackTrace();
+					logger.log(Level.INFO, "Tried to send message to " + p.getId(), e);
 				}
 			}
 			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[] {}), msg.getSecond(), message);
@@ -303,4 +322,6 @@ public class DefaultRoom implements Room{
 	private Set<Integer> execAndSendMethods = new HashSet<>();
 
 	private Map<String, Peer> peers = new LinkedHashMap<>();
+
+	private static Logger logger = Logger.getLogger(DefaultRoom.class.getName());
 }
