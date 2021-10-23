@@ -9,7 +9,7 @@ public class EnterRoom extends Message{
 	public EnterRoom() {
 	}
 
-	public EnterRoom(String roomId, String name, int selfId,
+	public EnterRoom(String roomId, String name, String selfId,
 			List<PeerInfo> peers, List<Message> histories) {
 		this.roomId = roomId;
 		this.name = name;
@@ -34,11 +34,11 @@ public class EnterRoom extends Message{
 		this.name = name;
 	}
 
-	public int getSelfId() {
+	public String getSelfId() {
 		return selfId;
 	}
 
-	public void setPeerId(int selfId) {
+	public void setPeerId(String selfId) {
 		this.selfId = selfId;
 	}
 
@@ -60,7 +60,7 @@ public class EnterRoom extends Message{
 
 	private String roomId;
 	private String name;
-	private int selfId;
+	private String selfId;
 	private List<PeerInfo> peers = new ArrayList<>();
 	private List<Message> histories = new ArrayList<>();
 }

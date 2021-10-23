@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -97,7 +96,7 @@ public class DefaultRoom implements Room{
 		eventLogger.receiveOpen(roomId, session.getId());
 		EnterRoom re = new EnterRoom();
 		re.setRoomId(this.roomId);
-		re.setPeerId(clientId.incrementAndGet());
+		re.setPeerId(session.getId());
 		re.setPeers(new ArrayList<>(
 				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder()))
 				.collect(Collectors.toList())
@@ -312,7 +311,6 @@ public class DefaultRoom implements Room{
 	private String roomId;
 	private RoomEventLogger eventLogger;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	private AtomicInteger clientId = new AtomicInteger();
 
 	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
 	private Map<Integer, String> states = new LinkedHashMap<>();
