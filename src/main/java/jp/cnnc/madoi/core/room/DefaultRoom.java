@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -49,7 +50,6 @@ import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
-import jp.go.nict.langrid.commons.util.Trio;
 
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
@@ -131,7 +131,8 @@ public class DefaultRoom implements Room{
 		peers.remove(peerId);
 		if(peers.size() > 0) {
 			try {
-				castMessage(CastType.BROADCAST, peerId, "PeerLeave", om.writeValueAsString(new PeerLeave(peerId)));
+				castMessage(CastType.BROADCAST, Collections.emptyList(),
+					peerId, "PeerLeave", om.writeValueAsString(new PeerLeave(peerId)));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -152,13 +153,29 @@ public class DefaultRoom implements Room{
 		}
 		eventLogger.receiveMessage(roomId, peerId, m.getType(), message);
 		CastType ct = CastType.BROADCAST;
+		List<String> recipients = new ArrayList<>();
+		try{
+			Object mct = om.readValue(message, Map.class).get("castType");
+			if(mct != null){
+					ct = CastType.valueOf(mct.toString());
+			}
+			Object r = om.readValue(message, Map.class).get("recipients");
+			if(r != null && r instanceof List){
+				recipients = (List<String>)r;
+				if(recipients.size() > 0) String.class.cast(recipients.get(0));
+			}
+		} catch(IllegalArgumentException | JsonProcessingException | ClassCastException e){
+			logger.log(Level.WARNING, "failed to read castType or recipients", e);
+		}
 		switch(m.getType()) {
 			case "ConnectionInfo":{
 				ct = CastType.CLIENTTOSERVER;
+				recipients.clear();;
 				break;
 			}
 			case "ObjectInfo":{
 				ct = CastType.CLIENTTOSERVER;
+				recipients.clear();;
 				try {
 					var oc = decode(peerId, message, ObjectInfo.class);
 					var methodIndexes = new LinkedHashSet<Integer>();
@@ -185,6 +202,7 @@ public class DefaultRoom implements Room{
 			}
 			case "FunctionInfo":{
 				ct = CastType.CLIENTTOSERVER;
+				recipients.clear();;
 				try {
 					var fi = decode(peerId, message, FunctionInfo.class);
 					var funcId = fi.getFuncId();
@@ -203,6 +221,7 @@ public class DefaultRoom implements Room{
 			}
 			case "ObjectState": {
 				ct = CastType.CLIENTTOSERVER;
+				recipients.clear();;
 				try {
 					var os = decode(peerId, message, ObjectState.class);
 					int objId = os.getObjId();
@@ -231,6 +250,7 @@ public class DefaultRoom implements Room{
 					} else {
 						ct = CastType.BROADCAST;
 					}
+					recipients.clear();;
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
@@ -238,18 +258,11 @@ public class DefaultRoom implements Room{
 				break;
 			}
 			default:
-				ct = null;
 				break;
 		}
 		if(ct == null){
 			ct = CastType.BROADCAST;
-			try{
-				Object mct = om.readValue(message, Map.class).get("castType");
-				if(mct != null){
-						ct = CastType.valueOf(mct.toString());
-				}
-			} catch(IllegalArgumentException | JsonProcessingException e){
-			}
+			recipients.clear();;
 		}
 		if(ct.equals(CastType.CLIENTTOSERVER)) return;
 		if(ct.equals(CastType.SELFCAST)) {
@@ -260,7 +273,7 @@ public class DefaultRoom implements Room{
 				e.printStackTrace();
 			}
 		} else {
-			castMessage(ct, peer.getId(), m.getType(), message);
+			castMessage(ct, recipients, peer.getId(), m.getType(), message);
 		}
 	}
 
@@ -279,27 +292,87 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	private void castMessage(CastType ct, String senderPeerId, String messageType, String message) {
-		var messages = new LinkedList<Trio<CastType, String, String>>();
-		messages.add(Trio.create(ct, messageType, message));
+	public static class Cast{
+		private CastType castType;
+		private List<String> recipients;
+		private String senderPeerId;
+		private String messateType;
+		private String message;
+		public Cast(CastType castType, List<String> recipients, String senderPeerId, String messateType, String message) {
+			this.castType = castType;
+			this.recipients = recipients;
+			this.senderPeerId = senderPeerId;
+			this.messateType = messateType;
+			this.message = message;
+		}
+		public CastType getCastType() {
+			return castType;
+		}
+		public void setCastType(CastType castType) {
+			this.castType = castType;
+		}
+		public List<String> getRecipients() {
+			return recipients;
+		}
+		public void setRecipients(List<String> recipients) {
+			this.recipients = recipients;
+		}
+		public String getSenderPeerId() {
+			return senderPeerId;
+		}
+		public void setSenderPeerId(String senderPeerId) {
+			this.senderPeerId = senderPeerId;
+		}
+		public String getMessateType() {
+			return messateType;
+		}
+		public void setMessateType(String messateType) {
+			this.messateType = messateType;
+		}
+		public String getMessage() {
+			return message;
+		}
+		public void setMessage(String message) {
+			this.message = message;
+		}
+	}
+
+	private void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message) {
+		var messages = new LinkedList<Cast>();
+		messages.add(new Cast(ct, recipients, senderPeerId, messageType, message));
 		while(messages.size() > 0) {
 			var msg = messages.pollFirst();
-			var ids = new ArrayList<>();
-			var it = peers.entrySet().iterator();
-			while(it.hasNext()) {
-				var p = it.next().getValue();
-				if(msg.getFirst().equals(CastType.OTHERCAST) &&
-						p.getId().equals(senderPeerId)) continue;
-				ids.add(p.getId());
-				try {
-					p.sendText(msg.getThird());
-				} catch (IOException e) {
-					it.remove();
-					messages.addLast(Trio.create(CastType.BROADCAST, "PeerLeave", encode(new PeerLeave(p.getId()))));
-					logger.log(Level.INFO, "Tried to send message to " + p.getId(), e);
+			var ids = new ArrayList<String>();
+			if(msg.getCastType().equals(CastType.UNICAST)){
+				if(msg.getRecipients().size() == 1){
+					ids.add(msg.recipients.get(0));
+				}
+			} else if(msg.getCastType().equals(CastType.MULTICAST)){
+				ids.addAll(msg.getRecipients());
+			} else if(msg.getCastType().equals(CastType.BROADCAST)){
+				for(var id : peers.keySet()){
+					ids.add(id);
+				}
+			} else if(msg.getCastType().equals(CastType.OTHERCAST)){
+				for(var p : peers.entrySet()){
+					var id = p.getKey();
+					if(id.equals(senderPeerId)) continue;
+					ids.add(id);
 				}
 			}
-			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[] {}), msg.getSecond(), message);
+			for(var id : ids){
+				try {
+					peers.get(id).sendText(msg.getMessage());
+				} catch (IOException e) {
+					peers.remove(id);
+					messages.addLast(new Cast(
+						CastType.BROADCAST, Collections.emptyList(),
+						"__SYSTEM__", "PeerLeave", encode(new PeerLeave(id))));
+					logger.log(Level.INFO, "Tried to send message to " + id, e);
+				}
+			}
+			eventLogger.sendMessage(roomId, ct.name(), ids.toArray(new String[]{}),
+				msg.getMessateType(), msg.getMessage());
 		}
 	}
 
