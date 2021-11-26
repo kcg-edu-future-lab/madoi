@@ -22,6 +22,24 @@ public class Message {
 		this.sender = sender;
 	}
 
+	public CastType getCastType() {
+		return castType;
+	}
+
+	public void setCastType(CastType castType) {
+		this.castType = castType;
+	}
+
+	public String[] getRecipients() {
+		return recipients;
+	}
+
+	public void setRecipients(String[] recipients) {
+		this.recipients = recipients;
+	}
+
 	private String type;
 	private String sender;
+	private CastType castType;
+	private String[] recipients;
 }
