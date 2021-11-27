@@ -22,6 +22,12 @@ public class Invocation extends Message {
 	public void setObjId(Integer objId) {
 		this.objId = objId;
 	}
+	public int getObjRevision() {
+		return objRevision;
+	}
+	public void setObjRevision(int objRevision) {
+		this.objRevision = objRevision;
+	}
 	public int getFuncId() {
 		return funcId;
 	}
@@ -41,6 +47,7 @@ public class Invocation extends Message {
 		this.args = args;
 	}
 	private Integer objId;
+	private int objRevision;
 	private int funcId;
 	private String funcName;
 	private Object[] args;

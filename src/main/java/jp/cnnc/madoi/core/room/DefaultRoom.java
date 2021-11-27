@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -241,6 +242,10 @@ public class DefaultRoom implements Room{
 			case "Invocation": {
 				try {
 					var iv = decode(peerId, message, Invocation.class);
+					if(iv.getObjId() != null) {
+						var ai = objRevision.computeIfAbsent(iv.getObjId(), i->new AtomicInteger());
+						iv.setObjRevision(ai.getAndIncrement());
+					}
 					message = om.writeValueAsString(iv);
 					var fid = iv.getFuncId();
 					EvictingQueue<Invocation> q = invocationLogs.get(fid);
@@ -396,6 +401,7 @@ public class DefaultRoom implements Room{
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
+	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
 	private Map<Integer, String> states = new LinkedHashMap<>();
 	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
 	private Set<Integer> execAndSendMethods = new HashSet<>();
