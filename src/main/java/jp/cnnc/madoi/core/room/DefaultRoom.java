@@ -194,6 +194,7 @@ public class DefaultRoom implements Room{
 							execAndSendMethods.add(funcId);
 						}
 					}
+					states.put(oc.getObjId(), "");
 					objectMethods.put(oc.getObjId(), methodIndexes);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
