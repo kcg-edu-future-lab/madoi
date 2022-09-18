@@ -45,6 +45,7 @@ import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.FunctionInfo;
 import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.message.LoginRoom;
 import jp.cnnc.madoi.core.message.ObjectInfo;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerInfo;
@@ -52,6 +53,12 @@ import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 
+/**
+ * Peerは最初は入室待ち状態になる。
+ * PeerはRoomにRoomLoginメッセージを送り、承認されればEnterRoomメッセージが送られ、
+ * 参加状態になる。この際、既存のPeerにはPeerEnterメッセージが送られる。
+ * @author Takao Nakaguchi
+ */
 public class DefaultRoom implements Room{
 	public DefaultRoom(String roomId, RoomEventLogger storage) {
 		this.roomId = roomId;
@@ -74,51 +81,9 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public void onRoomStarted() {
-	}
-
-	@Override
-	public void onRoomEnded() {
-	}
-
-	@Override
-	public synchronized void onPeerArrive(Peer session) {
-		for(Peer p : peers.values()) {
-			try {
-				p.sendMessage(new PeerJoin(session.getId()));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		if(peers.size() == 0) {
-			onRoomStarted();
-		}
-		eventLogger.receiveOpen(roomId, session.getId());
-		EnterRoom re = new EnterRoom();
-		re.setRoomId(this.roomId);
-		re.setPeerId(session.getId());
-		re.setPeers(new ArrayList<>(
-				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder()))
-				.collect(Collectors.toList())
-				));
-		// statesから状態を送信
-		for(Map.Entry<Integer, String> e : states.entrySet()) {
-			var state = new ObjectState(e.getKey(), e.getValue());
-			re.getHistories().add(state);
-		}
-		for(Collection<Invocation> ils : invocationLogs.values()) {
-			for(Invocation i : ils) {
-				re.getHistories().add(i);
-			}
-		}
-		peers.put(session.getId(), session);
-		try {
-			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {session.getId()}, re);
-			session.sendMessage(re);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+	public synchronized void onPeerArrive(Peer peer) {
+		eventLogger.receiveOpen(roomId, peer.getId());
+		waitingPeers.put(peer.getId(), peer);
 	}
 
 	@Override
@@ -128,6 +93,7 @@ public class DefaultRoom implements Room{
 
 	@Override
 	public synchronized void onPeerLeave(String peerId) {
+		waitingPeers.remove(peerId);
 		eventLogger.receiveClose(roomId, peerId);
 		peers.remove(peerId);
 		if(peers.size() > 0) {
@@ -140,9 +106,60 @@ public class DefaultRoom implements Room{
 		}
 	}
 
+	private void onWaitingPeerMessage(Peer peer, String message) {
+		LoginRoom lr = null;
+		try {
+			lr = decode(peer.getId(), message, LoginRoom.class);
+		} catch(JsonProcessingException e) {
+			castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+			eventLogger.receiveMessage(roomId, peer.getId(), null, message);
+			return;
+		}
+		peer.setProfile(lr.getPeerProfile());
+
+		for(Peer p : peers.values()) {
+			try {
+				p.sendMessage(new PeerJoin(peer.getId(), peer.getProfile()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		EnterRoom er = new EnterRoom();
+		er.setRoomId(this.roomId);
+		er.setPeerId(peer.getId());
+		er.setPeers(new ArrayList<>(
+				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder(), p.getProfile()))
+				.collect(Collectors.toList())
+				));
+		// statesから状態を送信
+		for(Map.Entry<Integer, String> e : objectStates.entrySet()) {
+			var state = new ObjectState(e.getKey(), e.getValue());
+			er.getHistories().add(state);
+		}
+		for(Collection<Invocation> ils : invocationLogs.values()) {
+			for(Invocation i : ils) {
+				er.getHistories().add(i);
+			}
+		}
+		peers.put(peer.getId(), peer);
+		try {
+			eventLogger.sendMessage(roomId, "SERVERNOTIFY", new String[] {peer.getId()}, er);
+			peer.sendMessage(er);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	public synchronized void onPeerMessage(String peerId, String message) {
-		Peer peer = peers.get(peerId);
+		var wp = waitingPeers.remove(peerId);
+		if(wp != null) {
+			onWaitingPeerMessage(wp, message);
+			return;
+		}
+
+		var peer = peers.get(peerId);
 		Message m = null;
 		try {
 			m = decode(peerId, message, Message.class);
@@ -176,7 +193,7 @@ public class DefaultRoom implements Room{
 			}
 			case "ObjectInfo":{
 				ct = CastType.CLIENTTOSERVER;
-				recipients.clear();;
+				recipients.clear();
 				try {
 					var oc = decode(peerId, message, ObjectInfo.class);
 					var methodIndexes = new LinkedHashSet<Integer>();
@@ -194,7 +211,6 @@ public class DefaultRoom implements Room{
 							execAndSendMethods.add(funcId);
 						}
 					}
-					states.put(oc.getObjId(), "");
 					objectMethods.put(oc.getObjId(), methodIndexes);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
@@ -228,7 +244,7 @@ public class DefaultRoom implements Room{
 					var os = decode(peerId, message, ObjectState.class);
 					int objId = os.getObjId();
 					String state = os.getState();
-					states.put(objId, state);
+					objectStates.put(objId, state);
 					for(int mi : objectMethods.getOrDefault(objId, Collections.emptySet())) {
 						EvictingQueue<Invocation> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
@@ -403,10 +419,11 @@ public class DefaultRoom implements Room{
 
 	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
 	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
-	private Map<Integer, String> states = new LinkedHashMap<>();
+	private Map<Integer, String> objectStates = new LinkedHashMap<>();
 	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
 	private Set<Integer> execAndSendMethods = new HashSet<>();
 
+	private Map<String, Peer> waitingPeers = new HashMap<>();
 	private Map<String, Peer> peers = new LinkedHashMap<>();
 
 	private static Logger logger = Logger.getLogger(DefaultRoom.class.getName());

@@ -25,8 +25,6 @@ import jp.cnnc.madoi.core.message.Invocation;public interface Room {
 	void onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);
 	void onPeerMessage(String peerId, byte[] message);
-	void onRoomStarted();
-	void onRoomEnded();
 	int getPeerCount();
 	String getRoomId();
 	Map<Integer, EvictingQueue<Invocation>> getInvocationLogs();

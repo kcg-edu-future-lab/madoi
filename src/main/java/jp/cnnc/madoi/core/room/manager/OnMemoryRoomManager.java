@@ -23,8 +23,6 @@ public class OnMemoryRoomManager implements RoomManager{
 				while(it.hasNext()) {
 					Map.Entry<String, Long> e = it.next();
 					if(cur > e.getValue()) {
-						Room r = rooms.get(e.getKey());
-						r.onRoomEnded();
 						rooms.remove(e.getKey());
 						it.remove();
 					}
@@ -77,9 +75,7 @@ public class OnMemoryRoomManager implements RoomManager{
 	}
 
 	protected Room newRoom(String roomId){
-		Room r = new DefaultRoom(roomId, new PrintRoomEventLogger());
-		r.onRoomStarted();
-		return r;
+		return new DefaultRoom(roomId, new PrintRoomEventLogger());
 	}
 
 	private Map<String, Long> roomTtls = new HashMap<>();

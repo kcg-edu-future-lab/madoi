@@ -2,7 +2,9 @@ package jp.cnnc.madoi.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -11,9 +13,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.Invocation;
 import jp.cnnc.madoi.core.message.LeaveRoom;
+import jp.cnnc.madoi.core.message.LoginRoom;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 public class MockPeer implements Peer {
 	public MockPeer(String id, Room room){
@@ -35,7 +39,17 @@ public class MockPeer implements Peer {
 	public void setOrder(int order) {
 		this.order = order;
 	}
-	
+
+	@Override
+	public Map<String, Object> getProfile() {
+		return profile;
+	}
+
+	@Override
+	public void setProfile(Map<String, Object> profile) {
+		this.profile = profile;
+	}
+
 	public void setIoeOnSend(boolean ioeOnSend) {
 		this.ioeOnSend = ioeOnSend;
 	}
@@ -61,10 +75,19 @@ public class MockPeer implements Peer {
 		messages.add(message);
 	}
 
+	public void peerArriveAndLoginRoom() {
+		peerArrive();
+		loginRoom();
+	}
+
 	public void peerArrive() {
 		room.onPeerArrive(this);
 	}
 
+	public void loginRoom() {
+		room.onPeerMessage(id, JSON.encode(new LoginRoom("", Collections.emptyMap(), Collections.emptyMap())));
+	}
+	
 	public void peerLeave() {
 		room.onPeerLeave(id);
 	}
@@ -77,9 +100,18 @@ public class MockPeer implements Peer {
 		return messages;
 	}
 
+	public int getSentMessageCount() {
+		return messages.size();
+	}
+	
+	public Message getSentMessageAt(int index) {
+		return messages.get(index);
+	}
+
 	private String id;
 	private Room room;
 	private int order;
+	private Map<String, Object> profile;
 	private List<Message> messages = new ArrayList<>();
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
