@@ -27,7 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -46,7 +45,6 @@ import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.FunctionInfo;
 import jp.cnnc.madoi.core.message.Invocation;
 import jp.cnnc.madoi.core.message.LoginRoom;
-import jp.cnnc.madoi.core.message.ObjectInfo;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
@@ -133,9 +131,10 @@ public class DefaultRoom implements Room{
 				.collect(Collectors.toList())
 				));
 		// statesから状態を送信
-		for(Map.Entry<Integer, String> e : objectStates.entrySet()) {
-			var state = new ObjectState(e.getKey(), e.getValue());
-			er.getHistories().add(state);
+		for(var oi : objectInfos.values()) {
+			if(oi.getState() != null) {
+				er.getHistories().add(new ObjectState(oi.getObjectId(), oi.getState(), oi.getRevision()));
+			}
 		}
 		for(Collection<Invocation> ils : invocationLogs.values()) {
 			for(Invocation i : ils) {
@@ -195,7 +194,7 @@ public class DefaultRoom implements Room{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();
 				try {
-					var oc = decode(peerId, message, ObjectInfo.class);
+					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.ObjectInfo.class);
 					var methodIndexes = new LinkedHashSet<Integer>();
 					for(var mi : oc.getMethods()) {
 						var sc = mi.getConfig().getShare();
@@ -211,7 +210,8 @@ public class DefaultRoom implements Room{
 							execAndSendMethods.add(funcId);
 						}
 					}
-					objectMethods.put(oc.getObjId(), methodIndexes);
+					objectInfos.computeIfAbsent(oc.getObjId(), ObjectInfo::new)
+						.setMethods(methodIndexes);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
@@ -242,10 +242,10 @@ public class DefaultRoom implements Room{
 				recipients.clear();;
 				try {
 					var os = decode(peerId, message, ObjectState.class);
-					int objId = os.getObjId();
-					String state = os.getState();
-					objectStates.put(objId, state);
-					for(int mi : objectMethods.getOrDefault(objId, Collections.emptySet())) {
+					var oi = objectInfos.computeIfAbsent(os.getObjId(), id->new ObjectInfo(id));
+					oi.setState(os.getState());
+					oi.setRevision(os.getRevision());
+					for(int mi : oi.getMethods()) {
 						EvictingQueue<Invocation> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}
@@ -260,8 +260,11 @@ public class DefaultRoom implements Room{
 				try {
 					var iv = decode(peerId, message, Invocation.class);
 					if(iv.getObjId() != null) {
-						var ai = objRevision.computeIfAbsent(iv.getObjId(), i->new AtomicInteger());
-						iv.setObjRevision(ai.getAndIncrement());
+						var oi = objectInfos.computeIfAbsent(iv.getObjId(), ObjectInfo::new);
+						// var cr = oi.getRevision();
+						// oiのリビジョンとivのリビジョンを照合する？
+						// 実行後にリビジョンが上がるので+1しておく
+						oi.setRevision(iv.getObjRevision() + 1);
 					}
 					message = om.writeValueAsString(iv);
 					var fid = iv.getFuncId();
@@ -417,10 +420,57 @@ public class DefaultRoom implements Room{
 	private RoomEventLogger eventLogger;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+	private static class ObjectInfo{
+		public ObjectInfo(int id) {
+			this.objectId = id;
+		}
+		public int getObjectId() {
+			return objectId;
+		}
+//		public EvictingQueue<Invocation> getInvocationLogs() {
+//			return invocationLogs;
+//		}
+//		public void setInvocationLogs(EvictingQueue<Invocation> invocationLogs) {
+//			this.invocationLogs = invocationLogs;
+//		}
+		public String getState() {
+			return state;
+		}
+		public void setState(String state) {
+			this.state = state;
+		}
+		public int getRevision() {
+			return revision;
+		}
+		public void setRevision(int revision) {
+			this.revision = revision;
+		}
+		public Set<Integer> getMethods() {
+			return methods;
+		}
+		public void setMethods(Set<Integer> methods) {
+			this.methods = methods;
+		}
+//		public Set<Integer> getExecAndSendMethods() {
+//			return execAndSendMethods;
+//		}
+//		public void setExecAndSendMethods(Set<Integer> execAndSendMethods) {
+//			this.execAndSendMethods = execAndSendMethods;
+//		}
+
+		private int objectId;
+//		private EvictingQueue<Invocation> invocationLogs;
+		private String state;
+		private int revision = -1;
+		private Set<Integer> methods = new HashSet<>();
+//		private Set<Integer> execAndSendMethods = new HashSet<>();;
+	}
+
+	private Map<Integer, ObjectInfo> objectInfos = new LinkedHashMap<>();
 	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
-	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
-	private Map<Integer, String> objectStates = new LinkedHashMap<>();
-	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
+//	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
+//	private Map<Integer, String> objectStates = new LinkedHashMap<>();
+//	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
 	private Set<Integer> execAndSendMethods = new HashSet<>();
 
 	private Map<String, Peer> waitingPeers = new HashMap<>();
