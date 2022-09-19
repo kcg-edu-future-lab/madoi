@@ -3,6 +3,7 @@ package jp.cnnc.madoi.core;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jp.cnnc.madoi.core.message.CustomMessage;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.Invocation;
 import jp.cnnc.madoi.core.message.LeaveRoom;
@@ -17,11 +19,13 @@ import jp.cnnc.madoi.core.message.LoginRoom;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 public class MockPeer implements Peer {
-	public MockPeer(String id, Room room){
+	public MockPeer(String id, String name, Room room){
 		this.id = id;
+		this.profile.put("name", name);
 		this.room = room;
 	}
 
@@ -63,8 +67,10 @@ public class MockPeer implements Peer {
 		case "LeaveRoom":{m = om.readValue(text, LeaveRoom.class); break;}
 		case "PeerJoin":{m = om.readValue(text, PeerJoin.class); break;}
 		case "PeerLeave":{m = om.readValue(text, PeerLeave.class); break;}
+		case "UpdatePeerProfile":{m = om.readValue(text, UpdatePeerProfile.class); break;}
 		case "Invocation":{m = om.readValue(text, Invocation.class); break;}
 		case "ObjectState":{m = om.readValue(text, ObjectState.class); break;}
+		default:{m = om.readValue(text, CustomMessage.class); break;}
 		}
 		messages.add(m);
 	}
@@ -85,11 +91,18 @@ public class MockPeer implements Peer {
 	}
 
 	public void loginRoom() {
-		room.onPeerMessage(id, JSON.encode(new LoginRoom("", Collections.emptyMap(), Collections.emptyMap())));
+		room.onPeerMessage(id, JSON.encode(new LoginRoom("", Collections.emptyMap(), profile)));
 	}
-	
+
 	public void peerLeave() {
 		room.onPeerLeave(id);
+	}
+
+	@SuppressWarnings("serial")
+	public void updatePeerProfileChangeName(String name) {
+		profile.put("name", name);
+		room.onPeerMessage(id, JSON.encode(new UpdatePeerProfile(
+				id, new HashMap<>() {{put("name", name);}}, null)));
 	}
 
 	public void peerMessage(Message m) throws JsonProcessingException {
@@ -111,7 +124,7 @@ public class MockPeer implements Peer {
 	private String id;
 	private Room room;
 	private int order;
-	private Map<String, Object> profile;
+	private Map<String, Object> profile = new HashMap<>();
 	private List<Message> messages = new ArrayList<>();
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
