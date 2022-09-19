@@ -42,13 +42,14 @@ import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.Peer;
 import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.message.EnterRoom;
-import jp.cnnc.madoi.core.message.FunctionInfo;
+import jp.cnnc.madoi.core.message.FunctionDefinition;
 import jp.cnnc.madoi.core.message.Invocation;
 import jp.cnnc.madoi.core.message.LoginRoom;
 import jp.cnnc.madoi.core.message.ObjectState;
 import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerJoin;
 import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 
 /**
@@ -117,15 +118,14 @@ public class DefaultRoom implements Room{
 
 		for(Peer p : peers.values()) {
 			try {
-				p.sendMessage(new PeerJoin(peer.getId(), peer.getProfile()));
+				p.sendMessage(new PeerJoin(new PeerInfo(peer.getId(), peer.getOrder(), peer.getProfile())));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 
 		EnterRoom er = new EnterRoom();
-		er.setRoomId(this.roomId);
-		er.setPeerId(peer.getId());
+		er.setSelfPeerId(peer.getId());
 		er.setPeers(new ArrayList<>(
 				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder(), p.getProfile()))
 				.collect(Collectors.toList())
@@ -150,6 +150,7 @@ public class DefaultRoom implements Room{
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public synchronized void onPeerMessage(String peerId, String message) {
 		var wp = waitingPeers.remove(peerId);
@@ -190,11 +191,11 @@ public class DefaultRoom implements Room{
 				recipients.clear();;
 				break;
 			}
-			case "ObjectInfo":{
+			case "ObjectDefinition":{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();
 				try {
-					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.ObjectInfo.class);
+					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.ObjectDefinition.class);
 					var methodIndexes = new LinkedHashSet<Integer>();
 					for(var mi : oc.getMethods()) {
 						var sc = mi.getConfig().getShare();
@@ -218,11 +219,11 @@ public class DefaultRoom implements Room{
 				}
 				break;
 			}
-			case "FunctionInfo":{
+			case "FunctionDefinition":{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();;
 				try {
-					var fi = decode(peerId, message, FunctionInfo.class);
+					var fi = decode(peerId, message, FunctionDefinition.class);
 					var funcId = fi.getFuncId();
 					if(fi.getConfig().getMaxLog() > 0) {
 						invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
@@ -231,6 +232,25 @@ public class DefaultRoom implements Room{
 					if(fi.getConfig().getType().equals(SharingType.afterExec)) {
 						execAndSendMethods.add(funcId);
 					}
+				} catch(JsonProcessingException e) {
+					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					return;
+				}
+				break;
+			}
+			case "UpdatePeerProfile": {
+				ct = CastType.OTHERCAST;
+				recipients.clear();
+				try {
+					var msg = decode(peerId, message, UpdatePeerProfile.class);
+					if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
+						peer.getProfile().put(e.getKey(), e.getValue());
+					}
+					if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
+						peer.getProfile().remove(k);
+					}
+					msg.setPeerId(peerId);
+					message = om.writeValueAsString(msg);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
@@ -275,7 +295,7 @@ public class DefaultRoom implements Room{
 					} else {
 						ct = CastType.BROADCAST;
 					}
-					recipients.clear();;
+					recipients.clear();
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;

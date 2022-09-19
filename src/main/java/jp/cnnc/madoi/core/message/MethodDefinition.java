@@ -3,15 +3,15 @@ package jp.cnnc.madoi.core.message;
 import jp.cnnc.madoi.core.message.config.MethodConfig;
 import jp.cnnc.madoi.core.message.config.ShareConfig;
 
-public class MethodInfo {
-	public MethodInfo() {
+public class MethodDefinition {
+	public MethodDefinition() {
 	}
-	public MethodInfo(Integer funcId, String name, MethodConfig config) {
+	public MethodDefinition(Integer funcId, String name, MethodConfig config) {
 		this.funcId = funcId;
 		this.name = name;
 		this.config = config;
 	}
-	public MethodInfo(Integer funcId, String name, ShareConfig config) {
+	public MethodDefinition(Integer funcId, String name, ShareConfig config) {
 		this.funcId = funcId;
 		this.name = name;
 		this.config = new MethodConfig(config);

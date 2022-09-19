@@ -9,37 +9,19 @@ public class EnterRoom extends Message{
 	public EnterRoom() {
 	}
 
-	public EnterRoom(String roomId, String name, String peerId,
+	public EnterRoom(String selfPeerId,
 			List<PeerInfo> peers, List<Message> histories) {
-		this.roomId = roomId;
-		this.name = name;
-		this.peerId = peerId;
+		this.selfPeerId = selfPeerId;
 		this.peers = peers;
 		this.histories = histories;
 	}
 
-	public String getRoomId() {
-		return roomId;
+	public String getSelfPeerId() {
+		return selfPeerId;
 	}
 
-	public void setRoomId(String roomId) {
-		this.roomId = roomId;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getPeerId() {
-		return peerId;
-	}
-
-	public void setPeerId(String peerId) {
-		this.peerId = peerId;
+	public void setSelfPeerId(String peerId) {
+		this.selfPeerId = peerId;
 	}
 
 	public List<PeerInfo> getPeers() {
@@ -58,9 +40,7 @@ public class EnterRoom extends Message{
 		this.histories = histories;
 	}
 
-	private String roomId;
-	private String name;
-	private String peerId;
+	private String selfPeerId;
 	private List<PeerInfo> peers = new ArrayList<>();
 	private List<Message> histories = new ArrayList<>();
 }

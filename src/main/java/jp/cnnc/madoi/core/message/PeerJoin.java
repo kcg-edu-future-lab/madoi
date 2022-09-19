@@ -1,32 +1,22 @@
 package jp.cnnc.madoi.core.message;
 
-import java.util.Map;
-
 import jp.cnnc.madoi.core.Message;
 
 public class PeerJoin extends Message{
 	public PeerJoin() {
 	}
 
-	public PeerJoin(String peerId, Map<String, Object> peerProfile) {
-		this.peerId = peerId;
-		this.peerProfile = peerProfile;
+	public PeerJoin(PeerInfo peer) {
+		this.peer = peer;
 	}
 
-	public String getPeerId() {
-		return peerId;
-	}
-	
-	public void setPeerId(String peerId) {
-		this.peerId = peerId;
-	}
-	public Map<String, Object> getPeerProfile() {
-		return peerProfile;
-	}
-	public void setPeerProfile(Map<String, Object> peerProfile) {
-		this.peerProfile = peerProfile;
+	public PeerInfo getPeer() {
+		return peer;
 	}
 
-	private String peerId;
-	private Map<String, Object> peerProfile;
+	public void setPeer(PeerInfo peer) {
+		this.peer = peer;
+	}
+
+	private PeerInfo peer;
 }

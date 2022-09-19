@@ -5,10 +5,10 @@ import java.util.List;
 
 import jp.cnnc.madoi.core.Message;
 
-public class ObjectInfo extends Message{
-	public ObjectInfo() {
+public class ObjectDefinition extends Message{
+	public ObjectDefinition() {
 	}
-	public ObjectInfo(int objId, String className, List<MethodInfo> methods) {
+	public ObjectDefinition(int objId, String className, List<MethodDefinition> methods) {
 		this.objId = objId;
 		this.className = className;
 		this.methods = methods;
@@ -25,14 +25,14 @@ public class ObjectInfo extends Message{
 	public void setClassName(String className) {
 		this.className = className;
 	}
-	public List<MethodInfo> getMethods() {
+	public List<MethodDefinition> getMethods() {
 		return methods;
 	}
-	public void setMethods(List<MethodInfo> methods) {
+	public void setMethods(List<MethodDefinition> methods) {
 		this.methods = methods;
 	}
 
 	private int objId;
 	private String className;
-	private List<MethodInfo> methods = new ArrayList<>();
+	private List<MethodDefinition> methods = new ArrayList<>();
 }
