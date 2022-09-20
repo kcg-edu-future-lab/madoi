@@ -6,34 +6,47 @@ import java.util.List;
 import jp.cnnc.madoi.core.Message;
 
 public class EnterRoom extends Message{
-	public EnterRoom() {
+	public static class SelfPeer{
+		public SelfPeer() {
+		}
+		public SelfPeer(String id, int order) {
+			this.id = id;
+			this.order = order;
+		}
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+		public int getOrder() {
+			return order;
+		}
+		public void setOrder(int order) {
+			this.order = order;
+		}
+
+		private String id;
+		private int order;
 	}
 
-	public EnterRoom(String selfPeerId, int selfPeerOrder,
-			List<PeerInfo> peers, List<Message> histories) {
-		this.selfPeerId = selfPeerId;
-		this.selfPeerOrder = selfPeerOrder;
+	public EnterRoom() {
+	}
+	public EnterRoom(SelfPeer self, List<PeerInfo> peers, List<Message> histories) {
+		this.self = self;
 		this.peers = peers;
 		this.histories = histories;
 	}
 
-	public String getSelfPeerId() {
-		return selfPeerId;
+	public SelfPeer getSelf() {
+		return self;
 	}
-
-	public void setSelfPeerId(String peerId) {
-		this.selfPeerId = peerId;
-	}
-	public int getSelfPeerOrder() {
-		return selfPeerOrder;
-	}
-	public void setSelfPeerOrder(int selfPeerOrder) {
-		this.selfPeerOrder = selfPeerOrder;
+	public void setSelf(SelfPeer self) {
+		this.self = self;
 	}
 	public List<PeerInfo> getPeers() {
 		return peers;
 	}
-	
 	public void setPeers(List<PeerInfo> peers) {
 		this.peers = peers;
 	}
@@ -44,8 +57,7 @@ public class EnterRoom extends Message{
 		this.histories = histories;
 	}
 
-	private String selfPeerId;
-	private int selfPeerOrder;
+	private SelfPeer self;
 	private List<PeerInfo> peers = new ArrayList<>();
 	private List<Message> histories = new ArrayList<>();
 }

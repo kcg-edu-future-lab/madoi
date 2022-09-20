@@ -141,8 +141,7 @@ public class DefaultRoom implements Room{
 		}
 
 		EnterRoom er = new EnterRoom();
-		er.setSelfPeerId(peer.getId());
-		er.setSelfPeerOrder(peer.getOrder());
+		er.setSelf(new EnterRoom.SelfPeer(peer.getId(), peer.getOrder()));
 		er.setPeers(new ArrayList<>(
 				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder(), p.getProfile()))
 				.collect(Collectors.toList())
@@ -319,12 +318,20 @@ public class DefaultRoom implements Room{
 				}
 				break;
 			}
-			default:
+			default:{
+				try {
+					var msg = om.readValue(message, Map.class);
+					msg.put("sender", peerId);
+					message = om.writeValueAsString(msg);
+				} catch(JsonProcessingException e) {
+					e.printStackTrace();
+				}
 				break;
+			}
 		}
 		if(ct == null){
 			ct = CastType.BROADCAST;
-			recipients.clear();;
+			recipients.clear();
 		}
 		if(ct.equals(CastType.CLIENTTOSERVER)) return;
 		if(ct.equals(CastType.SELFCAST)) {

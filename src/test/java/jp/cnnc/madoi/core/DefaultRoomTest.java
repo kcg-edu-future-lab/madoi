@@ -53,11 +53,11 @@ public class DefaultRoomTest {
 		peer2.peerArriveAndLoginRoom();
 		assertEquals(2, peer1.getSentMessageCount());
 		assertEquals("EnterRoom", peer1.getSentMessageAt(0).getType());
-		assertEquals(1, ((EnterRoom)peer1.getSentMessageAt(0)).getSelfPeerOrder());
+		assertEquals(1, ((EnterRoom)peer1.getSentMessageAt(0)).getSelf().getOrder());
 		assertEquals("PeerJoin", peer1.getSentMessageAt(1).getType());
 		assertEquals(1, peer2.getSentMessageCount());
 		assertEquals("EnterRoom", peer2.getSentMessageAt(0).getType());
-		assertEquals(2, ((EnterRoom)peer2.getSentMessageAt(0)).getSelfPeerOrder());
+		assertEquals(2, ((EnterRoom)peer2.getSentMessageAt(0)).getSelf().getOrder());
 		assertEquals("peer1", ((EnterRoom)peer2.getSentMessageAt(0)).getPeers().get(0).getId());
 	}
 
