@@ -105,10 +105,26 @@ public class DefaultRoom implements Room{
 		}
 	}
 
+	/**
+	 * このルームに入っても良いかを判定する。
+	 * @param peer ピア
+	 * @param loginRoom LoginRoomメッセージ
+	 * @return
+	 */
+	protected boolean canPeerEnter(Peer peer, LoginRoom loginRoom) {
+		return true;
+	}
+	
 	private void onWaitingPeerMessage(Peer peer, String message) {
 		LoginRoom lr = null;
 		try {
 			lr = decode(peer.getId(), message, LoginRoom.class);
+			if(!canPeerEnter(peer, lr)) {
+				castMessageTo(CastType.SERVERTOCLIENT, peer,
+						new jp.cnnc.madoi.core.message.Error("Login error."));
+				return;
+			}
+			peer.setOrder(peerOrder++);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(roomId, peer.getId(), null, message);
@@ -126,6 +142,7 @@ public class DefaultRoom implements Room{
 
 		EnterRoom er = new EnterRoom();
 		er.setSelfPeerId(peer.getId());
+		er.setSelfPeerOrder(peer.getOrder());
 		er.setPeers(new ArrayList<>(
 				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder(), p.getProfile()))
 				.collect(Collectors.toList())
@@ -437,6 +454,7 @@ public class DefaultRoom implements Room{
 	}
 
 	private String roomId;
+	private int peerOrder = 1;
 	private RoomEventLogger eventLogger;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
