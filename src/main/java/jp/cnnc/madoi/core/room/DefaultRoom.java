@@ -245,7 +245,8 @@ public class DefaultRoom implements Room{
 						invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
 								Math.min(fi.getConfig().getMaxLog(), 10000)));
 					}
-					if(fi.getConfig().getType().equals(SharingType.afterExec)) {
+					System.out.println("check method type");
+					if(SharingType.afterExec.equals(fi.getConfig().getType())) {
 						execAndSendMethods.add(funcId);
 					}
 				} catch(JsonProcessingException e) {
@@ -304,7 +305,8 @@ public class DefaultRoom implements Room{
 					}
 					message = om.writeValueAsString(iv);
 					var fid = iv.getFuncId();
-					EvictingQueue<Invocation> q = invocationLogs.get(fid);
+					var q = invocationLogs.get(fid);
+					System.out.printf("logs of %d is %d.%n", fid, (q != null) ? q.size() : null);
 					if(q != null) q.add(iv);
 					if(execAndSendMethods.contains(fid)) {
 						ct = CastType.OTHERCAST;
