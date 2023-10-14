@@ -16,16 +16,27 @@
 sequenceDiagram
   Peer1->>Server: EnterRoom(selfId?: string, roomSpec?: {}, profile?: {}
   alt OK
-    Server->>Peer1: EnterRoomAllowed
+    Server->>Peer1: EnterRoomAllowed(self: {peerId: string, order: number}, peers: PeerInfo[], histories: (MethodInvoked|ObjectStateChanged)[])
     Server->>Peer2: PeerEntered(peerId: string, profile?: {})
-    Peer1->>Server: UpdateProfile(peerId: string, updates?: {}, deletes?: string[])
-    Peer1->>Server: DefineFunction
-    Peer1->>Server: DefineObject
-    Peer1->>Server: DefineMethod
-    Peer1->>Server: NotifyOjectState(objectId: string, state: {})
   else NG
     Server->>Peer1: EnterRoomDenied
   end  
+```
+
+### 入室後
+```mermaid
+sequenceDiagram
+  Peer1->>Server: UpdateProfile(peerId: string, updates?: {}, deletes?: string[])
+  Server->>Peer2: PeerProfileUpdated(peerId: string, updates?: {}, deletes?: string[])
+  Peer1->>Server: DefineFunction
+  Peer1->>Server: DefineObject
+  Peer1->>Server: DefineMethod
+  Peer1->>Server: InvokeMethod
+  Server->>Peer1: MethodInvoked
+  Server->>Peer2: MethodInvoked
+  Peer1->>Server: NotifyOjectState(objectId: string, state: {})
+  Server->>Peer1: ObjectStateChanged
+  Server->>Peer2: ObjectStateChanged  
 ```
 
 ### 退室時
