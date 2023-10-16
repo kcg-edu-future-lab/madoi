@@ -12,14 +12,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jp.cnnc.madoi.core.message.CustomMessage;
-import jp.cnnc.madoi.core.message.EnterRoom;
-import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.message.EnterRoomAllowed;
+import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
 import jp.cnnc.madoi.core.message.LeaveRoom;
-import jp.cnnc.madoi.core.message.LoginRoom;
-import jp.cnnc.madoi.core.message.ObjectState;
-import jp.cnnc.madoi.core.message.PeerJoin;
-import jp.cnnc.madoi.core.message.PeerLeave;
-import jp.cnnc.madoi.core.message.UpdatePeerProfile;
+import jp.cnnc.madoi.core.message.EnterRoom;
+import jp.cnnc.madoi.core.message.NotifyObjectState;
+import jp.cnnc.madoi.core.message.PeerEntered;
+import jp.cnnc.madoi.core.message.PeerLeaved;
+import jp.cnnc.madoi.core.message.PeerProfileUpdated;
 import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 public class MockPeer implements Peer {
@@ -63,13 +63,13 @@ public class MockPeer implements Peer {
 		if(ioeOnSend) throw new IOException();
 		Message m = om.readValue(text, Message.class);
 		switch(m.getType()) {
-		case "EnterRoom":{m = om.readValue(text, EnterRoom.class); break;}
+		case "EnterRoom":{m = om.readValue(text, EnterRoomAllowed.class); break;}
 		case "LeaveRoom":{m = om.readValue(text, LeaveRoom.class); break;}
-		case "PeerJoin":{m = om.readValue(text, PeerJoin.class); break;}
-		case "PeerLeave":{m = om.readValue(text, PeerLeave.class); break;}
-		case "UpdatePeerProfile":{m = om.readValue(text, UpdatePeerProfile.class); break;}
-		case "Invocation":{m = om.readValue(text, Invocation.class); break;}
-		case "ObjectState":{m = om.readValue(text, ObjectState.class); break;}
+		case "PeerJoin":{m = om.readValue(text, PeerEntered.class); break;}
+		case "PeerLeave":{m = om.readValue(text, PeerLeaved.class); break;}
+		case "UpdatePeerProfile":{m = om.readValue(text, PeerProfileUpdated.class); break;}
+		case "Invocation":{m = om.readValue(text, InvokeMethodOrFunction.class); break;}
+		case "ObjectState":{m = om.readValue(text, NotifyObjectState.class); break;}
 		default:{m = om.readValue(text, CustomMessage.class); break;}
 		}
 		messages.add(m);
@@ -91,7 +91,7 @@ public class MockPeer implements Peer {
 	}
 
 	public void loginRoom() {
-		room.onPeerMessage(id, JSON.encode(new LoginRoom("", Collections.emptyMap(), profile)));
+		room.onPeerMessage(id, JSON.encode(new EnterRoom("", Collections.emptyMap(), profile)));
 	}
 
 	public void peerLeave() {
@@ -101,7 +101,7 @@ public class MockPeer implements Peer {
 	@SuppressWarnings("serial")
 	public void updatePeerProfileChangeName(String name) {
 		profile.put("name", name);
-		room.onPeerMessage(id, JSON.encode(new UpdatePeerProfile(
+		room.onPeerMessage(id, JSON.encode(new PeerProfileUpdated(
 				id, new HashMap<>() {{put("name", name);}}, null)));
 	}
 

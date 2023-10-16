@@ -3,10 +3,10 @@ package jp.cnnc.madoi.core.message;
 import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.message.config.ShareConfig;
 
-public class FunctionDefinition extends Message{
-	public FunctionDefinition() {
+public class DefineFunction extends Message{
+	public DefineFunction() {
 	}
-	public FunctionDefinition(int funcId, String name, ShareConfig config) {
+	public DefineFunction(int funcId, String name, ShareConfig config) {
 		this.funcId = funcId;
 		this.name = name;
 		this.config = config;

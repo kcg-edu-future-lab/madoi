@@ -43,7 +43,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   Peer1->>Server: LeaveRoom
-  Server->>Peer1: LeaveRoomAllowed
+  Server->>Peer1: LeaveRoomDone
   Server->>Peer2: PeerLeaved(peerId: string)
 ```
 ```mermaid

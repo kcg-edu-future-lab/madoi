@@ -2,11 +2,11 @@ package jp.cnnc.madoi.core.message;
 
 import jp.cnnc.madoi.core.Message;
 
-public class PeerJoin extends Message{
-	public PeerJoin() {
+public class PeerEntered extends Message{
+	public PeerEntered() {
 	}
 
-	public PeerJoin(PeerInfo peer) {
+	public PeerEntered(PeerInfo peer) {
 		this.peer = peer;
 	}
 

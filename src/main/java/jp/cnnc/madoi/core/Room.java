@@ -19,7 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.EvictingQueue;
 
-import jp.cnnc.madoi.core.message.Invocation;
+import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
 
 public interface Room {
 	void onPeerArrive(Peer peer);
@@ -29,5 +29,5 @@ public interface Room {
 	void onPeerError(String peerId, Throwable cause);
 	int getPeerCount();
 	String getRoomId();
-	Map<Integer, EvictingQueue<Invocation>> getInvocationLogs();
+	Map<Integer, EvictingQueue<InvokeMethodOrFunction>> getInvocationLogs();
 }

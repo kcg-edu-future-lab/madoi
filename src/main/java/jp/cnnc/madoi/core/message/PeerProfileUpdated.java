@@ -5,14 +5,23 @@ import java.util.Map;
 
 import jp.cnnc.madoi.core.Message;
 
-public class UpdatePeerProfile extends Message{
-	public UpdatePeerProfile() {
+public class PeerProfileUpdated extends Message{
+	public PeerProfileUpdated() {
 	}
 
-	public UpdatePeerProfile(Map<String, Object> updates, List<String> deletes) {
+	public PeerProfileUpdated(String peerId, Map<String, Object> updates, List<String> deletes) {
 		super();
+		this.peerId = peerId;
 		this.updates = updates;
 		this.deletes = deletes;
+	}
+
+	public String getPeerId() {
+		return peerId;
+	}
+
+	public void setPeerId(String peerId) {
+		this.peerId = peerId;
 	}
 
 	public Map<String, Object> getUpdates() {
@@ -31,6 +40,7 @@ public class UpdatePeerProfile extends Message{
 		this.deletes = deletes;
 	}
 
+	private String peerId;
 	private Map<String, Object> updates;
 	private List<String> deletes;
 }

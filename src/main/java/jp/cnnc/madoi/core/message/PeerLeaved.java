@@ -2,11 +2,11 @@ package jp.cnnc.madoi.core.message;
 
 import jp.cnnc.madoi.core.Message;
 
-public class PeerLeave extends Message{
-	public PeerLeave() {
+public class PeerLeaved extends Message{
+	public PeerLeaved() {
 	}
 
-	public PeerLeave(String peerId) {
+	public PeerLeaved(String peerId) {
 		this.peerId = peerId;
 	}
 

@@ -9,14 +9,14 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import jp.cnnc.madoi.core.message.EnterRoom;
-import jp.cnnc.madoi.core.message.FunctionDefinition;
-import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.MethodDefinition;
-import jp.cnnc.madoi.core.message.ObjectDefinition;
-import jp.cnnc.madoi.core.message.ObjectState;
-import jp.cnnc.madoi.core.message.PeerJoin;
-import jp.cnnc.madoi.core.message.UpdatePeerProfile;
+import jp.cnnc.madoi.core.message.EnterRoomAllowed;
+import jp.cnnc.madoi.core.message.DefineFunction;
+import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.DefineMethod;
+import jp.cnnc.madoi.core.message.DefineObject;
+import jp.cnnc.madoi.core.message.NotifyObjectState;
+import jp.cnnc.madoi.core.message.PeerEntered;
+import jp.cnnc.madoi.core.message.PeerProfileUpdated;
 import jp.cnnc.madoi.core.message.config.ShareConfig;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 import jp.cnnc.madoi.core.room.DefaultRoom;
@@ -31,7 +31,7 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArrive();
-		peer1.sendMessage(new Invocation(1, 1, "foo", new Object[] {}));
+		peer1.sendMessage(new InvokeMethodOrFunction(1, 1, "foo", new Object[] {}));
 		assertEquals(2, peer1.getSentMessageCount());
 		assertEquals("EnterRoom", peer1.getSentMessageAt(0).getType());
 		assertEquals("Invocation", peer1.getSentMessageAt(1).getType());
@@ -39,7 +39,7 @@ public class DefaultRoomTest {
 		peer2.loginRoom();
 		assertEquals(3, peer1.getSentMessageCount());
 		assertEquals("PeerJoin", peer1.getSentMessageAt(2).getType());
-		assertEquals("Peer2", ((PeerJoin)peer1.getSentMessageAt(2)).getPeer().getProfile().get("name"));
+		assertEquals("Peer2", ((PeerEntered)peer1.getSentMessageAt(2)).getPeer().getProfile().get("name"));
 		assertEquals(1, peer2.getSentMessageCount());
 		assertEquals("EnterRoom", peer2.getSentMessageAt(0).getType());
 	}
@@ -53,12 +53,12 @@ public class DefaultRoomTest {
 		peer2.peerArriveAndLoginRoom();
 		assertEquals(2, peer1.getSentMessageCount());
 		assertEquals("EnterRoom", peer1.getSentMessageAt(0).getType());
-		assertEquals(1, ((EnterRoom)peer1.getSentMessageAt(0)).getSelf().getOrder());
+		assertEquals(1, ((EnterRoomAllowed)peer1.getSentMessageAt(0)).getSelf().getOrder());
 		assertEquals("PeerJoin", peer1.getSentMessageAt(1).getType());
 		assertEquals(1, peer2.getSentMessageCount());
 		assertEquals("EnterRoom", peer2.getSentMessageAt(0).getType());
-		assertEquals(2, ((EnterRoom)peer2.getSentMessageAt(0)).getSelf().getOrder());
-		assertEquals("peer1", ((EnterRoom)peer2.getSentMessageAt(0)).getPeers().get(0).getId());
+		assertEquals(2, ((EnterRoomAllowed)peer2.getSentMessageAt(0)).getSelf().getOrder());
+		assertEquals("peer1", ((EnterRoomAllowed)peer2.getSentMessageAt(0)).getPeers().get(0).getId());
 	}
 
 	@Test
@@ -78,7 +78,7 @@ public class DefaultRoomTest {
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("PeerLeave", peer2.getSentMessages().get(1).getType());
 		assertEquals("PeerJoin", peer2.getSentMessages().get(2).getType());
-		assertEquals("peer2", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0).getId());
+		assertEquals("peer2", ((EnterRoomAllowed)peer3.getSentMessages().get(0)).getPeers().get(0).getId());
 	}
 
 	@Test
@@ -98,10 +98,10 @@ public class DefaultRoomTest {
 		assertEquals(3, peer2.getSentMessages().size());
 		assertEquals("EnterRoom", peer2.getSentMessages().get(0).getType());
 		assertEquals("UpdatePeerProfile", peer2.getSentMessages().get(1).getType());
-		assertEquals("Peer1NewName", ((UpdatePeerProfile)peer2.getSentMessages().get(1)).getUpdates().get("name"));
+		assertEquals("Peer1NewName", ((PeerProfileUpdated)peer2.getSentMessages().get(1)).getUpdates().get("name"));
 		assertEquals("PeerJoin", peer2.getSentMessages().get(2).getType());
-		assertEquals("peer1", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0).getId());
-		assertEquals("Peer1NewName", ((EnterRoom)peer3.getSentMessages().get(0)).getPeers().get(0).getProfile().get("name"));
+		assertEquals("peer1", ((EnterRoomAllowed)peer3.getSentMessages().get(0)).getPeers().get(0).getId());
+		assertEquals("Peer1NewName", ((EnterRoomAllowed)peer3.getSentMessages().get(0)).getPeers().get(0).getProfile().get("name"));
 	}
 
 	@Test
@@ -111,17 +111,17 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
-		assertTrue(peer1.getSentMessages().get(0) instanceof EnterRoom);
-		if(peer1.getSentMessages().get(0) instanceof EnterRoom) {
-			EnterRoom er1 = (EnterRoom)peer1.getSentMessages().get(0);
+		assertTrue(peer1.getSentMessages().get(0) instanceof EnterRoomAllowed);
+		if(peer1.getSentMessages().get(0) instanceof EnterRoomAllowed) {
+			EnterRoomAllowed er1 = (EnterRoomAllowed)peer1.getSentMessages().get(0);
 			assertEquals("EnterRoom", er1.getType());
 			assertEquals(0, er1.getPeers().size());
-			assertTrue(peer2.getSentMessages().get(0) instanceof EnterRoom);
+			assertTrue(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed);
 		} else {
 			fail();
 		}
-		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
-			EnterRoom er2 = (EnterRoom)peer2.getSentMessages().get(0);
+		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
+			EnterRoomAllowed er2 = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals("EnterRoom", er2.getType());
 			assertEquals(1, er2.getPeers().size());
 			assertEquals(peer1.getId(), er2.getPeers().get(0).getId());
@@ -138,8 +138,8 @@ public class DefaultRoomTest {
 		var peer = new MockPeer("peer1", "Peer1", room);
 
 		peer.peerArriveAndLoginRoom();
-		peer.peerMessage(new FunctionDefinition(1, "foo", new ShareConfig(SharingType.afterExec, 0)));
-		peer.peerMessage(new Invocation(1, 1, "foo", new Object[]{"arg1"}));
+		peer.peerMessage(new DefineFunction(1, "foo", new ShareConfig(SharingType.afterExec, 0)));
+		peer.peerMessage(new InvokeMethodOrFunction(1, 1, "foo", new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());
 		assertEquals("EnterRoom", ((Message)peer.getSentMessages().get(0)).getType());
@@ -173,18 +173,18 @@ public class DefaultRoomTest {
 		var room = new DefaultRoom("room1", new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new ObjectDefinition(0, "Test", Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+		peer1.peerMessage(new DefineObject(0, "Test", Arrays.asList(
+				new DefineMethod(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(0, "foo", new Object[] {}));
 		assertEquals(1, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
-		peer1.peerMessage(new ObjectState(0, "", 0));
+		peer1.peerMessage(new NotifyObjectState(0, "", 0));
 		assertEquals(0, room.getInvocationLogs().get(0).size());
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer2.peerArriveAndLoginRoom();
-		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
-			EnterRoom er = (EnterRoom)peer2.getSentMessages().get(0);
+		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
+			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals(1, er.getHistories().size());
 			assertEquals("ObjectState", er.getHistories().get(0).getType());
 		} else {
@@ -202,29 +202,29 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new ObjectDefinition(0, "Test", Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000)),
-				new MethodDefinition(1, "bar", new ShareConfig(SharingType.beforeExec, 1000))
+		peer1.peerMessage(new DefineObject(0, "Test", Arrays.asList(
+				new DefineMethod(0, "foo", new ShareConfig(SharingType.beforeExec, 1000)),
+				new DefineMethod(1, "bar", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new ObjectDefinition(1, "Test2", Arrays.asList(
-				new MethodDefinition(2, "foo2", new ShareConfig(SharingType.beforeExec, 1000))
+		peer1.peerMessage(new DefineObject(1, "Test2", Arrays.asList(
+				new DefineMethod(2, "foo2", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new Invocation(0, 0, "foo", new Object[] {}));
-		peer1.peerMessage(new Invocation(0, 1, "bar", new Object[] {}));
-		peer1.peerMessage(new Invocation(1, 2, "foo2", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(0, 1, "bar", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(1, 2, "foo2", new Object[] {}));
 		assertEquals(3, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
 		assertEquals(1, room.getInvocationLogs().get(1).size());
 		assertEquals(1, room.getInvocationLogs().get(2).size());
 
-		peer1.peerMessage(new ObjectState(0, "", 0));
+		peer1.peerMessage(new NotifyObjectState(0, "", 0));
 		assertEquals(0, room.getInvocationLogs().get(0).size());
 		assertEquals(0, room.getInvocationLogs().get(1).size());
 		assertEquals(1, room.getInvocationLogs().get(2).size());
 
 		peer2.peerArriveAndLoginRoom();
-		if(peer2.getSentMessages().get(0) instanceof EnterRoom) {
-			EnterRoom er = (EnterRoom)peer2.getSentMessages().get(0);
+		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
+			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals(2, er.getHistories().size());
 			assertEquals("ObjectState", er.getHistories().get(0).getType());
 			assertEquals("Invocation", er.getHistories().get(1).getType());
@@ -242,12 +242,12 @@ public class DefaultRoomTest {
 
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
-		peer1.peerMessage(new ObjectDefinition(0, "Test", Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+		peer1.peerMessage(new DefineObject(0, "Test", Arrays.asList(
+				new DefineMethod(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(0, "foo", new Object[] {}));
 		peer2.setIoeOnSend(true);
-		peer1.peerMessage(new Invocation(0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethodOrFunction(0, "foo", new Object[] {}));
 		{
 			var msgs = peer1.getSentMessages();
 			assertEquals(5, msgs.size());

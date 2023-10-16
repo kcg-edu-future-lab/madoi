@@ -41,14 +41,15 @@ import jp.cnnc.madoi.core.CastType;
 import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.Peer;
 import jp.cnnc.madoi.core.Room;
+import jp.cnnc.madoi.core.message.DefineFunction;
 import jp.cnnc.madoi.core.message.EnterRoom;
-import jp.cnnc.madoi.core.message.FunctionDefinition;
-import jp.cnnc.madoi.core.message.Invocation;
-import jp.cnnc.madoi.core.message.LoginRoom;
-import jp.cnnc.madoi.core.message.ObjectState;
+import jp.cnnc.madoi.core.message.EnterRoomAllowed;
+import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.NotifyObjectState;
+import jp.cnnc.madoi.core.message.PeerEntered;
 import jp.cnnc.madoi.core.message.PeerInfo;
-import jp.cnnc.madoi.core.message.PeerJoin;
-import jp.cnnc.madoi.core.message.PeerLeave;
+import jp.cnnc.madoi.core.message.PeerLeaved;
+import jp.cnnc.madoi.core.message.PeerProfileUpdated;
 import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 
@@ -75,7 +76,7 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public Map<Integer, EvictingQueue<Invocation>> getInvocationLogs() {
+	public Map<Integer, EvictingQueue<InvokeMethodOrFunction>> getInvocationLogs() {
 		return invocationLogs;
 	}
 
@@ -98,7 +99,7 @@ public class DefaultRoom implements Room{
 		if(peers.size() > 0) {
 			try {
 				castMessage(CastType.BROADCAST, Collections.emptyList(),
-					peerId, "PeerLeave", om.writeValueAsString(new PeerLeave(peerId)));
+					peerId, "PeerLeave", om.writeValueAsString(new PeerLeaved(peerId)));
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
@@ -111,14 +112,14 @@ public class DefaultRoom implements Room{
 	 * @param loginRoom LoginRoomメッセージ
 	 * @return
 	 */
-	protected boolean canPeerEnter(Peer peer, LoginRoom loginRoom) {
+	protected boolean canPeerEnter(Peer peer, EnterRoom loginRoom) {
 		return true;
 	}
 	
 	private void onWaitingPeerMessage(Peer peer, String message) {
-		LoginRoom lr = null;
+		EnterRoom lr = null;
 		try {
-			lr = decode(peer.getId(), message, LoginRoom.class);
+			lr = decode(peer.getId(), message, EnterRoom.class);
 			if(!canPeerEnter(peer, lr)) {
 				castMessageTo(CastType.SERVERTOCLIENT, peer,
 						new jp.cnnc.madoi.core.message.Error("Login error."));
@@ -134,26 +135,26 @@ public class DefaultRoom implements Room{
 
 		for(Peer p : peers.values()) {
 			try {
-				p.sendMessage(new PeerJoin(new PeerInfo(peer.getId(), peer.getOrder(), peer.getProfile())));
+				p.sendMessage(new PeerEntered(new PeerInfo(peer.getId(), peer.getOrder(), peer.getProfile())));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 
-		EnterRoom er = new EnterRoom();
-		er.setSelf(new EnterRoom.SelfPeer(peer.getId(), peer.getOrder()));
-		er.setPeers(new ArrayList<>(
+		EnterRoomAllowed er = new EnterRoomAllowed();
+		er.setSelfPeer(new PeerInfo(peer.getId(), peer.getOrder(), peer.getProfile()));
+		er.setOtherPeers(new ArrayList<>(
 				peers.values().stream().map(p -> new PeerInfo(p.getId(), p.getOrder(), p.getProfile()))
 				.collect(Collectors.toList())
 				));
 		// statesから状態を送信
 		for(var oi : objectInfos.values()) {
 			if(oi.getState() != null) {
-				er.getHistories().add(new ObjectState(oi.getObjectId(), oi.getState(), oi.getRevision()));
+				er.getHistories().add(new NotifyObjectState(oi.getObjectId(), oi.getState(), oi.getRevision()));
 			}
 		}
-		for(Collection<Invocation> ils : invocationLogs.values()) {
-			for(Invocation i : ils) {
+		for(Collection<InvokeMethodOrFunction> ils : invocationLogs.values()) {
+			for(InvokeMethodOrFunction i : ils) {
 				er.getHistories().add(i);
 			}
 		}
@@ -207,11 +208,11 @@ public class DefaultRoom implements Room{
 				recipients.clear();;
 				break;
 			}
-			case "ObjectDefinition":{
+			case "DefineObject":{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();
 				try {
-					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.ObjectDefinition.class);
+					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.DefineObject.class);
 					var methodIndexes = new LinkedHashSet<Integer>();
 					for(var mi : oc.getMethods()) {
 						var sc = mi.getConfig().getShare();
@@ -220,7 +221,7 @@ public class DefaultRoom implements Room{
 						int funcId = mi.getFuncId();
 						int maxLog = sc.getMaxLog();
 						if(maxLog > 0) {
-							invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
+							invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethodOrFunction>create(
 									Math.min(maxLog, 10000)));
 						}
 						if(sc.getType().equals(SharingType.afterExec)) {
@@ -235,14 +236,14 @@ public class DefaultRoom implements Room{
 				}
 				break;
 			}
-			case "FunctionDefinition":{
+			case "DefineFunction":{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();;
 				try {
-					var fi = decode(peerId, message, FunctionDefinition.class);
+					var fi = decode(peerId, message, DefineFunction.class);
 					var funcId = fi.getFuncId();
 					if(fi.getConfig().getMaxLog() > 0) {
-						invocationLogs.putIfAbsent(funcId, EvictingQueue.<Invocation>create(
+						invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethodOrFunction>create(
 								Math.min(fi.getConfig().getMaxLog(), 10000)));
 					}
 					System.out.println("check method type");
@@ -266,36 +267,36 @@ public class DefaultRoom implements Room{
 					if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
 						peer.getProfile().remove(k);
 					}
-					msg.setPeerId(peerId);
-					message = om.writeValueAsString(msg);
+					message = om.writeValueAsString(new PeerProfileUpdated(
+							msg.getSender(), msg.getUpdates(), msg.getDeletes()));
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
 			}
-			case "ObjectState": {
+			case "NotifyObjectState": {
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();;
 				try {
-					var os = decode(peerId, message, ObjectState.class);
+					var os = decode(peerId, message, NotifyObjectState.class);
 					var oi = objectInfos.computeIfAbsent(os.getObjId(), id->new ObjectInfo(id));
 					oi.setState(os.getState());
 					oi.setRevision(os.getRevision());
 					for(int mi : oi.getMethods()) {
-						EvictingQueue<Invocation> q = invocationLogs.get(mi);
+						EvictingQueue<InvokeMethodOrFunction> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}
 					eventLogger.stateChange(roomId, invocationLogs);
-					break;
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
+				break;
 			}
-			case "Invocation": {
+			case "InvokeMethodOrFunction": {
 				try {
-					var iv = decode(peerId, message, Invocation.class);
+					var iv = decode(peerId, message, InvokeMethodOrFunction.class);
 					if(iv.getObjId() != null) {
 						var oi = objectInfos.computeIfAbsent(iv.getObjId(), ObjectInfo::new);
 						// var cr = oi.getRevision();
@@ -304,7 +305,7 @@ public class DefaultRoom implements Room{
 						oi.setRevision(iv.getObjRevision() + 1);
 					}
 					message = om.writeValueAsString(iv);
-					var fid = iv.getFuncId();
+					var fid = iv.getMethodId();
 					var q = invocationLogs.get(fid);
 					System.out.printf("logs of %d is %d.%n", fid, (q != null) ? q.size() : null);
 					if(q != null) q.add(iv);
@@ -438,7 +439,7 @@ public class DefaultRoom implements Room{
 					peers.remove(id);
 					messages.addLast(new Cast(
 						CastType.BROADCAST, Collections.emptyList(),
-						"__SYSTEM__", "PeerLeave", encode(new PeerLeave(id))));
+						"__SYSTEM__", "PeerLeave", encode(new PeerLeaved(id))));
 					logger.log(Level.INFO, "Tried to send message to " + id, e);
 				}
 			}
@@ -461,11 +462,6 @@ public class DefaultRoom implements Room{
 			throw new RuntimeException(e);
 		}
 	}
-
-	private String roomId;
-	private int peerOrder = 1;
-	private RoomEventLogger eventLogger;
-	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 	private static class ObjectInfo{
 		public ObjectInfo(int id) {
@@ -513,8 +509,13 @@ public class DefaultRoom implements Room{
 //		private Set<Integer> execAndSendMethods = new HashSet<>();;
 	}
 
+	private String roomId;
+	private int peerOrder = 1;
+	private RoomEventLogger eventLogger;
+	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
 	private Map<Integer, ObjectInfo> objectInfos = new LinkedHashMap<>();
-	private Map<Integer, EvictingQueue<Invocation>> invocationLogs = new HashMap<>();
+	private Map<Integer, EvictingQueue<InvokeMethodOrFunction>> invocationLogs = new HashMap<>();
 //	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
 //	private Map<Integer, String> objectStates = new LinkedHashMap<>();
 //	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
