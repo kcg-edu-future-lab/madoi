@@ -11,21 +11,21 @@ public class DefineObject extends Message{
 	public static class MethodDefinition {
 		public MethodDefinition() {
 		}
-		public MethodDefinition(Integer funcId, String name, MethodConfig config) {
-			this.funcId = funcId;
+		public MethodDefinition(Integer methodId, String name, MethodConfig config) {
+			this.methodId = methodId;
 			this.name = name;
 			this.config = config;
 		}
-		public MethodDefinition(Integer funcId, String name, ShareConfig config) {
-			this.funcId = funcId;
+		public MethodDefinition(Integer methodId, String name, ShareConfig config) {
+			this.methodId = methodId;
 			this.name = name;
 			this.config = new MethodConfig(config);
 		}
-		public Integer getFuncId() {
-			return funcId;
+		public Integer getMethodId() {
+			return methodId;
 		}
-		public void setFuncId(Integer funcId) {
-			this.funcId = funcId;
+		public void setMethodId(Integer methodId) {
+			this.methodId = methodId;
 		}
 		public String getName() {
 			return name;
@@ -39,7 +39,7 @@ public class DefineObject extends Message{
 		public void setConfig(MethodConfig config) {
 			this.config = config;
 		}
-		private Integer funcId;
+		private Integer methodId;
 		private String name;
 		private MethodConfig config;
 	}
