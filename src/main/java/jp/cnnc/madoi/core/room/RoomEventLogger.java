@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
 import jp.cnnc.madoi.core.Message;
-import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.util.JsonUtil;
 
 public interface RoomEventLogger {
@@ -17,7 +17,7 @@ public interface RoomEventLogger {
 	void receiveMessage(String roomId, String peerId, String type, String message);
 
 	void stateChange(String roomId, String state);
-	default void stateChange(String roomId, Map<Integer, EvictingQueue<InvokeMethodOrFunction>> queue) {
+	default void stateChange(String roomId, Map<Integer, EvictingQueue<InvokeMethod>> queue) {
 		try {
 			stateChange(roomId, new ObjectMapper().writeValueAsString(queue));
 		} catch (JsonProcessingException e) {

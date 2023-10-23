@@ -44,7 +44,7 @@ import jp.cnnc.madoi.core.Room;
 import jp.cnnc.madoi.core.message.DefineFunction;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
-import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.NotifyObjectState;
 import jp.cnnc.madoi.core.message.PeerEntered;
 import jp.cnnc.madoi.core.message.PeerInfo;
@@ -76,7 +76,7 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public Map<Integer, EvictingQueue<InvokeMethodOrFunction>> getInvocationLogs() {
+	public Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs() {
 		return invocationLogs;
 	}
 
@@ -153,8 +153,8 @@ public class DefaultRoom implements Room{
 				er.getHistories().add(new NotifyObjectState(oi.getObjectId(), oi.getState(), oi.getRevision()));
 			}
 		}
-		for(Collection<InvokeMethodOrFunction> ils : invocationLogs.values()) {
-			for(InvokeMethodOrFunction i : ils) {
+		for(Collection<InvokeMethod> ils : invocationLogs.values()) {
+			for(InvokeMethod i : ils) {
 				er.getHistories().add(i);
 			}
 		}
@@ -221,7 +221,7 @@ public class DefaultRoom implements Room{
 						int methodId = mi.getMethodId();
 						int maxLog = sc.getMaxLog();
 						if(maxLog > 0) {
-							invocationLogs.putIfAbsent(methodId, EvictingQueue.<InvokeMethodOrFunction>create(
+							invocationLogs.putIfAbsent(methodId, EvictingQueue.<InvokeMethod>create(
 									Math.min(maxLog, 10000)));
 						}
 						if(sc.getType().equals(SharingType.afterExec)) {
@@ -243,7 +243,7 @@ public class DefaultRoom implements Room{
 					var fi = decode(peerId, message, DefineFunction.class);
 					var funcId = fi.getFuncId();
 					if(fi.getConfig().getMaxLog() > 0) {
-						invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethodOrFunction>create(
+						invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethod>create(
 								Math.min(fi.getConfig().getMaxLog(), 10000)));
 					}
 					System.out.println("check method type");
@@ -284,7 +284,7 @@ public class DefaultRoom implements Room{
 					oi.setState(os.getState());
 					oi.setRevision(os.getRevision());
 					for(int mi : oi.getMethods()) {
-						EvictingQueue<InvokeMethodOrFunction> q = invocationLogs.get(mi);
+						EvictingQueue<InvokeMethod> q = invocationLogs.get(mi);
 						if(q != null) q.clear();
 					}
 					eventLogger.stateChange(roomId, invocationLogs);
@@ -294,9 +294,9 @@ public class DefaultRoom implements Room{
 				}
 				break;
 			}
-			case "InvokeMethodOrFunction": {
+			case "InvokeMethod": {
 				try {
-					var iv = decode(peerId, message, InvokeMethodOrFunction.class);
+					var iv = decode(peerId, message, InvokeMethod.class);
 					if(iv.getObjId() != null) {
 						var oi = objectInfos.computeIfAbsent(iv.getObjId(), ObjectInfo::new);
 						// var cr = oi.getRevision();
@@ -515,7 +515,7 @@ public class DefaultRoom implements Room{
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 	private Map<Integer, ObjectInfo> objectInfos = new LinkedHashMap<>();
-	private Map<Integer, EvictingQueue<InvokeMethodOrFunction>> invocationLogs = new HashMap<>();
+	private Map<Integer, EvictingQueue<InvokeMethod>> invocationLogs = new HashMap<>();
 //	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
 //	private Map<Integer, String> objectStates = new LinkedHashMap<>();
 //	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();

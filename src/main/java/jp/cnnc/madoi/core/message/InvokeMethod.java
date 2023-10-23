@@ -2,10 +2,13 @@ package jp.cnnc.madoi.core.message;
 
 import jp.cnnc.madoi.core.Message;
 
-public class InvokeMethodOrFunction extends Message {
-	public InvokeMethodOrFunction(){
+/**
+ * メソッド実行を表すメッセージ。FunctionはobjIdがnullのメソッドとして扱う。
+ */
+public class InvokeMethod extends Message {
+	public InvokeMethod(){
 	}
-	public InvokeMethodOrFunction(Integer objId, int methodId, String methodName, Object[] args){
+	public InvokeMethod(Integer objId, int methodId, String methodName, Object[] args){
 		this.objId = objId;
 		this.methodId = methodId;
 		this.methodName = methodName;

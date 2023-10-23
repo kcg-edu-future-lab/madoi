@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
 import jp.cnnc.madoi.core.message.DefineFunction;
-import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.DefineObject;
 import jp.cnnc.madoi.core.message.NotifyObjectState;
 import jp.cnnc.madoi.core.message.PeerEntered;
@@ -31,10 +31,10 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArrive();
-		peer1.sendMessage(new InvokeMethodOrFunction(1, 1, "foo", new Object[] {}));
+		peer1.sendMessage(new InvokeMethod(1, 1, "foo", new Object[] {}));
 		assertEquals(2, peer1.getSentMessageCount());
 		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer1.getSentMessageAt(0).getType());
-		assertEquals(InvokeMethodOrFunction.class.getSimpleName(), peer1.getSentMessageAt(1).getType());
+		assertEquals(InvokeMethod.class.getSimpleName(), peer1.getSentMessageAt(1).getType());
 		assertEquals(0, peer2.getSentMessageCount());
 		peer2.loginRoom();
 		assertEquals(3, peer1.getSentMessageCount());
@@ -139,7 +139,7 @@ public class DefaultRoomTest {
 
 		peer.peerArriveAndLoginRoom();
 		peer.peerMessage(new DefineFunction(1, "foo", new ShareConfig(SharingType.afterExec, 0)));
-		peer.peerMessage(new InvokeMethodOrFunction(1, 1, "foo", new Object[]{"arg1"}));
+		peer.peerMessage(new InvokeMethod(1, 1, "foo", new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());
 		assertEquals("EnterRoomAllowed", ((Message)peer.getSentMessages().get(0)).getType());
@@ -158,10 +158,10 @@ public class DefaultRoomTest {
 				new Object[] {"receiveMessage", "room1", "peer1", "DefineFunction"},
 				Arrays.copyOf(el.getEvents().get(2), 4));
 		assertArrayEquals(
-				new Object[] {"receiveMessage", "room1", "peer1", "InvokeMethodOrFunction"},
+				new Object[] {"receiveMessage", "room1", "peer1", "InvokeMethod"},
 				Arrays.copyOf(el.getEvents().get(3), 4));
 		assertArrayEquals(
-				new Object[] {"sendMessage", "room1", "OTHERCAST", new String[]{}, "InvokeMethodOrFunction"},
+				new Object[] {"sendMessage", "room1", "OTHERCAST", new String[]{}, "InvokeMethod"},
 				Arrays.copyOf(el.getEvents().get(4), 5));
 	}
 
@@ -176,7 +176,7 @@ public class DefaultRoomTest {
 		peer1.peerMessage(new DefineObject(0, "Test", Arrays.asList(
 				new DefineObject.MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new InvokeMethodOrFunction(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
 		assertEquals(1, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
 		peer1.peerMessage(new NotifyObjectState(0, "", 0));
@@ -209,9 +209,9 @@ public class DefaultRoomTest {
 		peer1.peerMessage(new DefineObject(1, "Test2", Arrays.asList(
 				new DefineObject.MethodDefinition(2, "foo2", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new InvokeMethodOrFunction(0, 0, "foo", new Object[] {}));
-		peer1.peerMessage(new InvokeMethodOrFunction(0, 1, "bar", new Object[] {}));
-		peer1.peerMessage(new InvokeMethodOrFunction(1, 2, "foo2", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(0, 1, "bar", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(1, 2, "foo2", new Object[] {}));
 		assertEquals(3, room.getInvocationLogs().size());
 		assertEquals(1, room.getInvocationLogs().get(0).size());
 		assertEquals(1, room.getInvocationLogs().get(1).size());
@@ -227,7 +227,7 @@ public class DefaultRoomTest {
 			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals(2, er.getHistories().size());
 			assertEquals("NotifyObjectState", er.getHistories().get(0).getType());
-			assertEquals("InvokeMethodOrFunction", er.getHistories().get(1).getType());
+			assertEquals("InvokeMethod", er.getHistories().get(1).getType());
 		} else {
 			fail();
 		}
@@ -245,23 +245,23 @@ public class DefaultRoomTest {
 		peer1.peerMessage(new DefineObject(0, "Test", Arrays.asList(
 				new DefineObject.MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				)));
-		peer1.peerMessage(new InvokeMethodOrFunction(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
 		peer2.setIoeOnSend(true);
-		peer1.peerMessage(new InvokeMethodOrFunction(0, 0, "foo", new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
 		{
 			var msgs = peer1.getSentMessages();
 			assertEquals(5, msgs.size());
 			assertEquals(EnterRoomAllowed.class.getSimpleName(), msgs.get(0).getType());
 			assertEquals(PeerEntered.class.getSimpleName(), msgs.get(1).getType());
-			assertEquals(InvokeMethodOrFunction.class.getSimpleName(), msgs.get(2).getType());
-			assertEquals(InvokeMethodOrFunction.class.getSimpleName(), msgs.get(3).getType());
+			assertEquals(InvokeMethod.class.getSimpleName(), msgs.get(2).getType());
+			assertEquals(InvokeMethod.class.getSimpleName(), msgs.get(3).getType());
 			assertEquals(PeerLeaved.class.getSimpleName(), msgs.get(4).getType());
 		}
 		{
 			var msgs = peer2.getSentMessages();
 			assertEquals(2, msgs.size());
 			assertEquals(EnterRoomAllowed.class.getSimpleName(), msgs.get(0).getType());
-			assertEquals(InvokeMethodOrFunction.class.getSimpleName(), msgs.get(1).getType());
+			assertEquals(InvokeMethod.class.getSimpleName(), msgs.get(1).getType());
 		}
 		{
 			var events = el.getEvents();
@@ -275,7 +275,7 @@ public class DefaultRoomTest {
 			assertEquals("sendMessage", events.get(6)[0]);
 			assertEquals("receiveMessage", events.get(7)[0]);
 			assertEquals("sendMessage", events.get(8)[0]);
-			assertEquals(InvokeMethodOrFunction.class.getSimpleName(), events.get(8)[4]);
+			assertEquals(InvokeMethod.class.getSimpleName(), events.get(8)[4]);
 			assertEquals("sendMessage", events.get(9)[0]);
 			assertEquals("PeerLeave", events.get(9)[4]);
 		}

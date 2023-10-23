@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.cnnc.madoi.core.message.CustomMessage;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
-import jp.cnnc.madoi.core.message.InvokeMethodOrFunction;
+import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.LeaveRoomDone;
 import jp.cnnc.madoi.core.message.NotifyObjectState;
 import jp.cnnc.madoi.core.message.PeerEntered;
@@ -69,7 +69,7 @@ public class MockPeer implements Peer {
 		case "PeerEntered":{m = om.readValue(text, PeerEntered.class); break;}
 		case "PeerLeaved":{m = om.readValue(text, PeerLeaved.class); break;}
 		case "PeerProfileUpdated":{m = om.readValue(text, PeerProfileUpdated.class); break;}
-		case "InvokeMethodOrFunction":{m = om.readValue(text, InvokeMethodOrFunction.class); break;}
+		case "InvokeMethod":{m = om.readValue(text, InvokeMethod.class); break;}
 		case "NotifyObjectState":{m = om.readValue(text, NotifyObjectState.class); break;}
 		default:{m = om.readValue(text, CustomMessage.class); break;}
 		}
