@@ -216,16 +216,16 @@ public class DefaultRoom implements Room{
 					var methodIndexes = new LinkedHashSet<Integer>();
 					for(var mi : oc.getMethods()) {
 						var sc = mi.getConfig().getShare();
-						if(mi.getFuncId() == null || sc == null) continue;
-						methodIndexes.add(mi.getFuncId());
-						int funcId = mi.getFuncId();
+						if(mi.getMethodId() == null || sc == null) continue;
+						methodIndexes.add(mi.getMethodId());
+						int methodId = mi.getMethodId();
 						int maxLog = sc.getMaxLog();
 						if(maxLog > 0) {
-							invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethodOrFunction>create(
+							invocationLogs.putIfAbsent(methodId, EvictingQueue.<InvokeMethodOrFunction>create(
 									Math.min(maxLog, 10000)));
 						}
 						if(sc.getType().equals(SharingType.afterExec)) {
-							execAndSendMethods.add(funcId);
+							execAndSendMethods.add(methodId);
 						}
 					}
 					objectInfos.computeIfAbsent(oc.getObjId(), ObjectInfo::new)
