@@ -3,8 +3,7 @@ package jp.cnnc.madoi.core.session;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.websocket.Session;
-
+import jakarta.websocket.Session;
 import jp.cnnc.madoi.core.Peer;
 
 public class WebsocketSessionPeer implements Peer{
