@@ -50,6 +50,8 @@ import jp.cnnc.madoi.core.message.PeerEntered;
 import jp.cnnc.madoi.core.message.PeerInfo;
 import jp.cnnc.madoi.core.message.PeerLeaved;
 import jp.cnnc.madoi.core.message.PeerProfileUpdated;
+import jp.cnnc.madoi.core.message.Ping;
+import jp.cnnc.madoi.core.message.Pong;
 import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 
@@ -203,9 +205,20 @@ public class DefaultRoom implements Room{
 			logger.log(Level.WARNING, "failed to read castType or recipients", e);
 		}
 		switch(m.getType()) {
+			case "Ping": {
+				try {
+					var ping = decode(peerId, message, Ping.class);
+					var pong = new Pong();
+					pong.setBody(ping.getBody());
+					castMessageTo(CastType.SERVERTOCLIENT, peer, pong);
+				} catch(JsonProcessingException e) {
+					e.printStackTrace();
+				}
+				break;
+			} 
 			case "ConnectionInfo":{
 				ct = CastType.CLIENTTOSERVER;
-				recipients.clear();;
+				recipients.clear();
 				break;
 			}
 			case "DefineObject":{
@@ -409,7 +422,7 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	private void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message) {
+	public void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message) {
 		var messages = new LinkedList<Cast>();
 		messages.add(new Cast(ct, recipients, senderPeerId, messageType, message));
 		while(messages.size() > 0) {

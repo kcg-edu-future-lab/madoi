@@ -15,6 +15,7 @@
  */
 package jp.cnnc.madoi.core;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.EvictingQueue;
@@ -22,12 +23,15 @@ import com.google.common.collect.EvictingQueue;
 import jp.cnnc.madoi.core.message.InvokeMethod;
 
 public interface Room {
+	int getPeerCount();
+	String getRoomId();
+	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
+
 	void onPeerArrive(Peer peer);
 	void onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);
 	void onPeerMessage(String peerId, byte[] message);
 	void onPeerError(String peerId, Throwable cause);
-	int getPeerCount();
-	String getRoomId();
-	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
+
+	void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message);
 }
