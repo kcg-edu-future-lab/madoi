@@ -95,6 +95,7 @@ public class DefaultRoom implements Room{
 
 	@Override
 	public synchronized void onPeerLeave(String peerId) {
+		System.err.printf("peer #%s removed.%n", peerId);
 		waitingPeers.remove(peerId);
 		eventLogger.receiveClose(roomId, peerId);
 		peers.remove(peerId);
@@ -179,6 +180,11 @@ public class DefaultRoom implements Room{
 		}
 
 		var peer = peers.get(peerId);
+		if(peer == null) {
+			System.err.printf("failed to find peer #%s.%n", peerId);
+			eventLogger.receiveMessage(roomId, peerId, null, message);
+			return;
+		}
 		Message m = null;
 		try {
 			m = decode(peerId, message, Message.class);
@@ -450,6 +456,7 @@ public class DefaultRoom implements Room{
 					peers.get(id).sendText(msg.getMessage());
 				} catch (IOException e) {
 					peers.remove(id);
+					System.err.printf("peer #%s removed because of %s.%n", id, e);
 					messages.addLast(new Cast(
 						CastType.BROADCAST, Collections.emptyList(),
 						"__SYSTEM__", "PeerLeave", encode(new PeerLeaved(id))));
