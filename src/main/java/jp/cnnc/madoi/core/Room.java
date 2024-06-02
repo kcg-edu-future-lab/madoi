@@ -21,10 +21,14 @@ import java.util.Map;
 import com.google.common.collect.EvictingQueue;
 
 import jp.cnnc.madoi.core.message.InvokeMethod;
+import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
+import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 public interface Room {
-	int getPeerCount();
 	String getRoomId();
+	Map<Integer, ObjectDefinition> getObjectDefinitions();
+	Map<Integer, FunctionDefinition> getFunctionDefinitions();
+	int getPeerCount();
 	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
 
 	void onPeerArrive(Peer peer);

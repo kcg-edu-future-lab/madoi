@@ -54,6 +54,8 @@ import jp.cnnc.madoi.core.message.Ping;
 import jp.cnnc.madoi.core.message.Pong;
 import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
+import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
+import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 /**
  * Peerは最初は入室待ち状態になる。
@@ -70,6 +72,16 @@ public class DefaultRoom implements Room{
 	@Override
 	public String getRoomId() {
 		return roomId;
+	}
+
+	@Override
+	public Map<Integer, ObjectDefinition> getObjectDefinitions() {
+		return objectDefinitions;
+	}
+
+	@Override
+	public Map<Integer, FunctionDefinition> getFunctionDefinitions() {
+		return functionDefinitions;
 	}
 
 	@Override
@@ -118,7 +130,7 @@ public class DefaultRoom implements Room{
 	protected boolean canPeerEnter(Peer peer, EnterRoom loginRoom) {
 		return true;
 	}
-	
+
 	private void onWaitingPeerMessage(Peer peer, String message) {
 		EnterRoom lr = null;
 		try {
@@ -221,7 +233,7 @@ public class DefaultRoom implements Room{
 					e.printStackTrace();
 				}
 				break;
-			} 
+			}
 			case "ConnectionInfo":{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();
@@ -231,9 +243,10 @@ public class DefaultRoom implements Room{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();
 				try {
-					var oc = decode(peerId, message, jp.cnnc.madoi.core.message.DefineObject.class);
+					var def = decode(peerId, message, jp.cnnc.madoi.core.message.DefineObject.class).getDefinition();
+					objectDefinitions.put(def.getObjId(), def);
 					var methodIndexes = new LinkedHashSet<Integer>();
-					for(var mi : oc.getMethods()) {
+					for(var mi : def.getMethods()) {
 						var sc = mi.getConfig().getShare();
 						if(mi.getMethodId() == null || sc == null) continue;
 						methodIndexes.add(mi.getMethodId());
@@ -247,7 +260,7 @@ public class DefaultRoom implements Room{
 							execAndSendMethods.add(methodId);
 						}
 					}
-					objectInfos.computeIfAbsent(oc.getObjId(), ObjectInfo::new)
+					objectInfos.computeIfAbsent(def.getObjId(), ObjectInfo::new)
 						.setMethods(methodIndexes);
 				} catch(JsonProcessingException e) {
 					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
@@ -259,14 +272,15 @@ public class DefaultRoom implements Room{
 				ct = CastType.CLIENTTOSERVER;
 				recipients.clear();;
 				try {
-					var fi = decode(peerId, message, DefineFunction.class);
-					var funcId = fi.getFuncId();
-					if(fi.getConfig().getMaxLog() > 0) {
+					var def = decode(peerId, message, DefineFunction.class).getDefinition();
+					var funcId = def.getFuncId();
+					functionDefinitions.put(funcId, def);
+					if(def.getConfig().getMaxLog() > 0) {
 						invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethod>create(
-								Math.min(fi.getConfig().getMaxLog(), 10000)));
+								Math.min(def.getConfig().getMaxLog(), 10000)));
 					}
 					System.out.println("check method type");
-					if(SharingType.afterExec.equals(fi.getConfig().getType())) {
+					if(SharingType.afterExec.equals(def.getConfig().getType())) {
 						execAndSendMethods.add(funcId);
 					}
 				} catch(JsonProcessingException e) {
@@ -314,6 +328,7 @@ public class DefaultRoom implements Room{
 				break;
 			}
 			case "InvokeMethod": {
+				logger.info("InvokeMethod");
 				try {
 					var iv = decode(peerId, message, InvokeMethod.class);
 					if(iv.getObjId() != null) {
@@ -428,6 +443,7 @@ public class DefaultRoom implements Room{
 		}
 	}
 
+	@Override
 	public void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message) {
 		var messages = new LinkedList<Cast>();
 		messages.add(new Cast(ct, recipients, senderPeerId, messageType, message));
@@ -483,7 +499,7 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	private static class ObjectInfo{
+	public static class ObjectInfo{
 		public ObjectInfo(int id) {
 			this.objectId = id;
 		}
@@ -529,11 +545,20 @@ public class DefaultRoom implements Room{
 //		private Set<Integer> execAndSendMethods = new HashSet<>();;
 	}
 
+	public Collection<ObjectInfo> getObjectInfos(){
+		return objectInfos.values();
+	}
+	public Collection<Map.Entry<Integer, EvictingQueue<InvokeMethod>>> getMethodInvocations(){
+		return invocationLogs.entrySet();
+	}
+
 	private String roomId;
 	private int peerOrder = 1;
 	private RoomEventLogger eventLogger;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+	private Map<Integer, ObjectDefinition> objectDefinitions = new LinkedHashMap<>();
+	private Map<Integer, FunctionDefinition> functionDefinitions = new LinkedHashMap<>();
 	private Map<Integer, ObjectInfo> objectInfos = new LinkedHashMap<>();
 	private Map<Integer, EvictingQueue<InvokeMethod>> invocationLogs = new HashMap<>();
 //	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
