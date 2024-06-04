@@ -33,20 +33,35 @@ import jp.go.nict.langrid.commons.lang.StringUtil;
 public class WebSocketServer {
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
-		String key = StringUtil.join(
+		try {
+			String key = StringUtil.join(
 				session.getRequestParameterMap().getOrDefault("key", Arrays.asList())
 				.toArray(new String[] {}), "").trim();
-		getRoomManager().onPeerOpen(key, roomId, new WebsocketSessionPeer(session));
+			getRoomManager().onPeerOpen(key, roomId, new WebsocketSessionPeer(session));
+		} catch(Error | RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@OnClose
 	public void onClose(Session session, @PathParam("roomId") String roomId) {
-		getRoomManager().onPeerClose(roomId, session.getId());
+		try {
+			getRoomManager().onPeerClose(roomId, session.getId());
+		} catch(Error | RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@OnError
 	public void onError(Session session, Throwable cause, @PathParam("roomId") String roomId) {
-		getRoomManager().onPeerError(roomId, session.getId(), cause);
+		try {
+			getRoomManager().onPeerError(roomId, session.getId(), cause);
+		} catch(Error | RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@OnMessage(maxMessageSize = 8192*1024)
@@ -54,7 +69,12 @@ public class WebSocketServer {
 			Session session,
 			@PathParam("roomId") String roomId,
 			String message) {
-		getRoomManager().onPeerMessage(roomId, session.getId(), message);
+		try {
+			getRoomManager().onPeerMessage(roomId, session.getId(), message);
+		} catch(Error | RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@OnMessage(maxMessageSize = 8192*1024)
@@ -62,7 +82,12 @@ public class WebSocketServer {
 			Session session,
 			@PathParam("roomId") String roomId,
 			byte[] message) {
-		getRoomManager().onPeerMessage(roomId, session.getId(), message);
+		try {
+			getRoomManager().onPeerMessage(roomId, session.getId(), message);
+		} catch(Error | RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	public synchronized RoomManager getRoomManager() {
