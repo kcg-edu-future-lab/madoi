@@ -4,6 +4,9 @@ import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class NullRoomEventLogger implements RoomEventLogger{
 	@Override
+	public void createRoom(String roomId) {
+	}
+	@Override
 	public void receiveOpen(String roomId, String id) {
 	}
 	@Override

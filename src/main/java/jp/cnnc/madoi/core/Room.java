@@ -31,6 +31,7 @@ public interface Room {
 	int getPeerCount();
 	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
 
+	void onRoomCreated();
 	void onPeerArrive(Peer peer);
 	void onPeerLeave(String peerId);
 	void onPeerMessage(String peerId, String message);

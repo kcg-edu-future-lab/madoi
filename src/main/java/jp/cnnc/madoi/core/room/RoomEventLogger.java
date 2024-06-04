@@ -11,6 +11,7 @@ import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.util.JsonUtil;
 
 public interface RoomEventLogger {
+	void createRoom(String roomId);
 	void receiveOpen(String roomId, String peerId);
 	void receiveError(String roomId, String peerId, Throwable cause);
 	void receiveClose(String roomId, String peerId);

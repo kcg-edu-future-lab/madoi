@@ -6,6 +6,12 @@ import jp.cnnc.madoi.core.room.RoomEventLogger;
 
 public class PrintRoomEventLogger implements RoomEventLogger{
 	@Override
+	public void createRoom(String roomId) {
+		System.err.printf("[%s] createRoom()%n",
+				roomId);
+	}
+
+	@Override
 	public void receiveOpen(String roomId, String peerId) {
 		System.err.printf("[%s] receiveOpen(%s)%n",
 				roomId, peerId);
@@ -40,6 +46,6 @@ public class PrintRoomEventLogger implements RoomEventLogger{
 	public void sendMessage(String roomId, String castType, String[] recipients, String messageType, String message) {
 		System.err.printf("[%s] sendMessagee(%s, [%s], %s)%n",
 				roomId, castType, Arrays.toString(recipients), message);
-		
+
 	}
 }

@@ -3,12 +3,16 @@ package jp.cnnc.madoi.core.message.definition;
 import java.util.ArrayList;
 import java.util.List;
 
+import jp.cnnc.madoi.core.message.config.ShareClassConfig;
+
 public class ObjectDefinition {
 	public ObjectDefinition() {
 	}
-	public ObjectDefinition(int objId, String name, List<MethodDefinition> methods) {
+	public ObjectDefinition(int objId, String className,
+			ShareClassConfig config, List<MethodDefinition> methods) {
 		this.objId = objId;
-		this.name = name;
+		this.className = className;
+		this.config = config;
 		this.methods = methods;
 	}
 	public int getObjId() {
@@ -17,11 +21,17 @@ public class ObjectDefinition {
 	public void setObjId(int objId) {
 		this.objId = objId;
 	}
-	public String getName() {
-		return name;
+	public String getClassName() {
+		return className;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setClassName(String className) {
+		this.className = className;
+	}
+	public ShareClassConfig getConfig() {
+		return config;
+	}
+	public void setConfig(ShareClassConfig config) {
+		this.config = config;
 	}
 	public List<MethodDefinition> getMethods() {
 		return methods;
@@ -31,6 +41,7 @@ public class ObjectDefinition {
 	}
 
 	private int objId;
-	private String name;
+	private String className;
+	private ShareClassConfig config;
 	private List<MethodDefinition> methods = new ArrayList<>();
 }

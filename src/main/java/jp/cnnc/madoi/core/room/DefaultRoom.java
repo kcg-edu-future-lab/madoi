@@ -59,14 +59,13 @@ import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 /**
  * Peerは最初は入室待ち状態になる。
- * PeerはRoomにRoomLoginメッセージを送り、承認されればEnterRoomメッセージが送られ、
- * 参加状態になる。この際、既存のPeerにはPeerEnterメッセージが送られる。
- * @author Takao Nakaguchi
+ * PeerはRoomにEnterRoomメッセージを送り、承認されればEnterRoomAllowedメッセージが送られ、
+ * 参加状態になる。この際、既存のPeerにはPeerEnteredメッセージが送られる。
  */
 public class DefaultRoom implements Room{
-	public DefaultRoom(String roomId, RoomEventLogger storage) {
+	public DefaultRoom(String roomId, RoomEventLogger eventLogger) {
 		this.roomId = roomId;
-		this.eventLogger = storage;
+		this.eventLogger = eventLogger;
 	}
 
 	@Override
@@ -92,6 +91,11 @@ public class DefaultRoom implements Room{
 	@Override
 	public Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs() {
 		return invocationLogs;
+	}
+
+	@Override
+	public void onRoomCreated() {
+		eventLogger.createRoom(roomId);
 	}
 
 	@Override

@@ -177,7 +177,7 @@ public class DefaultRoomTest {
 		var room = new DefaultRoom("room1", new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", Arrays.asList(
+		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
 				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				))));
 		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
@@ -206,11 +206,11 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", Arrays.asList(
+		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
 				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000)),
 				new MethodDefinition(1, "bar", new ShareConfig(SharingType.beforeExec, 1000))
 				))));
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(1, "Test2", Arrays.asList(
+		peer1.peerMessage(new DefineObject(new ObjectDefinition(1, "Test2", null, Arrays.asList(
 				new MethodDefinition(2, "foo2", new ShareConfig(SharingType.beforeExec, 1000))
 				))));
 		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));
@@ -246,7 +246,7 @@ public class DefaultRoomTest {
 
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", Arrays.asList(
+		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
 				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				))));
 		peer1.peerMessage(new InvokeMethod(0, 0, "foo", new Object[] {}));

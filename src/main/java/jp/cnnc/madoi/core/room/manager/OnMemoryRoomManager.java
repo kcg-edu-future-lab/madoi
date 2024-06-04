@@ -66,7 +66,11 @@ public class OnMemoryRoomManager implements RoomManager{
 
 	@Override
 	public Room getRoom(String roomId){
-		return rooms.computeIfAbsent(roomId, this::newRoom);
+		return rooms.computeIfAbsent(roomId, rid->{
+			var r = newRoom(rid);
+			r.onRoomCreated();
+			return r;
+		});
 	}
 
 	@Override
