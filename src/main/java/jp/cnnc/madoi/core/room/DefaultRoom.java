@@ -140,13 +140,13 @@ public class DefaultRoom implements Room{
 		try {
 			lr = decode(peer.getId(), message, EnterRoom.class);
 			if(!canPeerEnter(peer, lr)) {
-				castMessageTo(CastType.SERVERTOCLIENT, peer,
+				castMessageTo(CastType.SERVERTOPEER, peer,
 						new jp.cnnc.madoi.core.message.Error("Login error."));
 				return;
 			}
 			peer.setOrder(peerOrder++);
 		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(roomId, peer.getId(), null, message);
 			return;
 		}
@@ -206,7 +206,7 @@ public class DefaultRoom implements Room{
 			m = decode(peerId, message, Message.class);
 			m.setSender(peerId);
 		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(roomId, peerId, null, message);
 			return;
 		}
@@ -232,19 +232,19 @@ public class DefaultRoom implements Room{
 					var ping = decode(peerId, message, Ping.class);
 					var pong = new Pong();
 					pong.setBody(ping.getBody());
-					castMessageTo(CastType.SERVERTOCLIENT, peer, pong);
+					castMessageTo(CastType.SERVERTOPEER, peer, pong);
 				} catch(JsonProcessingException e) {
 					e.printStackTrace();
 				}
 				break;
 			}
 			case "ConnectionInfo":{
-				ct = CastType.CLIENTTOSERVER;
+				ct = CastType.PEERTOSERVER;
 				recipients.clear();
 				break;
 			}
 			case "DefineObject":{
-				ct = CastType.CLIENTTOSERVER;
+				ct = CastType.PEERTOSERVER;
 				recipients.clear();
 				try {
 					var def = decode(peerId, message, jp.cnnc.madoi.core.message.DefineObject.class).getDefinition();
@@ -267,13 +267,13 @@ public class DefaultRoom implements Room{
 					objectInfos.computeIfAbsent(def.getObjId(), ObjectInfo::new)
 						.setMethods(methodIndexes);
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
 			}
 			case "DefineFunction":{
-				ct = CastType.CLIENTTOSERVER;
+				ct = CastType.PEERTOSERVER;
 				recipients.clear();;
 				try {
 					var def = decode(peerId, message, DefineFunction.class).getDefinition();
@@ -288,7 +288,7 @@ public class DefaultRoom implements Room{
 						execAndSendMethods.add(funcId);
 					}
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -307,13 +307,13 @@ public class DefaultRoom implements Room{
 					message = om.writeValueAsString(new PeerProfileUpdated(
 							msg.getSender(), msg.getUpdates(), msg.getDeletes()));
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
 			}
 			case "NotifyObjectState": {
-				ct = CastType.CLIENTTOSERVER;
+				ct = CastType.PEERTOSERVER;
 				recipients.clear();;
 				try {
 					var os = decode(peerId, message, NotifyObjectState.class);
@@ -326,7 +326,7 @@ public class DefaultRoom implements Room{
 					}
 					eventLogger.stateChange(roomId, invocationLogs);
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -354,7 +354,7 @@ public class DefaultRoom implements Room{
 					}
 					recipients.clear();
 				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOCLIENT, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 					return;
 				}
 				break;
@@ -374,7 +374,7 @@ public class DefaultRoom implements Room{
 			ct = CastType.BROADCAST;
 			recipients.clear();
 		}
-		if(ct.equals(CastType.CLIENTTOSERVER)) return;
+		if(ct.equals(CastType.PEERTOSERVER)) return;
 		if(ct.equals(CastType.SELFCAST)) {
 			eventLogger.sendMessage(roomId, ct.name(), peer.getId(), m.getType(), message);
 			try {
@@ -393,7 +393,7 @@ public class DefaultRoom implements Room{
 
 	private void castMessageTo(CastType type, Peer peer, Message message) {
 		try {
-			eventLogger.sendMessage(roomId, CastType.SERVERTOCLIENT.name(), peer.getId(), message);
+			eventLogger.sendMessage(roomId, CastType.SERVERTOPEER.name(), peer.getId(), message);
 			peer.sendMessage(message);
 		} catch(JsonProcessingException ex) {
 			throw new RuntimeException(ex);

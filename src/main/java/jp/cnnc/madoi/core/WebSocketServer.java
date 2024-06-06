@@ -34,7 +34,7 @@ public class WebSocketServer {
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		try {
-			String key = StringUtil.join(
+			var key = StringUtil.join(
 				session.getRequestParameterMap().getOrDefault("key", Arrays.asList())
 				.toArray(new String[] {}), "").trim();
 			getRoomManager().onPeerOpen(key, roomId, new WebsocketSessionPeer(session));
