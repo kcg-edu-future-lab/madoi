@@ -479,7 +479,7 @@ public class DefaultRoom implements Room{
 					System.err.printf("peer #%s removed because of %s.%n", id, e);
 					messages.addLast(new Cast(
 						CastType.BROADCAST, Collections.emptyList(),
-						"__SYSTEM__", "PeerLeave", encode(new PeerLeaved(id))));
+						"__SERVER__", "PeerLeave", encode(new PeerLeaved(id))));
 					logger.log(Level.INFO, "Tried to send message to " + id, e);
 				}
 			}

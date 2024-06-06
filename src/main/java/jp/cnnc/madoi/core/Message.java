@@ -3,7 +3,7 @@ package jp.cnnc.madoi.core;
 public class Message {
 	public Message(){
 		this.type = getClass().getSimpleName();
-		this.sender = "__SYSTEM__";
+		this.sender = "__SERVER__";
 	}
 
 	public String getType() {
