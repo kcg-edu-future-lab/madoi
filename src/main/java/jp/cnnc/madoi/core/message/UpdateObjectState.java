@@ -1,11 +1,9 @@
 package jp.cnnc.madoi.core.message;
 
-import jp.cnnc.madoi.core.Message;
-
-public class NotifyObjectState extends Message {
-	public NotifyObjectState() {
+public class UpdateObjectState extends Message {
+	public UpdateObjectState() {
 	}
-	public NotifyObjectState(int objId, String state, int revision) {
+	public UpdateObjectState(int objId, String state, int revision) {
 		this.objId = objId;
 		this.state = state;
 		this.revision = revision;

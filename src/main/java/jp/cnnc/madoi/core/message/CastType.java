@@ -1,4 +1,4 @@
-package jp.cnnc.madoi.core;
+package jp.cnnc.madoi.core.message;
 
 public enum CastType{
 	UNICAST, MULTICAST, BROADCAST, SELFCAST, OTHERCAST, PEERTOSERVER, SERVERTOPEER;

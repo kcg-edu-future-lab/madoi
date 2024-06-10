@@ -15,6 +15,7 @@
  */
 package jp.cnnc.madoi.core;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import jakarta.websocket.OnClose;
@@ -24,10 +25,13 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import jp.cnnc.madoi.core.message.Message;
+import jp.cnnc.madoi.core.room.MessageSender;
+import jp.cnnc.madoi.core.room.DefaultRoomManager;
+import jp.cnnc.madoi.core.room.Peer;
 import jp.cnnc.madoi.core.room.RoomManager;
-import jp.cnnc.madoi.core.room.manager.OnMemoryRoomManager;
-import jp.cnnc.madoi.core.session.WebsocketSessionPeer;
 import jp.go.nict.langrid.commons.lang.StringUtil;
+import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 @ServerEndpoint("/rooms/{roomId}")
 public class WebSocketServer {
@@ -35,9 +39,20 @@ public class WebSocketServer {
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		try {
 			var key = StringUtil.join(
-				session.getRequestParameterMap().getOrDefault("key", Arrays.asList())
+				session.getRequestParameterMap().getOrDefault("apikey", Arrays.asList())
 				.toArray(new String[] {}), "").trim();
-			getRoomManager().onPeerOpen(key, roomId, new WebsocketSessionPeer(session));
+			System.out.println("key: " + key);
+			var peer = getRoomManager().onPeerOpen(roomId, new MessageSender() {
+				@Override
+				public void sendText(String message) throws IOException {
+					session.getBasicRemote().sendText(message);
+				}
+				@Override
+				public void send(Message message) throws IOException{
+					session.getBasicRemote().sendText(JSON.encode(message));
+				}
+			});
+			session.getUserProperties().put("peer", peer);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -47,7 +62,8 @@ public class WebSocketServer {
 	@OnClose
 	public void onClose(Session session, @PathParam("roomId") String roomId) {
 		try {
-			getRoomManager().onPeerClose(roomId, session.getId());
+			var peer = (Peer)session.getUserProperties().get("peer");
+			getRoomManager().onPeerClose(roomId, peer);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -57,7 +73,8 @@ public class WebSocketServer {
 	@OnError
 	public void onError(Session session, Throwable cause, @PathParam("roomId") String roomId) {
 		try {
-			getRoomManager().onPeerError(roomId, session.getId(), cause);
+			var peer = (Peer)session.getUserProperties().get("peer");
+			getRoomManager().onPeerError(roomId, peer, cause);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -70,7 +87,8 @@ public class WebSocketServer {
 			@PathParam("roomId") String roomId,
 			String message) {
 		try {
-			getRoomManager().onPeerMessage(roomId, session.getId(), message);
+			var peer = (Peer)session.getUserProperties().get("peer");
+			getRoomManager().onPeerMessage(roomId, peer, message);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -83,7 +101,8 @@ public class WebSocketServer {
 			@PathParam("roomId") String roomId,
 			byte[] message) {
 		try {
-			getRoomManager().onPeerMessage(roomId, session.getId(), message);
+			var peer = (Peer)session.getUserProperties().get("peer");
+			getRoomManager().onPeerMessage(roomId, peer, message);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -98,7 +117,7 @@ public class WebSocketServer {
 	}
 
 	protected RoomManager createRoomManager() {
-		return new OnMemoryRoomManager();
+		return new DefaultRoomManager();
 	}
 
 	private RoomManager roomManager;

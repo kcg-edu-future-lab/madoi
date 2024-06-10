@@ -1,4 +1,4 @@
-package jp.cnnc.madoi.core;
+package jp.cnnc.madoi.core.message;
 
 public class Message {
 	public Message(){

@@ -13,30 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jp.cnnc.madoi.core;
+package jp.cnnc.madoi.core.room;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.EvictingQueue;
 
+import jp.cnnc.madoi.core.message.CastType;
 import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
 import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 public interface Room {
-	String getRoomId();
+	String getId();
+	Map<String, Object> getProfile();
+
+	int getPeerCount();
 	Map<Integer, ObjectDefinition> getObjectDefinitions();
 	Map<Integer, FunctionDefinition> getFunctionDefinitions();
-	int getPeerCount();
 	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
 
 	void onRoomCreated();
 	void onPeerArrive(Peer peer);
-	void onPeerLeave(String peerId);
-	void onPeerMessage(String peerId, String message);
-	void onPeerMessage(String peerId, byte[] message);
-	void onPeerError(String peerId, Throwable cause);
+	void onPeerLeave(Peer peer);
+	void onPeerMessage(Peer peer, String message);
+	void onPeerMessage(Peer peer, byte[] message);
+	void onPeerError(Peer peer, Throwable cause);
 
 	void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message);
 }

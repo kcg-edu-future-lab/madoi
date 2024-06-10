@@ -3,18 +3,24 @@ package jp.cnnc.madoi.core.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.cnnc.madoi.core.Message;
-
 public class EnterRoomAllowed extends Message{
 	public EnterRoomAllowed() {
 	}
 	public EnterRoomAllowed(
+			RoomInfo room,
 			PeerInfo selfPeer, List<PeerInfo> otherPeers, List<Message> histories) {
+		this.room = room;
 		this.selfPeer = selfPeer;
 		this.otherPeers = otherPeers;
 		this.histories = histories;
 	}
 
+	public RoomInfo getRoom() {
+		return room;
+	}
+	public void setRoom(RoomInfo room) {
+		this.room = room;
+	}
 	public PeerInfo getSelfPeer() {
 		return selfPeer;
 	}
@@ -34,6 +40,7 @@ public class EnterRoomAllowed extends Message{
 		this.histories = histories;
 	}
 
+	private RoomInfo room;
 	private PeerInfo selfPeer;
 	private List<PeerInfo> otherPeers = new ArrayList<>();
 	private List<Message> histories = new ArrayList<>();

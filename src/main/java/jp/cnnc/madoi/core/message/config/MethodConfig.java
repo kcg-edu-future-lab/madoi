@@ -1,6 +1,6 @@
 package jp.cnnc.madoi.core.message.config;
 
-import jp.cnnc.madoi.core.Message;
+import jp.cnnc.madoi.core.message.Message;
 
 public class MethodConfig extends Message{
 	public MethodConfig() {

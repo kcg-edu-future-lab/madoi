@@ -1,7 +1,5 @@
 package jp.cnnc.madoi.core.message;
 
-import jp.cnnc.madoi.core.Message;
-
 public class PeerLeaved extends Message{
 	public PeerLeaved() {
 	}

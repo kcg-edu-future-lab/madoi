@@ -6,8 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 
-import jp.cnnc.madoi.core.Message;
 import jp.cnnc.madoi.core.message.InvokeMethod;
+import jp.cnnc.madoi.core.message.Message;
 import jp.cnnc.madoi.core.util.JsonUtil;
 
 public interface RoomEventLogger {

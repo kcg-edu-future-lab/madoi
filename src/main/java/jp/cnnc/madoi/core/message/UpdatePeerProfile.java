@@ -3,14 +3,12 @@ package jp.cnnc.madoi.core.message;
 import java.util.List;
 import java.util.Map;
 
-import jp.cnnc.madoi.core.Message;
-
 public class UpdatePeerProfile extends Message{
 	public UpdatePeerProfile() {
 	}
 
-	public UpdatePeerProfile(Map<String, Object> updates, List<String> deletes) {
-		super();
+	public UpdatePeerProfile(String sender, Map<String, Object> updates, List<String> deletes) {
+		setSender(sender);
 		this.updates = updates;
 		this.deletes = deletes;
 	}

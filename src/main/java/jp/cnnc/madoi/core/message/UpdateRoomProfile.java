@@ -3,25 +3,23 @@ package jp.cnnc.madoi.core.message;
 import java.util.List;
 import java.util.Map;
 
-import jp.cnnc.madoi.core.Message;
-
-public class PeerProfileUpdated extends Message{
-	public PeerProfileUpdated() {
+public class UpdateRoomProfile extends Message{
+	public UpdateRoomProfile() {
 	}
 
-	public PeerProfileUpdated(String peerId, Map<String, Object> updates, List<String> deletes) {
-		super();
-		this.peerId = peerId;
+	public UpdateRoomProfile(String sender, String roomId, Map<String, Object> updates, List<String> deletes) {
+		setSender(sender);
+		this.roomId = roomId;
 		this.updates = updates;
 		this.deletes = deletes;
 	}
 
-	public String getPeerId() {
-		return peerId;
+	public String getRoomId() {
+		return roomId;
 	}
 
-	public void setPeerId(String peerId) {
-		this.peerId = peerId;
+	public void setRoomId(String roomId) {
+		this.roomId = roomId;
 	}
 
 	public Map<String, Object> getUpdates() {
@@ -40,7 +38,7 @@ public class PeerProfileUpdated extends Message{
 		this.deletes = deletes;
 	}
 
-	private String peerId;
+	private String roomId;
 	private Map<String, Object> updates;
 	private List<String> deletes;
 }
