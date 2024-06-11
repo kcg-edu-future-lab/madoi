@@ -8,7 +8,7 @@ public class EnterRoomAllowed extends Message{
 	}
 	public EnterRoomAllowed(
 			RoomInfo room,
-			PeerInfo selfPeer, List<PeerInfo> otherPeers, List<Message> histories) {
+			PeerInfo selfPeer, List<PeerInfo> otherPeers, List<Object> histories) {
 		this.room = room;
 		this.selfPeer = selfPeer;
 		this.otherPeers = otherPeers;
@@ -33,15 +33,15 @@ public class EnterRoomAllowed extends Message{
 	public void setOtherPeers(List<PeerInfo> peers) {
 		this.otherPeers = peers;
 	}
-	public List<Message> getHistories() {
+	public List<Object> getHistories() {
 		return histories;
 	}
-	public void setHistories(List<Message> histories) {
+	public void setHistories(List<Object> histories) {
 		this.histories = histories;
 	}
 
 	private RoomInfo room;
 	private PeerInfo selfPeer;
 	private List<PeerInfo> otherPeers = new ArrayList<>();
-	private List<Message> histories = new ArrayList<>();
+	private List<Object> histories = new ArrayList<>();
 }

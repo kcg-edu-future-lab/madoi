@@ -13,6 +13,7 @@ import jp.cnnc.madoi.core.message.DefineFunction;
 import jp.cnnc.madoi.core.message.DefineObject;
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
 import jp.cnnc.madoi.core.message.InvokeMethod;
+import jp.cnnc.madoi.core.message.Message;
 import jp.cnnc.madoi.core.message.PeerEntered;
 import jp.cnnc.madoi.core.message.PeerLeaved;
 import jp.cnnc.madoi.core.message.UpdateObjectState;
@@ -181,16 +182,17 @@ public class DefaultRoomTest {
 				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
 				))));
 		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
-		assertEquals(1, room.getInvocationLogs().size());
-		assertEquals(1, room.getInvocationLogs().get(0).size());
+		assertEquals(1, room.getMessageHistories().size());
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getRevision());
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
 		peer1.peerMessage(new UpdateObjectState(0, "", 0));
-		assertEquals(0, room.getInvocationLogs().get(0).size());
+		assertEquals(0, room.getMessageHistories().size());
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer2.peerArriveAndLoginRoom();
 		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
 			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals(1, er.getHistories().size());
-			assertEquals("NotifyObjectState", er.getHistories().get(0).getType());
+			assertEquals("NotifyObjectState", ((Message)er.getHistories().get(0)).getType());
 		} else {
 			fail();
 		}
@@ -216,22 +218,24 @@ public class DefaultRoomTest {
 		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
 		peer1.peerMessage(new InvokeMethod(0, 1, 1, new Object[] {}));
 		peer1.peerMessage(new InvokeMethod(1, 2, 2, new Object[] {}));
-		assertEquals(3, room.getInvocationLogs().size());
-		assertEquals(1, room.getInvocationLogs().get(0).size());
-		assertEquals(1, room.getInvocationLogs().get(1).size());
-		assertEquals(1, room.getInvocationLogs().get(2).size());
+		assertEquals(3, room.getMessageHistories().size());
+		// TODO: 要修正。特定のメソッドの呼び出し履歴が記録されているかは現状わからない
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(1).getInvocationCount());
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(2).getInvocationCount());
 
 		peer1.peerMessage(new UpdateObjectState(0, "", 0));
-		assertEquals(0, room.getInvocationLogs().get(0).size());
-		assertEquals(0, room.getInvocationLogs().get(1).size());
-		assertEquals(1, room.getInvocationLogs().get(2).size());
+		// TODO: 要修正。特定のメソッドの呼び出し履歴が記録されているかは現状わからない
+		assertEquals(0, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
+		assertEquals(0, room.getObjectRuntimeInfos().get(0).getMethods().get(1).getInvocationCount());
+		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(2).getInvocationCount());
 
 		peer2.peerArriveAndLoginRoom();
 		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
 			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
 			assertEquals(2, er.getHistories().size());
-			assertEquals("NotifyObjectState", er.getHistories().get(0).getType());
-			assertEquals("InvokeMethod", er.getHistories().get(1).getType());
+			assertEquals("UpdateObjectState", ((UpdateObjectState)er.getHistories().get(0)).getType());
+			assertEquals("InvokeMethod", ((InvokeMethod)er.getHistories().get(1)).getType());
 		} else {
 			fail();
 		}

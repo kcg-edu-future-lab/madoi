@@ -17,30 +17,29 @@ package jp.cnnc.madoi.core.room;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.EvictingQueue;
 
 import jp.cnnc.madoi.core.message.CastType;
 import jp.cnnc.madoi.core.message.DefineFunction;
+import jp.cnnc.madoi.core.message.DefineObject;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
+import jp.cnnc.madoi.core.message.InvokeFunction;
 import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.Message;
 import jp.cnnc.madoi.core.message.PeerEntered;
@@ -53,8 +52,6 @@ import jp.cnnc.madoi.core.message.UpdateObjectState;
 import jp.cnnc.madoi.core.message.UpdatePeerProfile;
 import jp.cnnc.madoi.core.message.UpdateRoomProfile;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
-import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
-import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 /**
  * Peerは最初は入室待ち状態になる。
@@ -79,23 +76,23 @@ public class DefaultRoom implements Room{
 	}
 
 	@Override
-	public Map<Integer, ObjectDefinition> getObjectDefinitions() {
-		return objectDefinitions;
+	public Map<Integer, ObjectRuntimeInfo> getObjectRuntimeInfos() {
+		return objectRuntimeInfos;
 	}
 
 	@Override
-	public Map<Integer, FunctionDefinition> getFunctionDefinitions() {
-		return functionDefinitions;
+	public Map<Integer, FunctionRuntimeInfo> getFunctionRuntimeInfos() {
+		return functionRuntimeInfos;
 	}
 
 	@Override
-	public int getPeerCount() {
-		return peers.size();
+	public List<History> getMessageHistories(){
+		return histories;
 	}
 
 	@Override
-	public Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs() {
-		return invocationLogs;
+	public Collection<Peer> getPeers() {
+		return peers.values();
 	}
 
 	@Override
@@ -184,30 +181,28 @@ public class DefaultRoom implements Room{
 
 		var otherPeers = peers.values().stream().map(p -> newPeerInfo(p))
 				.collect(Collectors.toList());
-		var histories = new ArrayList<Message>();
-		for(var oi : objectInfos.values()) {
+		var histories = new ArrayList<Object>();
+		for(var oi : objectRuntimeInfos.values()) {
 			if(oi.getState() != null) {
-				histories.add(new UpdateObjectState(oi.getObjectId(), oi.getState(), oi.getRevision()));
+				histories.add(new UpdateObjectState(
+						oi.getDefinition().getObjId(), oi.getState(), oi.getRevision()));
 			}
 		}
-		for(Collection<InvokeMethod> ils : invocationLogs.values()) {
-			for(InvokeMethod i : ils) {
-				histories.add(i);
-			}
+		for(var h : this.histories) {
+			histories.add(h.getMessage());
 		}
 		var era = new EnterRoomAllowed(
 				new RoomInfo(id, profile), newPeerInfo(peer),
 				otherPeers, histories);
 		peers.put(peer.getId(), peer);
 		try {
-			eventLogger.sendMessage(id, "SERVERNOTIFY", new String[] {peer.getId()}, era);
+			eventLogger.sendMessage(id, "SERVERTOPEER", new String[] {peer.getId()}, era);
 			peer.getSender().send(era);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public synchronized void onPeerMessage(Peer peer, String message) {
 		var p = (DefaultPeer)peer;
@@ -216,200 +211,158 @@ public class DefaultRoom implements Room{
 			return;
 		}
 		var peerId = p.getId();
-		Message m = null;
-		try {
-			m = decode(peerId, message, Message.class);
-			m.setSender(peerId);
-		} catch(JsonProcessingException e) {
-			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+		var m = decodeAndSetSender(peer, message);
+		if(m == null) {
 			eventLogger.receiveMessage(id, p.getId(), null, message);
 			return;
 		}
-		eventLogger.receiveMessage(id, peerId, m.getType(), message);
-		CastType ct = CastType.BROADCAST;
-		List<String> recipients = new ArrayList<>();
-		try{
-			Object mct = om.readValue(message, Map.class).get("castType");
-			if(mct != null){
-					ct = CastType.valueOf(mct.toString());
-			}
-			Object r = om.readValue(message, Map.class).get("recipients");
-			if(r != null && r instanceof List){
-				recipients = (List<String>)r;
-				if(recipients.size() > 0) String.class.cast(recipients.get(0));
-			}
-		} catch(IllegalArgumentException | JsonProcessingException | ClassCastException e){
-			logger.log(Level.WARNING, "failed to read castType or recipients", e);
-		}
-		switch(m.getType()) {
+		eventLogger.receiveMessage(id, peerId, m.get("type").toString(), message);
+
+		switch(m.get("type").toString()) {
 			case "Ping": {
-				try {
-					var ping = decode(peerId, message, Ping.class);
-					var pong = new Pong();
-					pong.setBody(ping.getBody());
-					castMessageTo(CastType.SERVERTOPEER, peer, pong);
-				} catch(JsonProcessingException e) {
-					e.printStackTrace();
-				}
+				var ping = decodeAndSetSender(peer, message, Ping.class);
+				var pong = new Pong();
+				pong.setBody(ping.getBody());
+				castFromServerToPeer(pong, peer);
 				break;
 			}
 			case "UpdateRoomProfile": {
-				ct = CastType.BROADCAST;
-				recipients.clear();
-				try {
-					var msg = decode(peerId, message, UpdateRoomProfile.class);
-					if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
-						peer.getProfile().put(e.getKey(), e.getValue());
-					}
-					if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
-						peer.getProfile().remove(k);
-					}
-					message = om.writeValueAsString(new UpdateRoomProfile(
-							msg.getSender(), msg.getRoomId(), msg.getUpdates(), msg.getDeletes()));
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
-					return;
+				var msg = decodeAndSetSender(peer, message, UpdateRoomProfile.class);
+				if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
+					peer.getProfile().put(e.getKey(), e.getValue());
 				}
+				if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
+					peer.getProfile().remove(k);
+				}
+				forwardBroadcast(msg);
 				break;
 			}
 			case "UpdatePeerProfile": {
-				ct = CastType.OTHERCAST;
-				recipients.clear();
-				try {
-					var msg = decode(peerId, message, UpdatePeerProfile.class);
-					if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
-						peer.getProfile().put(e.getKey(), e.getValue());
-					}
-					if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
-						peer.getProfile().remove(k);
-					}
-					message = om.writeValueAsString(new UpdatePeerProfile(
-							msg.getSender(), msg.getUpdates(), msg.getDeletes()));
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
-					return;
+				var msg = decodeAndSetSender(peer, message, UpdatePeerProfile.class);
+				if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
+					peer.getProfile().put(e.getKey(), e.getValue());
 				}
+				if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
+					peer.getProfile().remove(k);
+				}
+				forwardOthercast(msg);
 				break;
 			}
-			case "DefineObject":{
-				ct = CastType.PEERTOSERVER;
-				recipients.clear();
-				try {
-					var def = decode(peerId, message, jp.cnnc.madoi.core.message.DefineObject.class).getDefinition();
-					objectDefinitions.put(def.getObjId(), def);
-					var methodIndexes = new LinkedHashSet<Integer>();
-					for(var mi : def.getMethods()) {
-						var sc = mi.getConfig().getShare();
-						if(mi.getMethodId() == null || sc == null) continue;
-						methodIndexes.add(mi.getMethodId());
-						int methodId = mi.getMethodId();
-						int maxLog = sc.getMaxLog();
-						if(maxLog > 0) {
-							invocationLogs.putIfAbsent(methodId, EvictingQueue.<InvokeMethod>create(
-									Math.min(maxLog, 10000)));
-						}
-						if(sc.getType().equals(SharingType.afterExec)) {
-							execAndSendMethods.add(methodId);
-						}
-					}
-					objectInfos.computeIfAbsent(def.getObjId(), ObjectInfo::new)
-						.setMethods(methodIndexes);
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
-					return;
-				}
+			case "DefineObject": {
+				var def = decodeAndSetSender(peer, message, DefineObject.class).getDefinition();
+				objectRuntimeInfos.put(def.getObjId(), new ObjectRuntimeInfo(def));
 				break;
 			}
-			case "DefineFunction":{
-				ct = CastType.PEERTOSERVER;
-				recipients.clear();;
-				try {
-					var def = decode(peerId, message, DefineFunction.class).getDefinition();
-					var funcId = def.getFuncId();
-					functionDefinitions.put(funcId, def);
-					if(def.getConfig().getMaxLog() > 0) {
-						invocationLogs.putIfAbsent(funcId, EvictingQueue.<InvokeMethod>create(
-								Math.min(def.getConfig().getMaxLog(), 10000)));
-					}
-					if(SharingType.afterExec.equals(def.getConfig().getType())) {
-						execAndSendMethods.add(funcId);
-					}
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
-					return;
-				}
+			case "DefineFunction": {
+				var def = decodeAndSetSender(peer, message, DefineFunction.class).getDefinition();
+				functionRuntimeInfos.put(def.getFuncId(), new FunctionRuntimeInfo(def));
 				break;
 			}
 			case "UpdateObjectState": {
-				ct = CastType.PEERTOSERVER;
-				recipients.clear();;
-				try {
-					var os = decode(peerId, message, UpdateObjectState.class);
-					var oi = objectInfos.computeIfAbsent(os.getObjId(), id->new ObjectInfo(id));
-					oi.setState(os.getState());
-					oi.setRevision(os.getRevision());
-					for(int mi : oi.getMethods()) {
-						EvictingQueue<InvokeMethod> q = invocationLogs.get(mi);
-						if(q != null) q.clear();
-					}
-					eventLogger.stateChange(id, invocationLogs);
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+				var uos = decodeAndSetSender(peer, message, UpdateObjectState.class);
+				var ori = objectRuntimeInfos.get(uos.getObjId());
+				if(ori == null) {
+					var msg = String.format("unknown object id: %d", uos.getObjId());
+					logger.warning(msg);
+					castFromServerToPeer(newError(msg), peer);
 					return;
+				}
+				ori.setState(uos.getState());
+				if(ori.getRevision() != uos.getRevision()) {
+					var msg = String.format(
+							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
+							uos.getObjId(), ori.getRevision(), uos.getRevision());
+					logger.warning(msg);
+				}
+				ori.setRevision(uos.getRevision());
+				// 更新されたオブジェクトに対するInvokeMethod履歴を削除
+				var it = histories.iterator();
+				while(it.hasNext()) {
+					var h = it.next();
+					if(!(h.getMessage() instanceof InvokeMethod)) continue;
+					var imh = (InvokeMethod)h.getMessage();
+					if(imh.getObjId() == uos.getObjId()) it.remove();
+				}
+				histories.add(MessageHistory.of(uos));
+				if(histories.size() >= maxHistory) {
+					histories.remove(0);
 				}
 				break;
 			}
 			case "InvokeMethod": {
-				logger.info("InvokeMethod");
-				try {
-					var iv = decode(peerId, message, InvokeMethod.class);
-					var oi = objectInfos.computeIfAbsent(iv.getObjId(), ObjectInfo::new);
-					// var cr = oi.getRevision();
-					// oiのリビジョンとivのリビジョンを照合する？
-					// 実行後にリビジョンが上がるので+1しておく
-					oi.setRevision(iv.getObjRevision() + 1);
-					message = om.writeValueAsString(iv);
-					var fid = iv.getMethodId();
-					var q = invocationLogs.get(fid);
-					System.out.printf("logs of %d is %d.%n", fid, (q != null) ? q.size() : null);
-					if(q != null) q.add(iv);
-					if(execAndSendMethods.contains(fid)) {
-						ct = CastType.OTHERCAST;
-					} else {
-						ct = CastType.BROADCAST;
-					}
-					recipients.clear();
-				} catch(JsonProcessingException e) {
-					castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
+				var im = decodeAndSetSender(peer, message, InvokeMethod.class);
+				var ori = objectRuntimeInfos.get(im.getObjId());
+				if(ori == null) {
+					var msg = String.format("unknown object id: %d", im.getObjId());
+					logger.warning(msg);
+					castFromServerToPeer(newError(msg), peer);
 					return;
+				}
+				var mri = ori.getMethods().get(im.getMethodId());
+				if(mri == null) {
+					var msg = String.format(
+							"Method not found. objId: %d, methodId: %d.",
+							im.getObjId(), im.getMethodId());
+					logger.warning(msg);
+					castFromServerToPeer(newError(msg), peer);
+					break;
+				}
+				// 実行後にリビジョンが上がるので+1しておく
+				if(ori.getRevision() != im.getObjRevision()) {
+					var msg = String.format(
+							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
+							im.getObjId(), ori.getRevision(), im.getObjRevision());
+					logger.warning(msg);
+				}
+				ori.setRevision(im.getObjRevision() + 1);
+				mri.onInvoked();
+				// 履歴に追加
+				histories.add(MessageHistory.of(im));
+				if(histories.size() >= maxHistory) {
+					histories.remove(0);
+				}
+				// 送信
+				var md = mri.getDefinition();
+				if(md.getConfig().getShare().getType().equals(SharingType.beforeExec)) {
+					forwardBroadcast(im);
+				} else {
+					forwardOthercast(im);
+				}
+				break;
+			}
+			case "InvokeFunction": {
+				var ifn = decodeAndSetSender(peer, message, InvokeFunction.class);
+				var fri = functionRuntimeInfos.get(ifn.getFuncId());
+				if(fri == null) {
+					var msg = String.format(
+							"Function not found. funcId: %d.",
+							ifn.getFuncId());
+					logger.warning(msg);
+					castFromServerToPeer(newError(msg), peer);
+					break;
+				}
+				// 履歴に追加
+				histories.add(MessageHistory.of(ifn));
+				if(histories.size() >= maxHistory) {
+					histories.remove(0);
+				}
+				// 送信
+				var fd = fri.getDefinition();
+				if(fd.getConfig().getType().equals(SharingType.beforeExec)) {
+					forwardBroadcast(ifn);
+				} else {
+					forwardOthercast(ifn);
 				}
 				break;
 			}
 			default:{
-				try {
-					var msg = om.readValue(message, Map.class);
-					msg.put("sender", peerId);
-					message = om.writeValueAsString(msg);
-				} catch(JsonProcessingException e) {
-					e.printStackTrace();
+				histories.add(new SOMHistory(m));
+				if(histories.size() >= maxHistory) {
+					histories.remove(0);
 				}
+				castMessage(m);
 				break;
 			}
-		}
-		if(ct == null){
-			ct = CastType.BROADCAST;
-			recipients.clear();
-		}
-		if(ct.equals(CastType.PEERTOSERVER)) return;
-		if(ct.equals(CastType.SELFCAST)) {
-			eventLogger.sendMessage(id, ct.name(), peer.getId(), m.getType(), message);
-			try {
-				peer.getSender().sendText(message);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
-			castMessage(ct, recipients, peer.getId(), m.getType(), message);
 		}
 	}
 
@@ -499,7 +452,8 @@ public class DefaultRoom implements Room{
 			}
 			for(var id : ids){
 				try {
-					peers.get(id).getSender().sendText(msg.getMessage());
+					var p = peers.get(id);
+					if(p != null) p.getSender().sendText(msg.getMessage());
 				} catch (IOException e) {
 					peers.remove(id);
 					System.err.printf("peer #%s removed because of %s.%n", id, e);
@@ -514,11 +468,111 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	private <T extends Message> T decode(String sender, String message, Class<T> clazz)
-	throws JsonMappingException, JsonProcessingException{
-		var m = om.readValue(message, clazz);
-		m.setSender(sender);
-		return m;
+	private void castMessage(Map<String, Object> message) {
+		castMessage(
+				CastType.valueOf(message.get("castType").toString()),
+				Arrays.asList((String[])message.get("recipients")),
+				message.get("sender").toString(),
+				message.get("type").toString(),
+				encode(message));
+	}
+
+	private void castMessage(Message message) {
+		castMessage(
+				message.getCastType(), Arrays.asList(message.getRecipients()),
+				message.getSender(), message.getType(),
+				encode(message));
+/*
+		var recipients = new ArrayList<Peer>();
+		switch(message.getCastType()) {
+			case UNICAST:
+			case SERVERTOPEER:
+				recipients.add(peers.get(message.getRecipients()[0]));
+				break;
+			case MULTICAST:
+				for(var r : message.getRecipients()) {
+					recipients.add(peers.get(r));
+				}
+				break;
+			case BROADCAST:
+				for(var p : peers.values()) {
+					recipients.add(p);
+				}
+				break;
+			case SELFCAST:
+				recipients.add(peers.get(message.getSender()));
+				break;
+			case OTHERCAST:
+				for(var p : peers.values()) {
+					if(p.getId().equals(message.getSender())) continue;
+					recipients.add(p);
+				}
+				break;
+			case PEERTOSERVER:
+		}
+		var m = encode(message);
+		var failPeers = new ArrayList<Peer>();
+		for(var p : recipients) {
+			try{
+				p.getSender().sendText(m);
+			} catch (IOException e) {
+				failPeers.add(p);
+			}
+		}
+		for(var p : failPeers) {
+			if(peers.containsKey(p.getId())) {
+				onPeerLeave(p);
+			}
+		}*/
+	}
+
+	private void castFromServerToPeer(Message message, Peer peer) {
+		message.setSender("__SERVER__");
+		message.setCastType(CastType.SERVERTOPEER);
+		message.setRecipients(new String[] {peer.getId()});
+		castMessage(message);
+	}
+
+	private void forwardBroadcast(Message message) {
+		message.setCastType(CastType.BROADCAST);
+		castMessage(message);
+	}
+
+	private void forwardOthercast(Message message) {
+		message.setCastType(CastType.OTHERCAST);
+		castMessage(message);
+	}
+
+	private jp.cnnc.madoi.core.message.Error newError(String message) {
+		var e = new jp.cnnc.madoi.core.message.Error(message);
+		e.setSender("__SERVER__");
+		e.setCastType(CastType.SERVERTOPEER);
+		return e;
+	}
+
+	private <T extends Message> T decodeAndSetSender(Peer peer, String message, Class<T> clazz){
+		try {
+			var m = om.readValue(message, clazz);
+			m.setSender(peer.getId());
+			return m;
+		} catch(JsonProcessingException e) {
+			logger.log(Level.WARNING, "failed to parse message from " + peer.getId() + ", messge: " + message);
+			castFromServerToPeer(newError(e.toString()), peer);
+			return null;
+		}
+	}
+
+	private Map<String, Object> decodeAndSetSender(Peer peer, String message){
+		try {
+			var m = om.readValue(
+					message, new TypeReference<Map<String, Object>>(){});
+			m.put("sender", peer.getId());
+			return m;
+		} catch(JsonProcessingException e) {
+			logger.log(Level.WARNING, "failed to parse message from " + peer.getId() + ", messge: " + message);
+			castFromServerToPeer(newError(e.toString()), peer);
+			return null;
+		}
 	}
 
 	private String encode(Object o) {
@@ -529,73 +583,53 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	public static class ObjectInfo{
-		public ObjectInfo(int id) {
-			this.objectId = id;
-		}
-		public int getObjectId() {
-			return objectId;
-		}
-//		public EvictingQueue<Invocation> getInvocationLogs() {
-//			return invocationLogs;
-//		}
-//		public void setInvocationLogs(EvictingQueue<Invocation> invocationLogs) {
-//			this.invocationLogs = invocationLogs;
-//		}
-		public String getState() {
-			return state;
-		}
-		public void setState(String state) {
-			this.state = state;
-		}
-		public int getRevision() {
-			return revision;
-		}
-		public void setRevision(int revision) {
-			this.revision = revision;
-		}
-		public Set<Integer> getMethods() {
-			return methods;
-		}
-		public void setMethods(Set<Integer> methods) {
-			this.methods = methods;
-		}
-//		public Set<Integer> getExecAndSendMethods() {
-//			return execAndSendMethods;
-//		}
-//		public void setExecAndSendMethods(Set<Integer> execAndSendMethods) {
-//			this.execAndSendMethods = execAndSendMethods;
-//		}
-
-		private int objectId;
-//		private EvictingQueue<Invocation> invocationLogs;
-		private String state;
-		private int revision = -1;
-		private Set<Integer> methods = new HashSet<>();
-//		private Set<Integer> execAndSendMethods = new HashSet<>();;
-	}
-
-	public Collection<ObjectInfo> getObjectInfos(){
-		return objectInfos.values();
-	}
-	public Collection<Map.Entry<Integer, EvictingQueue<InvokeMethod>>> getMethodInvocations(){
-		return invocationLogs.entrySet();
-	}
-
 	private String id;
 	private Map<String, Object> profile;
 	private int peerOrder = 1;
 	private RoomEventLogger eventLogger;
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-	private Map<Integer, ObjectDefinition> objectDefinitions = new LinkedHashMap<>();
-	private Map<Integer, FunctionDefinition> functionDefinitions = new LinkedHashMap<>();
-	private Map<Integer, ObjectInfo> objectInfos = new LinkedHashMap<>();
-	private Map<Integer, EvictingQueue<InvokeMethod>> invocationLogs = new HashMap<>();
-//	private Map<Integer, AtomicInteger> objRevision = new HashMap<>();
-//	private Map<Integer, String> objectStates = new LinkedHashMap<>();
-//	private Map<Integer, Set<Integer>> objectMethods = new HashMap<>();
-	private Set<Integer> execAndSendMethods = new HashSet<>();
+	private Map<Integer, ObjectRuntimeInfo> objectRuntimeInfos = new LinkedHashMap<>();
+	private Map<Integer, FunctionRuntimeInfo> functionRuntimeInfos = new LinkedHashMap<>();
+
+	/*
+	 * 履歴のサイズは有限。古いものから消す。
+	 * オブジェクトの状態+メソッド実行の場合でも、オブジェクトの状態が一番古い履歴で履歴がもう満杯なら、オブジェクトの状態を消す。
+	 * いずれオブジェクトの状態がきて同期状態に戻るはず。
+	 */
+	static class MessageHistory<T extends Message> implements History{
+		private T message;
+		public MessageHistory(T message) {
+			this.message = message;
+		}
+		@Override
+		public T getMessage() {
+			return message;
+		}
+		@Override
+		public String getMessageType() {
+			return message.getType();
+		}
+		public static <U extends Message> MessageHistory<U> of(U message){
+			return new MessageHistory<U>(message);
+		}
+	}
+	static class SOMHistory implements History{
+		private Map<String, Object> message;
+		public SOMHistory(Map<String, Object> message) {
+			this.message = message;
+		}
+		@Override
+		public Object getMessage() {
+			return message;
+		}
+		@Override
+		public String getMessageType() {
+			return message.get("type").toString();
+		}
+	}
+	private LinkedList<History> histories = new LinkedList<>();
+	private int maxHistory = 1024;
 
 	private Map<String, Peer> waitingPeers = new HashMap<>();
 	private Map<String, Peer> peers = new LinkedHashMap<>();

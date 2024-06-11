@@ -46,7 +46,7 @@ public class DefaultRoomManager implements RoomManager{
 	public void onPeerClose(String roomId, Peer peer) {
 		Room r = getRoom(roomId);
 		r.onPeerLeave(peer);
-		if(r.getPeerCount() == 0) {
+		if(r.getPeers().size() == 0) {
 			roomTtls.put(roomId, System.currentTimeMillis() + TTL_ROOM);
 		}
 	}

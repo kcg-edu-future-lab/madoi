@@ -15,24 +15,20 @@
  */
 package jp.cnnc.madoi.core.room;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.EvictingQueue;
-
 import jp.cnnc.madoi.core.message.CastType;
-import jp.cnnc.madoi.core.message.InvokeMethod;
-import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
-import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 
 public interface Room {
 	String getId();
 	Map<String, Object> getProfile();
 
-	int getPeerCount();
-	Map<Integer, ObjectDefinition> getObjectDefinitions();
-	Map<Integer, FunctionDefinition> getFunctionDefinitions();
-	Map<Integer, EvictingQueue<InvokeMethod>> getInvocationLogs();
+	Collection<Peer> getPeers();
+	Map<Integer, FunctionRuntimeInfo> getFunctionRuntimeInfos();
+	Map<Integer, ObjectRuntimeInfo> getObjectRuntimeInfos();
+	Collection<History> getMessageHistories();
 
 	void onRoomCreated();
 	void onPeerArrive(Peer peer);
@@ -42,4 +38,9 @@ public interface Room {
 	void onPeerError(Peer peer, Throwable cause);
 
 	void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message);
+
+	interface History{
+		Object getMessage();
+		String getMessageType();
+	}
 }
