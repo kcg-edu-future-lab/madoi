@@ -161,7 +161,6 @@ public class DefaultRoom implements Room{
 			if(peerId == null || peerId.isEmpty()) peerId = "" + order;
 			if(peerProfile == null) peerProfile = new HashMap<>();
 			peer.onEntered(peerId, order, peerProfile);
-			System.out.printf("peer.onEntered(peerId: %s, order: %d.%n", peerId, order);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(id, peer.getId(), null, message);
@@ -554,7 +553,7 @@ public class DefaultRoom implements Room{
 		return e;
 	}
 
-	private <T extends Message> T decodeAndSetSender(Peer peer, String message, Class<T> clazz){
+	protected <T extends Message> T decodeAndSetSender(Peer peer, String message, Class<T> clazz){
 		try {
 			var m = om.readValue(message, clazz);
 			m.setSender(peer.getId());
@@ -566,7 +565,7 @@ public class DefaultRoom implements Room{
 		}
 	}
 
-	private Map<String, Object> decodeAndSetSender(Peer peer, String message){
+	protected Map<String, Object> decodeAndSetSender(Peer peer, String message){
 		try {
 			var m = om.readValue(
 					message, new TypeReference<Map<String, Object>>(){});
