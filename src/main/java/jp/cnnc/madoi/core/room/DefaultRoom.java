@@ -323,7 +323,8 @@ public class DefaultRoom implements Room{
 				}
 				// 送信
 				var md = mri.getDefinition();
-				if(md.getConfig().getShare().getType().equals(SharingType.beforeExec)) {
+				var cfg = md.getConfig();
+				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
 					forwardBroadcast(im);
 				} else {
 					forwardOthercast(im);
@@ -348,7 +349,8 @@ public class DefaultRoom implements Room{
 				}
 				// 送信
 				var fd = fri.getDefinition();
-				if(fd.getConfig().getType().equals(SharingType.beforeExec)) {
+				var cfg = fd.getConfig();
+				if((cfg.getType() == null) || cfg.getType().equals(SharingType.beforeExec)) {
 					forwardBroadcast(ifn);
 				} else {
 					forwardOthercast(ifn);
