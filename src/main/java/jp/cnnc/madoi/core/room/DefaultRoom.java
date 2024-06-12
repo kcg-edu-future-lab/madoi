@@ -158,9 +158,10 @@ public class DefaultRoom implements Room{
 				peerProfile = er.getSelfPeer().getProfile();
 			}
 			var order = peerOrder++;
-			if(peerId == null) peerId = "" + order;
+			if(peerId == null || peerId.isEmpty()) peerId = "" + order;
 			if(peerProfile == null) peerProfile = new HashMap<>();
 			peer.onEntered(peerId, order, peerProfile);
+			System.out.printf("peer.onEntered(peerId: %s, order: %d.%n", peerId, order);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(id, peer.getId(), null, message);
