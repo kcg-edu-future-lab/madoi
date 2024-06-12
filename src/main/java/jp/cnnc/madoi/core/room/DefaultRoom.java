@@ -469,17 +469,20 @@ public class DefaultRoom implements Room{
 	}
 
 	private void castMessage(Map<String, Object> message) {
+		var recipients = (String[])message.get("recipients");
 		castMessage(
 				CastType.valueOf(message.get("castType").toString()),
-				Arrays.asList((String[])message.get("recipients")),
+				recipients != null ? Arrays.asList(recipients) : Collections.emptyList(),
 				message.get("sender").toString(),
 				message.get("type").toString(),
 				encode(message));
 	}
 
 	private void castMessage(Message message) {
+		var recipients = message.getRecipients();
 		castMessage(
-				message.getCastType(), Arrays.asList(message.getRecipients()),
+				message.getCastType(),
+				recipients != null ? Arrays.asList(recipients) : Collections.emptyList(),
 				message.getSender(), message.getType(),
 				encode(message));
 /*
