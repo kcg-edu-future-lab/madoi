@@ -8,7 +8,7 @@ public class DefaultPeer implements Peer{
 		this.sender = sender;
 	}
 
-	public void onEntered(String id, int order, Map<String, Object> profile) {
+	public void onEnterRoomAllowed(String id, int order, Map<String, Object> profile) {
 		this.id = id;
 		this.order = order;
 		this.profile = profile;

@@ -8,7 +8,7 @@ import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
 public class ObjectRuntimeInfo {
 	private ObjectDefinition definition;
 	private String state;
-	private int revision = -1;
+	private int revision = 0;
 	private Map<Integer, MethodRuntimeInfo> methodRuntimeInfos = new HashMap<>();
 	public ObjectRuntimeInfo(ObjectDefinition definition) {
 		this.definition = definition;

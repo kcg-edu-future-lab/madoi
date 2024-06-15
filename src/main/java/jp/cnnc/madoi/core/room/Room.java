@@ -40,7 +40,10 @@ public interface Room {
 	void castMessage(CastType ct, List<String> recipients, String senderPeerId, String messageType, String message);
 
 	interface History{
+		String getSender();
 		Object getMessage();
 		String getMessageType();
+		CastType getCastType();
+		String[] getRecipients();
 	}
 }

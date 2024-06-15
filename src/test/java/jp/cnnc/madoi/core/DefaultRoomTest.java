@@ -1,9 +1,6 @@
 package jp.cnnc.madoi.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -18,6 +15,7 @@ import jp.cnnc.madoi.core.message.PeerEntered;
 import jp.cnnc.madoi.core.message.PeerLeaved;
 import jp.cnnc.madoi.core.message.UpdateObjectState;
 import jp.cnnc.madoi.core.message.UpdatePeerProfile;
+import jp.cnnc.madoi.core.message.config.FunctionConfig;
 import jp.cnnc.madoi.core.message.config.ShareConfig;
 import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
 import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
@@ -143,7 +141,7 @@ public class DefaultRoomTest {
 
 		peer.peerArriveAndLoginRoom();
 		peer.peerMessage(new DefineFunction(new FunctionDefinition(
-				1, "foo", new ShareConfig(SharingType.afterExec, 0))));
+				1, "foo", new FunctionConfig(new ShareConfig(SharingType.afterExec, 0)))));
 		peer.peerMessage(new InvokeMethod(1, 1, 1, new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());

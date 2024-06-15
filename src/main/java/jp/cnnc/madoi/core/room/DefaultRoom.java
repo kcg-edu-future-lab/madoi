@@ -39,6 +39,7 @@ import jp.cnnc.madoi.core.message.DefineFunction;
 import jp.cnnc.madoi.core.message.DefineObject;
 import jp.cnnc.madoi.core.message.EnterRoom;
 import jp.cnnc.madoi.core.message.EnterRoomAllowed;
+import jp.cnnc.madoi.core.message.EnterRoomDenied;
 import jp.cnnc.madoi.core.message.InvokeFunction;
 import jp.cnnc.madoi.core.message.InvokeMethod;
 import jp.cnnc.madoi.core.message.Message;
@@ -144,7 +145,7 @@ public class DefaultRoom implements Room{
 			er = om.readValue(message, EnterRoom.class);
 			if(!canPeerEnter(peer, er)) {
 				castMessageTo(CastType.SERVERTOPEER, peer,
-						new jp.cnnc.madoi.core.message.Error("Login error."));
+						new EnterRoomDenied("Login error."));
 				return;
 			}
 			if(profile == null) {
@@ -160,7 +161,7 @@ public class DefaultRoom implements Room{
 			var order = peerOrder++;
 			if(peerId == null || peerId.isEmpty()) peerId = "" + order;
 			if(peerProfile == null) peerProfile = new HashMap<>();
-			peer.onEntered(peerId, order, peerProfile);
+			peer.onEnterRoomAllowed(peerId, order, peerProfile);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOPEER, peer, new jp.cnnc.madoi.core.message.Error(e.toString()));
 			eventLogger.receiveMessage(id, peer.getId(), null, message);
@@ -189,7 +190,26 @@ public class DefaultRoom implements Room{
 			}
 		}
 		for(var h : this.histories) {
-			histories.add(h.getMessage());
+			switch(h.getCastType()) {
+				case UNICAST:  case MULTICAST:
+					for(var r : h.getRecipients()) {
+						if(r.equals(peer.getId())) {
+							histories.add(h.getMessage());
+							break;
+						}
+					}
+					break;
+				case BROADCAST:  case OTHERCAST:
+					histories.add(h.getMessage());
+					break;
+				case SELFCAST:
+					if(h.getSender().equals(peer.getId())) {
+						histories.add(h.getMessage());
+					}
+					break;
+				case SERVERTOPEER:  case PEERTOSERVER:
+					break;
+			}
 		}
 		var era = new EnterRoomAllowed(
 				new RoomInfo(id, profile), newPeerInfo(peer),
@@ -268,13 +288,14 @@ public class DefaultRoom implements Room{
 					return;
 				}
 				ori.setState(uos.getState());
+/*
 				if(ori.getRevision() != uos.getRevision()) {
 					var msg = String.format(
 							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
 							uos.getObjId(), ori.getRevision(), uos.getRevision());
 					logger.warning(msg);
 				}
-				ori.setRevision(uos.getRevision());
+*/				ori.setRevision(uos.getRevision());
 				// 更新されたオブジェクトに対するInvokeMethod履歴を削除
 				var it = histories.iterator();
 				while(it.hasNext()) {
@@ -308,13 +329,13 @@ public class DefaultRoom implements Room{
 					break;
 				}
 				// 実行後にリビジョンが上がるので+1しておく
-				if(ori.getRevision() != im.getObjRevision()) {
+/*				if(ori.getRevision() != im.getObjRevision()) {
 					var msg = String.format(
 							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
 							im.getObjId(), ori.getRevision(), im.getObjRevision());
 					logger.warning(msg);
 				}
-				ori.setRevision(im.getObjRevision() + 1);
+*/				ori.setRevision(im.getObjRevision() + 1);
 				mri.onInvoked();
 				// 履歴に追加
 				histories.add(MessageHistory.of(im));
@@ -350,7 +371,7 @@ public class DefaultRoom implements Room{
 				// 送信
 				var fd = fri.getDefinition();
 				var cfg = fd.getConfig();
-				if((cfg.getType() == null) || cfg.getType().equals(SharingType.beforeExec)) {
+				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
 					forwardBroadcast(ifn);
 				} else {
 					forwardOthercast(ifn);
@@ -608,12 +629,24 @@ public class DefaultRoom implements Room{
 			this.message = message;
 		}
 		@Override
+		public String getSender() {
+			return message.getSender();
+		}
+		@Override
 		public T getMessage() {
 			return message;
 		}
 		@Override
 		public String getMessageType() {
 			return message.getType();
+		}
+		@Override
+		public CastType getCastType() {
+			return message.getCastType();
+		}
+		@Override
+		public String[] getRecipients() {
+			return message.getRecipients();
 		}
 		public static <U extends Message> MessageHistory<U> of(U message){
 			return new MessageHistory<U>(message);
@@ -625,12 +658,24 @@ public class DefaultRoom implements Room{
 			this.message = message;
 		}
 		@Override
+		public String getSender() {
+			return message.get("sender").toString();
+		}
+		@Override
 		public Object getMessage() {
 			return message;
 		}
 		@Override
 		public String getMessageType() {
 			return message.get("type").toString();
+		}
+		@Override
+		public CastType getCastType() {
+			return CastType.valueOf(message.get("castType").toString());
+		}
+		@Override
+		public String[] getRecipients() {
+			return (String[])message.get("recipients");
 		}
 	}
 	private LinkedList<History> histories = new LinkedList<>();
