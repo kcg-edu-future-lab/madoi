@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cnncjp/madoi-client-js.git"
+    "url": "git+https://github.com/kcg-edu-future-lab/madoi.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cnncjp/madoi-client-js/issues"
+    "url": "https://github.com/kcg-edu-future-lab/madoi/issues"
   },
-  "homepage": "https://github.com/cnncjp/madoi-client-js#readme",
+  "homepage": "https://github.com/kcg-edu-future-lab/madoi#readme",
   "devDependencies": {
     "ts-loader": "^9.2.3",
     "tslint": "^6.1.3",
