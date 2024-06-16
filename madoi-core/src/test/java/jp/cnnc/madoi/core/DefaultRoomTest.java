@@ -6,24 +6,24 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import jp.cnnc.madoi.core.message.DefineFunction;
-import jp.cnnc.madoi.core.message.DefineObject;
-import jp.cnnc.madoi.core.message.EnterRoomAllowed;
-import jp.cnnc.madoi.core.message.InvokeMethod;
-import jp.cnnc.madoi.core.message.Message;
-import jp.cnnc.madoi.core.message.PeerEntered;
-import jp.cnnc.madoi.core.message.PeerLeaved;
-import jp.cnnc.madoi.core.message.UpdateObjectState;
-import jp.cnnc.madoi.core.message.UpdatePeerProfile;
-import jp.cnnc.madoi.core.message.config.FunctionConfig;
-import jp.cnnc.madoi.core.message.config.ShareConfig;
-import jp.cnnc.madoi.core.message.config.ShareConfig.SharingType;
-import jp.cnnc.madoi.core.message.definition.FunctionDefinition;
-import jp.cnnc.madoi.core.message.definition.MethodDefinition;
-import jp.cnnc.madoi.core.message.definition.ObjectDefinition;
-import jp.cnnc.madoi.core.room.DefaultRoom;
-import jp.cnnc.madoi.core.room.eventlogger.NullRoomEventLogger;
-import jp.cnnc.madoi.core.room.eventlogger.OnMemoryEventLogger;
+import edu.kcg.futurelab.madoi.core.message.DefineFunction;
+import edu.kcg.futurelab.madoi.core.message.DefineObject;
+import edu.kcg.futurelab.madoi.core.message.EnterRoomAllowed;
+import edu.kcg.futurelab.madoi.core.message.InvokeMethod;
+import edu.kcg.futurelab.madoi.core.message.Message;
+import edu.kcg.futurelab.madoi.core.message.PeerEntered;
+import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
+import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
+import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
+import edu.kcg.futurelab.madoi.core.message.config.FunctionConfig;
+import edu.kcg.futurelab.madoi.core.message.config.ShareConfig;
+import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
+import edu.kcg.futurelab.madoi.core.message.definition.FunctionDefinition;
+import edu.kcg.futurelab.madoi.core.message.definition.MethodDefinition;
+import edu.kcg.futurelab.madoi.core.message.definition.ObjectDefinition;
+import edu.kcg.futurelab.madoi.core.room.DefaultRoom;
+import edu.kcg.futurelab.madoi.core.room.logger.NullRoomEventLogger;
+import edu.kcg.futurelab.madoi.core.room.logger.OnMemoryEventLogger;
 
 public class DefaultRoomTest {
 	@Test
