@@ -28,7 +28,6 @@ import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
 import edu.kcg.futurelab.madoi.core.room.MessageSender;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.Room;
-import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 public class MockPeer implements Peer {
 	@SuppressWarnings("serial")
@@ -79,8 +78,8 @@ public class MockPeer implements Peer {
 				case "PeerEntered":{m = om.readValue(text, PeerEntered.class); break;}
 				case "PeerLeaved":{m = om.readValue(text, PeerLeaved.class); break;}
 				case "UpdatePeerProfile":{m = om.readValue(text, UpdatePeerProfile.class); break;}
-				case "InvokeMethod":{m = om.readValue(text, InvokeMethod.class); break;}
 				case "InvokeFunction":{m = om.readValue(text, InvokeFunction.class); break;}
+				case "InvokeMethod":{m = om.readValue(text, InvokeMethod.class); break;}
 				case "UpdateObjectState":{m = om.readValue(text, UpdateObjectState.class); break;}
 				default:{m = om.readValue(text, CustomMessage.class); break;}
 				}
@@ -89,7 +88,7 @@ public class MockPeer implements Peer {
 
 			@Override
 			public void send(Message message) throws IOException {
-				sendText(JSON.encode(message));
+				sendText(om.writeValueAsString(message));
 			}
 		};
 	}
@@ -106,7 +105,7 @@ public class MockPeer implements Peer {
 	public void loginRoom() {
 		room.onPeerMessage(
 				this,
-				JSON.encode(new EnterRoom(
+				toJsonString(new EnterRoom(
 						room.getProfile(),
 						new PeerInfo(id, order, profile))));
 	}
@@ -122,11 +121,11 @@ public class MockPeer implements Peer {
 				id,
 				new HashMap<>() {{put("name", name);}},
 				null);
-		room.onPeerMessage(this, JSON.encode(p));
+		room.onPeerMessage(this, toJsonString(p));
 	}
 
-	public void peerMessage(Message m) throws JsonProcessingException {
-		room.onPeerMessage(this, om.writeValueAsString(m));
+	public void peerMessage(Message m) {
+		room.onPeerMessage(this, toJsonString(m));
 	}
 
 	public List<Message> getSentMessages() {
@@ -139,6 +138,14 @@ public class MockPeer implements Peer {
 
 	public Message getSentMessageAt(int index) {
 		return messages.get(index);
+	}
+
+	private String toJsonString(Object value) {
+		try {
+			return om.writeValueAsString(value);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private String id;

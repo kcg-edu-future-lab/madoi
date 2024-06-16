@@ -16,7 +16,8 @@
 package edu.kcg.futurelab.madoi.core.websocket;
 
 import java.io.IOException;
-import java.util.Arrays;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.kcg.futurelab.madoi.core.message.Message;
 import edu.kcg.futurelab.madoi.core.room.DefaultRoomManager;
@@ -30,18 +31,13 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import jp.go.nict.langrid.commons.lang.StringUtil;
-import jp.go.nict.langrid.repackaged.net.arnx.jsonic.JSON;
 
 @ServerEndpoint("/rooms/{roomId}")
 public class WebSocketServer {
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		try {
-			var key = StringUtil.join(
-				session.getRequestParameterMap().getOrDefault("apikey", Arrays.asList())
-				.toArray(new String[] {}), "").trim();
-			System.out.println("key: " + key);
+			var om = new ObjectMapper();
 			var peer = getRoomManager().onPeerOpen(roomId, new MessageSender() {
 				@Override
 				public void sendText(String message) throws IOException {
@@ -49,7 +45,7 @@ public class WebSocketServer {
 				}
 				@Override
 				public void send(Message message) throws IOException{
-					session.getBasicRemote().sendText(JSON.encode(message));
+					session.getBasicRemote().sendText(om.writeValueAsString(message));
 				}
 			});
 			session.getUserProperties().put("peer", peer);
