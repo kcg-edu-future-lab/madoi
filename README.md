@@ -31,35 +31,50 @@ block-beta
 ### メッセージの配信
 
 Madoiを使った最もシンプルな例を以下に示します。この例では、Webページが表示されたらMadoiサーバに接続します。
-その後ウィンドウがクリックされたらメッセージをサーバに送信し、サーバからメッセージが送信されてくれば、Webページにdivタグを追加します。
-この例をファイルに保存して、それを複数のブラウザで開くと、一つのブラウザでウィンドウがクリックされるたびに、全てのブラウザにdivタグが追加されます。
+テキストボックスに文字が入力されenterキーが押されたら、入力内容をサーバに送信し、サーバからメッセージが送信されてくれば、入力内容を含んだdivタグを追加します。
+この例をファイルに保存して、それを複数のブラウザで開くと、送信した内容が全てのブラウザに送られ、divタグが追加されます。
 
-### tutorial01.html
+`chat_by_sendrecv.html`
 ```html
-<html>
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-<meta charset="utf8">
+<meta encoding="utf-8">
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+<script src="./js/madoi.js"></script>
 </head>
 <body>
-<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数はルームのIDとAPI KEY。
-  const m = new madoi.Madoi("chat-ldfngslkkeg?apikey=XXXXXXXXX");
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=SheiYo8cohg0quei");
 
-  // ウィンドウがクリックされたら、メッセージをサーバに送信する。
-  // サーバは同じルームに接続している全てのブラウザにメッセージを送信する。
-  window.addEventListener("click", e=>{
-    // 第一引数はメッセージタイプ。第二引数はメッセージ内容(body)
-    m.send("windowClicked", "hello");
+  // フォームのsubmit時に、メッセージを送信する。
+  document.getElementById("form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const input = document.getElementById("input");
+    // メッセージのブロードキャスト。
+    // 引数はメッセージタイプとメッセージ内容(body)
+    m.send("chat", input.value)
+    input.value = "";
   });
-
-  // "windowClick"タイプのメッセージを受信したら、documentにdivタグを追加する。
-  m.addReceiver("windowClicked", ({detail: {body}})=>{
-    const div = document.createElement("div");
-    div.innerText = body;
-    document.body.append(div);
+  // レシーバの登録。引数はタイプとレシーバ。
+  // レシーバのパラメータはCustomEvent型で、detailのbodyに送信内容が格納されている。
+  m.addReceiver("chat", ({detail: {body}})=>{
+    document.getElementById("log").innerHTML += body + "<br />";
   });
 });
 </script>
@@ -103,8 +118,62 @@ Madoiでのメッセージ配信は、デフォルトではブロードキャス
 * UpdateObjectState
 * Error
 
-
 ### 関数実行の共有
+
+Madoiでは多人数参加型のツールの開発に必要なメッセージ配信機能が用意されていますが、メッセージの送受信ではなく、オブジェクトや関数の共有に着目した機能を備えています。この機能を使うと、関数やオブジェクトを共有することを意識したプログラミングが行えます。
+
+実際に例を見てみましょう。以下に示すコードは、先ほど実装したチャットを、チャットログにメッセージを追加する関数(chat)と、その関数の共有で書き換えたものです。
+
+`chat_by_function.html`
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta encoding="utf-8">
+<script src="./js/madoi.js"></script>
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat_by_function_sdkfj2j?apikey=SheiYo8cohg0quei");
+
+  // メッセージの追加処理を実装した関数。
+  let chat = function(message){
+    document.getElementById("log").innerHTML += message + "<br />";
+  };
+
+  // 関数をmadoiに登録する。戻り値は、本来のchat関数の代わりに使用する関数。
+  // 呼び出すと、呼び出されたことをBroadcastする。
+  // 内部でレシーバも用意されており、サーバからBroadcastが来れば、本来の関数が呼び出される。
+  chat = m.registerFunction(chat, {share: {maxLog: 1000}});
+
+  // フォームのsubmit時に、chat関数を呼び出す。
+  document.getElementById("form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const input = document.getElementById("input");
+    chat(input.value);
+    input.value = "";
+  });
+});
+</script>
+</body>
+</html>
+```
 
 
 
@@ -121,10 +190,10 @@ Madoiでのメッセージ配信は、デフォルトではブロードキャス
 ### 入室時
 ```mermaid
 sequenceDiagram
-  Peer1->>Server: EnterRoom(selfId?: string, roomSpec?: {}, profile?: {}
+  Peer1->>Server: EnterRoom
   alt OK
-    Server->>Peer1: EnterRoomAllowed(self: {peerId: string, order: number}, peers: PeerInfo[], histories: (MethodInvoked|ObjectStateChanged)[])
-    Server->>Peer2: PeerEntered(peerId: string, profile?: {})
+    Server->>Peer1: EnterRoomAllowed
+    Server->>Peer2: PeerEntered
   else NG
     Server->>Peer1: EnterRoomDenied
   end  
@@ -133,17 +202,19 @@ sequenceDiagram
 ### 入室後
 ```mermaid
 sequenceDiagram
-  Peer1->>Server: UpdateProfile(peerId: string, updates?: {}, deletes?: string[])
-  Server->>Peer2: PeerProfileUpdated(peerId: string, updates?: {}, deletes?: string[])
+  Peer1->>Server: UpdateRoomProfile
+  Server->>Peer1: UpdateRoomProfile
+  Server->>Peer2: UpdateRoomProfile
+  Peer1->>Server: UpdatePeerProfile
+  Server->>Peer2: UpdatePeerProfile
   Peer1->>Server: DefineFunction
   Peer1->>Server: DefineObject
-  Peer1->>Server: DefineMethod
   Peer1->>Server: InvokeMethod
-  Server->>Peer1: MethodInvoked
-  Server->>Peer2: MethodInvoked
-  Peer1->>Server: NotifyOjectState(objectId: string, state: {})
-  Server->>Peer1: ObjectStateChanged
-  Server->>Peer2: ObjectStateChanged  
+  Server->>Peer1: InvokeMethod
+  Server->>Peer2: InvokeMethod
+  Peer1->>Server: UpdateObjectState
+  Server->>Peer1: UpdateObjectState
+  Server->>Peer2: UpdateObjectState  
 ```
 
 ### 退室時
@@ -151,18 +222,6 @@ sequenceDiagram
 sequenceDiagram
   Peer1->>Server: LeaveRoom
   Server->>Peer1: LeaveRoomDone
-  Server->>Peer2: PeerLeaved(peerId: string)
-```
-```mermaid
-sequenceDiagram
-  Server->>Server: 特定のピアの退出処理
-  Server->>Peer1: RoomClosed
-  Server->>Peer2: PeerLeaved(peerId: string)
-```
-```mermaid
-sequenceDiagram
-  Server->>Server: ルームを閉じる処理
-  Server->>Peer1: RoomClosed
-  Server->>Peer2: RoomClosed
+  Server->>Peer2: PeerLeaved
 ```
 
