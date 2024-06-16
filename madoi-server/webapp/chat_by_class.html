@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta encoding="utf-8">
+<script src="./js/madoi.js"></script>
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat0000?apikey=SheiYo8cohg0quei");
+
+  // Chatクラスのインスタンスを作成する
+  const c = new Chat("form", "input", "log");
+
+  // Maodiに登録する。chatメソッドを共有するよう指定する。
+  // c.chatメソッドは、呼び出しの通知をサーバにBroadcastする代替メソッドで置き換えられる。
+  // レシーバも内部で用意され、通知がサーバから届くと本来のchatメソッドが実行される。
+  m.register(c, [
+    {method: c.chat, share: {maxLog: 1000}}
+  ]);
+});
+
+// チャット処理を実装するクラス。
+class Chat{
+	constructor(formId, inputId, logId){
+		this.log = document.getElementById(logId);
+		// フォームがsubmitされると、テキストボックスに入っている内容を
+		// 取り出しchatメソッドを呼び出す。
+		document.getElementById(formId).addEventListener("submit", e=>{
+			e.preventDefault();
+			const input = document.getElementById(inputId);
+			this.chat(input.value);
+			input.value = "";
+		});
+	}
+	chat(message){
+		// ログを表示するdivタグに、messaageを含んだdivタグを追加する。
+		this.log.innerHTML += `<div>${message}</div>\n`;
+	}
+}
+</script>
+</body>
+</html>

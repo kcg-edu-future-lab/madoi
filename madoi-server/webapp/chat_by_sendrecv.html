@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta encoding="utf-8">
+<script src="./js/madoi.js"></script>
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=SheiYo8cohg0quei");
+
+  // フォームのsubmit時に、メッセージを送信する。
+  document.getElementById("form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const input = document.getElementById("input");
+    // メッセージのブロードキャスト。
+    // 引数はメッセージタイプとメッセージ内容(body)
+    m.send("chat", input.value)
+    input.value = "";
+  });
+  // レシーバの登録。引数はタイプとレシーバ。
+  // レシーバのパラメータはCustomEvent型で、detailのbodyに送信内容が格納されている。
+  m.addReceiver("chat", ({detail: {body}})=>{
+    document.getElementById("log").innerHTML += body + "<br />";
+  });
+});
+</script>
+</body>
+</html>

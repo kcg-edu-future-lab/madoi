@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta encoding="utf-8">
+<script src="./js/madoi.js"></script>
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat_function_sdkfj2j?apikey=SheiYo8cohg0quei");
+
+  // メッセージの追加処理を実装した関数。
+  let chat = function(message){
+    document.getElementById("log").innerHTML += message + "<br />";
+  };
+
+  // 関数をmadoiに登録する。戻り値は、本来のchat関数の代わりに使用する関数。
+  // 呼び出すと、呼び出されたことをBroadcastする。
+  // 内部でレシーバも用意されており、サーバからBroadcastが来れば、本来の関数が呼び出される。
+  chat = m.registerFunction(chat, {share: {maxLog: 1000}});
+
+  // フォームのsubmit時に、chat関数を呼び出す。
+  document.getElementById("form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const input = document.getElementById("input");
+    chat(input.value);
+    input.value = "";
+  });
+});
+</script>
+</body>
+</html>

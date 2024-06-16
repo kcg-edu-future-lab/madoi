@@ -1,0 +1,20 @@
+server:
+  servlet:
+    context-path: ${CONTEXT_PATH:/madoi}
+
+logging:
+  level:
+    org:
+      springframework:
+#        security: TRACE
+
+madoi:
+  apiKeys:
+    - SheiYo8cohg0quei
+  allowedOrigins:
+    - http://localhost:[*]
+    - https://fungo.kcg.edu/
+  websocket:
+    maxTextMessageBufferSize: 10485760  # 10 * 1024 * 1024
+    maxBinaryMessageBufferSize: 10485760  # 10 * 1024 * 1024
+
