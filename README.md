@@ -26,20 +26,62 @@ block-beta
 * オブジェクト管理
   * このレイヤでは、クライアントアプリケーション内のオブジェクトの状態や変更の管理機能が提供されます。
 
-## 使い方
+## サーバの起動方法
+
+Madoiプロジェクトでは、メモリ上で動作する(ファイルやDBに情報を残さない)madoi-volatileserverを提供しています。
+このリポジトリをcloneしてdockerコマンドを実行すると、ローカルでサーバが起動します。
+
+まず、このリポジトリをcloneしてください。
+
+```bash
+git clone https://github.com/kcg-edu-future-lab/madoi
+```
+
+次にcloneしたディレクトリないで、docker-composeコマンドを実行してください。
+
+```bash
+cd madoi
+docker compose up
+```
+
+コマンドを実行すると、Madoiのビルドが行われ、volatileserverが起動します。
+
+```bash
+> docker compose up
+[+] Running 1/0
+ ✔ Container madoi-madoi_volatileserver-1  Created                                                                                          0.0s 
+Attaching to madoi_volatileserver-1
+madoi_volatileserver-1  |   .   ____          _            __ _ _
+madoi_volatileserver-1  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+madoi_volatileserver-1  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+madoi_volatileserver-1  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+madoi_volatileserver-1  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+madoi_volatileserver-1  |  =========|_|==============|___/=/_/_/_/
+madoi_volatileserver-1  | 
+madoi_volatileserver-1  |  :: Spring Boot ::                (v3.3.0)
+madoi_volatileserver-1  | 
+(省略)
+madoi_volatileserver-1  | 2024-06-16T14:20:06.153Z  INFO 7 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/madoi'
+madoi_volatileserver-1  | 2024-06-16T14:20:06.170Z  INFO 7 --- [           main] e.k.f.madoi.volatileserver.Application   : Started Application in 3.427 seconds (process running for 3.999)
+```
+
+`Start Application`と出力されると、サーバが起動しています。この状態で `http://localhost:8080/madoi/chat_message.html` にブラウザでアクセスすると、チャットサンプルが表示されます。
+
+
+## クライアントライブラリの使い方
 
 ### メッセージの配信
 
-Madoiを使った最もシンプルな例を以下に示します。この例では、Webページが表示されたらMadoiサーバに接続します。
+Madoiを使った最もシンプルな例を以下に示します。この例では、Webページが表示される(windowのloadイベントが発生する)とMadoiサーバに接続します。
 テキストボックスに文字が入力されenterキーが押されたら、入力内容をサーバに送信し、サーバからメッセージが送信されてくれば、入力内容を含んだdivタグを追加します。
 この例をファイルに保存して、それを複数のブラウザで開くと、送信した内容が全てのブラウザに送られ、divタグが追加されます。
 
-`chat_by_sendrecv.html`
+[chat_by_sendrecv.html](madoi-volatileserver/webapp/chat_by_sendrecv.html)
 ```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta encoding="utf-8">
+<meta charset="utf-8">
 <style>
 div#log{
   border: 1px solid;
@@ -47,7 +89,7 @@ div#log{
   min-height: 300px;
 }
 </style>
-<script src="./js/madoi.js"></script>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 </head>
 <body>
 <form id="form">
@@ -60,7 +102,7 @@ div#log{
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=SheiYo8cohg0quei");
+  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
 
   // フォームのsubmit時に、メッセージを送信する。
   document.getElementById("form").addEventListener("submit", e=>{
@@ -74,7 +116,7 @@ window.addEventListener("load", ()=>{
   // レシーバの登録。引数はタイプとレシーバ。
   // レシーバのパラメータはCustomEvent型で、detailのbodyに送信内容が格納されている。
   m.addReceiver("chat", ({detail: {body}})=>{
-    document.getElementById("log").innerHTML += body + "<br />";
+    document.getElementById("log").innerHTML += `<div>${body}</div>\n`;
   });
 });
 </script>
@@ -120,11 +162,11 @@ Madoiでのメッセージ配信は、デフォルトではブロードキャス
 
 ### 関数実行の共有
 
-Madoiでは多人数参加型のツールの開発に必要なメッセージ配信機能が用意されていますが、メッセージの送受信ではなく、オブジェクトや関数の共有に着目した機能を備えています。この機能を使うと、関数やオブジェクトを共有することを意識したプログラミングが行えます。
+Madoiでは多人数参加型のツールの開発に必要なメッセージ配信機能が用意されています。さらに、このメッセージ配信機能を利用した、オブジェクトの状態や関数の実行を共有する機能を提供しています。この機能を使うと、メッセージをどのようにやりとりするかはMadoiに任せて、関数やオブジェクトをどう共有するかを意識してプログラミングが行えます。
 
-実際に例を見てみましょう。以下に示すコードは、先ほど実装したチャットを、チャットログにメッセージを追加する関数(chat)と、その関数の共有で書き換えたものです。
+実際に例を見てみましょう。以下に示すコードは、先ほど実装したチャットを書き換えたものです。チャットログにメッセージを追加する部分が関数(chat)として切り出され、Madoiを使ってその関数の実行を共有するというスタイルに変わっています。
 
-`chat_by_function.html`
+[chat_by_function.html](madoi-volatileserver/webapp/chat_by_function.html)
 ```html
 <!DOCTYPE html>
 <html lang="ja">
@@ -150,7 +192,7 @@ div#log{
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_function_sdkfj2j?apikey=SheiYo8cohg0quei");
+  const m = new madoi.Madoi("chat_by_function_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
 
   // メッセージの追加処理を実装した関数。
   let chat = function(message){
@@ -175,53 +217,14 @@ window.addEventListener("load", ()=>{
 </html>
 ```
 
+共有したい処理を関数に切り出し、それをMadoiに登録し、以降は登録時に返された関数を実行するたびに、
+同じルームに参加している全てのピアで、その関数が実行されるようになります。
+登録時に返された関数を実行した際には、実際には本来の関数は実行されず、サーバへのメッセージ送信のみが行われます。
+その後サーバからメッセージが全てのピアに送信され、ピアでそれを受信した際に、本来の関数が実行されます。
+この振る舞いにより、全てのピアで同じ順番で関数が実行されるため、各ピアの状態が同期されやすくなります
+(本来の関数内で乱数を利用していたり、共有すべき関数が登録されていないなど、同期が保たれない状況は複数あり得るため、
+"同期されやすくなる"という表現にとどめます)。
 
 
 
-## 用語
-|用語|説明|
-|---|---|
-|メッセージ(Message)|クライアントやサーバ間でやりとりされるデータ。JSON形式|
-|ルーム(Room)|ピアが参加する、メッセージ配信の区切りとなるグループ。メッセージ配信はルーム内で完結する。|
-|ピア(Peer)|クライアントを識別する単位。IDとプロファイル(name=valueのセット)を持ち、ルームに参加してメッセージ通信を行う|
-
-## メッセージシーケンス
-
-### 入室時
-```mermaid
-sequenceDiagram
-  Peer1->>Server: EnterRoom
-  alt OK
-    Server->>Peer1: EnterRoomAllowed
-    Server->>Peer2: PeerEntered
-  else NG
-    Server->>Peer1: EnterRoomDenied
-  end  
-```
-
-### 入室後
-```mermaid
-sequenceDiagram
-  Peer1->>Server: UpdateRoomProfile
-  Server->>Peer1: UpdateRoomProfile
-  Server->>Peer2: UpdateRoomProfile
-  Peer1->>Server: UpdatePeerProfile
-  Server->>Peer2: UpdatePeerProfile
-  Peer1->>Server: DefineFunction
-  Peer1->>Server: DefineObject
-  Peer1->>Server: InvokeMethod
-  Server->>Peer1: InvokeMethod
-  Server->>Peer2: InvokeMethod
-  Peer1->>Server: UpdateObjectState
-  Server->>Peer1: UpdateObjectState
-  Server->>Peer2: UpdateObjectState  
-```
-
-### 退室時
-```mermaid
-sequenceDiagram
-  Peer1->>Server: LeaveRoom
-  Server->>Peer1: LeaveRoomDone
-  Server->>Peer2: PeerLeaved
-```
 
