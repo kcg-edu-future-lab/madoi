@@ -1001,26 +1001,26 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	registerFunction(func: Function, config: MethodConfig = {share: {}}){
 		if("hostOnly" in config){
 			return this.addHostOnlyFunction(func, config);
+		} else if("share" in config){
+			// デフォルト値チェック
+			if(!config.share.type) config.share.type = shareConfigDefault.type;
+			if(!config.share.maxLog) config.share.maxLog = shareConfigDefault.maxLog;
+
+			const funcName = func.name;
+			const [fid, f] = this.addSharedFunction(func, config.share);
+			const ret = function(){
+				return f.apply(null, arguments);
+			};
+			this.doSendMessage(newDefineFunction({
+				definition: {
+					funcId: fid,
+					name: funcName,
+					config: config
+				}
+			}));
+			return ret;
 		}
-		if(!("share" in config)) return func;
-
-		// デフォルト値チェック
-		if(!config.share.type) config.share.type = shareConfigDefault.type;
-		if(!config.share.maxLog) config.share.maxLog = shareConfigDefault.maxLog;
-
-		const funcName = func.name;
-		const [fid, f] = this.addSharedFunction(func, config.share);
-		const ret = function(){
-			return f.apply(null, arguments);
-		};
-		this.doSendMessage(newDefineFunction({
-			definition: {
-				funcId: fid,
-				name: funcName,
-				config: config
-			}
-		}));
-		return ret;
+		return func;
 	}
 
 	private addSharedFunction(f: Function, config: ShareConfig, objectIndex?: number): [number, Function]{
