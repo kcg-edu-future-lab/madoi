@@ -10,11 +10,10 @@ logging:
 
 madoi:
   apiKeys:
-    - SheiYo8cohg0quei
+    - ${MADOI_API_KEY:SheiYo8cohg0quei}
   allowedOrigins:
-    - http://localhost:[*]
-    - https://fungo.kcg.edu/
+    - ${MADOI_ALLOWED_ORIGIN:http://localhost:[*]}
   websocket:
-    maxTextMessageBufferSize: 10485760  # 10 * 1024 * 1024
-    maxBinaryMessageBufferSize: 10485760  # 10 * 1024 * 1024
+    maxTextMessageBufferSize: ${MADOI_WEBSOCKET_MAXTEXTMESSAGEBUFFERSIZE:10485760}  # 10 * 1024 * 1024
+    maxBinaryMessageBufferSize: ${MADOI_WEBSOCKET_MAXBINARYMESSAGEBUFFERSIZE:10485760}  # 10 * 1024 * 1024
 
