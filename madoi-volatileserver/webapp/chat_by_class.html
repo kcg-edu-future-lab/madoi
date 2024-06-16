@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta encoding="utf-8">
+<meta charset="utf-8">
 <script src="./js/madoi.js"></script>
 <style>
 div#log{
@@ -35,23 +35,23 @@ window.addEventListener("load", ()=>{
   ]);
 });
 
-// チャット処理を実装するクラス。
+//チャット処理を実装するクラス。
 class Chat{
-	constructor(formId, inputId, logId){
-		this.log = document.getElementById(logId);
-		// フォームがsubmitされると、テキストボックスに入っている内容を
-		// 取り出しchatメソッドを呼び出す。
-		document.getElementById(formId).addEventListener("submit", e=>{
-			e.preventDefault();
-			const input = document.getElementById(inputId);
-			this.chat(input.value);
-			input.value = "";
-		});
-	}
-	chat(message){
-		// ログを表示するdivタグに、messaageを含んだdivタグを追加する。
-		this.log.innerHTML += `<div>${message}</div>\n`;
-	}
+  constructor(formId, inputId, logId){
+    this.log = document.getElementById(logId);
+    // フォームがsubmitされると、テキストボックスに入っている内容を
+    // 取り出しchatメソッドを呼び出す。
+    document.getElementById(formId).addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = document.getElementById(inputId);
+      this.chat(input.value);
+      input.value = "";
+    });
+  }
+  chat(message){
+    // ログを表示するdivタグに、messaageを含んだdivタグを追加する。
+    this.log.innerHTML += `<div>${message}</div>\n`;
+  }
 }
 </script>
 </body>

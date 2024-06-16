@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta encoding="utf-8">
+<meta charset="utf-8">
 <script src="./js/madoi.js"></script>
 <style>
 div#log{
@@ -36,7 +36,7 @@ window.addEventListener("load", ()=>{
   // レシーバの登録。引数はタイプとレシーバ。
   // レシーバのパラメータはCustomEvent型で、detailのbodyに送信内容が格納されている。
   m.addReceiver("chat", ({detail: {body}})=>{
-    document.getElementById("log").innerHTML += body + "<br />";
+    document.getElementById("log").innerHTML += `<div>${body}</div>\n`;
   });
 });
 </script>
