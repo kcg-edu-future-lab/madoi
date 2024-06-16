@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server.config;
+package edu.kcg.futurelab.madoi.volatileserver.config;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,8 +16,8 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 
-import edu.kcg.futurelab.madoi.server.ApplicationProperties;
-import edu.kcg.futurelab.madoi.server.config.auth.ApiKeyAuthenticationFilter;
+import edu.kcg.futurelab.madoi.volatileserver.ApplicationProperties;
+import edu.kcg.futurelab.madoi.volatileserver.config.auth.ApiKeyAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity

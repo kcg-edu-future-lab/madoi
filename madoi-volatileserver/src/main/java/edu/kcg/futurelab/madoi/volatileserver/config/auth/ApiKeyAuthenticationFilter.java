@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server.config.auth;
+package edu.kcg.futurelab.madoi.volatileserver.config.auth;
 
 import java.io.IOException;
 

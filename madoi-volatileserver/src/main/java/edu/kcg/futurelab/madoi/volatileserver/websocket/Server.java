@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server.websocket;
+package edu.kcg.futurelab.madoi.volatileserver.websocket;
 
 import org.springframework.stereotype.Component;
 

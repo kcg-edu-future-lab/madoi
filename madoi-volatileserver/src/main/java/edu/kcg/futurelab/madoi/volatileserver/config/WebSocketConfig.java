@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server.config;
+package edu.kcg.futurelab.madoi.volatileserver.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

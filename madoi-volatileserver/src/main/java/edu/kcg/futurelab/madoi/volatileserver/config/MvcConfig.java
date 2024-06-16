@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server.config;
+package edu.kcg.futurelab.madoi.volatileserver.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

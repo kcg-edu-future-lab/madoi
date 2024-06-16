@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.server;
+package edu.kcg.futurelab.madoi.volatileserver;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

@@ -7,9 +7,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>edu.kcg.futurelab.madoi</groupId>
-	<artifactId>madoi-server</artifactId>
+	<artifactId>madoi-volatileserver</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>madoi-server</name>
+	<name>madoi-volatileserver</name>
 	<description>Server web application of Madoi</description>
 	<properties>
 		<java.version>21</java.version>
