@@ -10,7 +10,7 @@ logging:
 
 madoi:
   apiKeys:
-    - ${MADOI_API_KEY:SheiYo8cohg0quei}
+    - ${MADOI_API_KEY:ahfuTep6ooDi7Oa4}
   allowedOrigins:
     - ${MADOI_ALLOWED_ORIGIN:http://localhost:[*]}
   websocket:
