@@ -1,4 +1,4 @@
-package jp.cnnc.madoi.core;
+package edu.kcg.futurelab.madoi.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
