@@ -12,7 +12,7 @@ export interface PeerInfo{
 //---- events ----
 interface EnterRoomAllowedDetail{
 	room: RoomInfo;
-	selfPeer: {id: string, order: number};
+	selfPeer: PeerInfo;
 	otherPeers: PeerInfo[];
 }
 interface EnterRoomDeniedDetail{
