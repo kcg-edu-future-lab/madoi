@@ -3,17 +3,17 @@
 <meta charset="utf8">
 </head>
 <body>
+<h4>ルーム</h4>
+<div>
+<form id="roomForm">
+色: <input id="roomColor" type="color">
+</form>
+</div>
 <h4>あなた</h4>
 <div>
 <form id="selfForm">
 id: <span id="selfId"></span>
 name: <input id="selfName" type="text" value="匿名">
-</form>
-</div>
-<h4>ルーム</h4>
-<div>
-<form id="roomForm">
-色: <input id="roomBgcolor" type="color">
 </form>
 </div>
 <h4>他の参加者</h4>
@@ -25,41 +25,52 @@ name: <input id="selfName" type="text" value="匿名">
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数はルームのIDとAPI KEY。
+  // 最初の引数はルームのIDとAPI KEY。
+  // 2番目の引数に自身のプロファイル、3番目にルームのプロファイルを指定する。
+  // 二人目以降の参加者のルームプロファイル指定は無視される。
   const m = new madoi.Madoi(
     "profiles_avmeLdkj34is?apikey=ahfuTep6ooDi7Oa4",
     {"profile": {"name": "匿名"}},
-    {"bgcolor": "#ffffff"});
+    {"color": "#ffffff"});
 
+  // 後で参照するフォーム要素を取得しておく
   const selfIdSpan = document.getElementById("selfId");
   const selfNameInput = document.getElementById("selfName");
-  const roomBgcolorInput = document.getElementById("roomBgcolor");
+  const roomColorInput = document.getElementById("roomColor");
   const peersDiv = document.getElementById("peers");
+
+  // ピアの追加処理
   const addPeer = (id, profile)=>{
     const p = document.createElement("div");
     p.setAttribute("id", `peer_${id}`);
     p.innerText = `id: ${id}, name: ${profile["name"]}`;
     peersDiv.append(p);
   };
+
+  // ルームに参加した際に発生するイベント。ルームや自身の情報を画面に反映する
   m.addEventListener("enterRoomAllowed", ({detail: {room, selfPeer, otherPeers}})=>{
-    roomBgcolorInput.value = room.profile["bgcolor"];
+    roomColorInput.value = room.profile["color"];
     selfIdSpan.innerText = selfPeer.id;
     selfNameInput.value = selfPeer.profile["name"];
     for(const p of otherPeers){
       addPeer(p.id, p.profile);
     }
   });
+  // ルームのプロファイルが変更された際に発生するイベント。ルームの色情報を画面に反映する
   m.addEventListener("roomProfileUpdated", ({detail: {updates, deletes}})=>{
-    if("bgcolor" in updates){
-      roomBgcolorInput.value = updates["bgcolor"];
+    if("color" in updates){
+      roomColorInput.value = updates["color"];
     }
   });
+  // 他のピアが参加した際に発生するイベント。ピアリストを更新する
   m.addEventListener("peerEntered", ({detail: {peer: {id, profile}}})=>{
     addPeer(id, profile);
   });
+  // 他のピアが離脱した際に発生するイベント。ピアリストを更新する
   m.addEventListener("peerLeaved", ({detail: peerId})=>{
     document.getElementById(`peer_${peerId}`).remove();
   });
+  // 他のピアのプロファイルが更新された際に発生するイベント。ピアの名前を更新する
   m.addEventListener("peerProfileUpdated", ({detail: {sender, updates, deletes}})=>{
     if("name" in updates){
       const p = document.getElementById(`peer_${sender}`);
@@ -67,13 +78,15 @@ window.addEventListener("load", ()=>{
     }
   });
 
+  // 自身の名前の変更を通知する
   document.getElementById("selfForm").addEventListener("submit", e=>{
     e.preventDefault();
     m.setSelfPeerProfile("name", selfNameInput.value);
   });
-  roomBgcolorInput.addEventListener("change", e=>{
+  // ルームの色情報を変更する
+  roomColorInput.addEventListener("change", e=>{
     e.preventDefault();
-    m.setRoomProfile("bgcolor", e.target.value);
+    m.setRoomProfile("color", e.target.value);
   });
 });
 </script>
