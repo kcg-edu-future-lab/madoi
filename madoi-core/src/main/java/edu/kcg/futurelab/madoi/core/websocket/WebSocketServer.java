@@ -15,6 +15,7 @@
  */
 package edu.kcg.futurelab.madoi.core.websocket;
 
+import java.io.EOFException;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +69,10 @@ public class WebSocketServer {
 
 	@OnError
 	public void onError(Session session, Throwable cause, @PathParam("roomId") String roomId) {
+		if(cause instanceof EOFException) {
+			// クライアントの切断で起こるエラーは無視。
+			return;
+		}
 		try {
 			var peer = (Peer)session.getUserProperties().get("peer");
 			getRoomManager().onPeerError(roomId, peer, cause);
