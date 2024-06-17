@@ -418,64 +418,63 @@ TypeScriptでは、デコレータを利用して共有すべきメソッド、�
 
 ```TypeScript
 window.addEventListener("load", ()=>{
-	// Madoiクライアントを作成しサーバに接続する。
-	// 引数は任意のルームIDとAPI KEY。
-	const m = new Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
-  
-	// Chatクラスのインスタンスを作成する
-	const c = new Chat("form", "input", "log");
-  
-	// Maodiに登録する。メソッド情報はデコレータから取得される。
-	m.register(c);
-  });
-  
-  //チャット処理を実装するクラス。
-  @ShareClass({className="Chat"})
-  class Chat{
-	private id: number;
-	private chatLog: {id: string, message: string}[];
-	private logDiv: HTMLDivElement;
-	constructor(formId: string, inputId: string, logId: string){
-	  this.id = 0;
-	  this.chatLog = [];
-	  this.logDiv = document.getElementById(logId) as HTMLDivElement;
-	  // フォームがsubmitされると、テキストボックスに入っている内容を
-	  // 取り出しchatメソッドを呼び出す。
-	  const form = document.getElementById(formId) as HTMLFormElement;
-	  form.addEventListener("submit", e=>{
-		e.preventDefault();
-		const input = document.getElementById(inputId) as HTMLInputElement;
-		this.chat(input.value);
-		input.value = "";
-	  });
-	}
-	@Share({maxLog: 1000})
-	chat(message: string){
-	  this.addChatLog(`chatlog_${this.id++}`, message);
-	}
-	// 状態取得のため定期的に呼び出される
-	@GetState({maxInterval: 3000})
-	getState(){
-	  return this.chatLog;
-	}
-	// 状態設定のため参加時に一度だけ呼び出される
-	@SetState()
-	setState(state: {id: string, message: string}[]){
-	  for(const l of state){
-		this.addChatLog(l.id, l.message);
-	  }
-	}
-	addChatLog(id: string, message: string){
-	  // チャットログに追加(getStateで返す用)
-	  this.chatLog.push({id: id, message: message});
-	  // メッセージを表示するdivを作成して追加
-	  this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
-	  // メッセージが100件を超えていたら古いものを削除
-	  if(this.chatLog.length > 100){
-		document.getElementById(this.chatLog[0].id)?.remove();
-		this.chatLog.shift();
-	  }
-	}
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+
+  // Chatクラスのインスタンスを作成する
+  const c = new Chat("form", "input", "log");
+
+  // Maodiに登録する。メソッド情報はデコレータから取得される。
+  m.register(c);
+});
+
+//チャット処理を実装するクラス。
+@ShareClass({className="Chat"})
+class Chat{
+  private id: number;
+  private chatLog: {id: string, message: string}[];
+  private logDiv: HTMLDivElement;
+  constructor(formId: string, inputId: string, logId: string){
+    this.id = 0;
+    this.chatLog = [];
+    this.logDiv = document.getElementById(logId) as HTMLDivElement;
+    // フォームがsubmitされると、テキストボックスに入っている内容を取り出しchatメソッドを呼び出す。
+    const form = document.getElementById(formId) as HTMLFormElement;
+    form.addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = document.getElementById(inputId) as HTMLInputElement;
+      this.chat(input.value);
+      input.value = "";
+    });
+  }
+  @Share({maxLog: 1000})
+  chat(message: string){
+    this.addChatLog(`chatlog_${this.id++}`, message);
+  }
+  // 状態取得のため定期的に呼び出される
+  @GetState({maxInterval: 3000})
+  getState(){
+    return this.chatLog;
+  }
+  // 状態設定のため参加時に一度だけ呼び出される
+  @SetState()
+  setState(state: {id: string, message: string}[]){
+    for(const l of state){
+      this.addChatLog(l.id, l.message);
+    }
+  }
+  private addChatLog(id: string, message: string){
+    // チャットログに追加(getStateで返す用)
+    this.chatLog.push({id: id, message: message});
+    // メッセージを表示するdivを作成して追加
+    this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
+    // メッセージが100件を超えていたら古いものを削除
+    if(this.chatLog.length > 100){
+      document.getElementById(this.chatLog[0].id)?.remove();
+      this.chatLog.shift();
+    }
+  }
 }
 ```
 
