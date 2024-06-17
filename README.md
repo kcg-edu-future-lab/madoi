@@ -1,4 +1,4 @@
-# Madoi - an Open Source Messaging Server for Collaboration Tools
+# Madoi - an Open Source Messaging Server for Serverless Development of Collaboration Tools
 
 Madoiは、コラボレーションツール用のメッセージングサーバーです。通信にはWebsocketを使用しています。"Madoi" という名前は、親しい人が集まって語らい楽しい時間を過ごす "円居"、と、多人数が参加するコラボレーションツールを実現するための複雑なプログラミングに苦悩する開発者の"惑い"、の両方を意味しています。
 
