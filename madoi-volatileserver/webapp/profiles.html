@@ -3,34 +3,78 @@
 <meta charset="utf8">
 </head>
 <body>
+<h4>あなた</h4>
+<div>
+<form id="selfForm">
+id: <span id="selfId"></span>
+name: <input id="selfName" type="text" value="匿名">
+</form>
+</div>
+<h4>ルーム</h4>
+<div>
+<form id="roomForm">
+色: <input id="roomBgcolor" type="color">
+</form>
+</div>
+<h4>他の参加者</h4>
+<div>
+<div id="peers">
+</div>
+</div>
 <script src="./js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数はルームのIDとAPI KEY。
   const m = new madoi.Madoi(
-    "tutorial001_xoeirj34f?apikey=ahfuTep6ooDi7Oa4",
-    {},
-    {background: "back.png"});
+    "profiles_avmeLdkj34is?apikey=ahfuTep6ooDi7Oa4",
+    {"profile": {"name": "匿名"}},
+    {"bgcolor": "#ffffff"});
 
-  // ウィンドウがクリックされたら、メッセージを送信する。
-  window.addEventListener("click", e=>{
-    // 第一引数はメッセージタイプ。第二引数はメッセージ内容
-    m.send("windowClick", "hello");
-    m.setRoomProfile("hello", "world");
+  const selfIdSpan = document.getElementById("selfId");
+  const selfNameInput = document.getElementById("selfName");
+  const roomBgcolorInput = document.getElementById("roomBgcolor");
+  const peersDiv = document.getElementById("peers");
+  const addPeer = (id, profile)=>{
+    const p = document.createElement("div");
+    p.setAttribute("id", `peer_${id}`);
+    p.innerText = `id: ${id}, name: ${profile["name"]}`;
+    peersDiv.append(p);
+  };
+  m.addEventListener("enterRoomAllowed", ({detail: {room, selfPeer, otherPeers}})=>{
+    roomBgcolorInput.value = room.profile["bgcolor"];
+    selfIdSpan.innerText = selfPeer.id;
+    selfNameInput.value = selfPeer.profile["name"];
+    for(const p of otherPeers){
+      addPeer(p.id, p.profile);
+    }
+  });
+  m.addEventListener("roomProfileUpdated", ({detail: {updates, deletes}})=>{
+    if("bgcolor" in updates){
+      roomBgcolorInput.value = updates["bgcolor"];
+    }
+  });
+  m.addEventListener("peerEntered", ({detail: {id, profile}})=>{
+    addPeer(id, profile);
+  });
+  m.addEventListener("peerLeaved", ({detail: peerId})=>{
+    document.getElementById(`peer_${peerId}`).remove();
+  });
+  m.addEventListener("peerProfileUpdated", ({detail: {sender, updates, deletes}})=>{
+    console.log("peerProfileUpdated", sender, updates);
+    if("name" in updates){
+      const p = document.getElementById(`peer_${sender}`);
+      p.innerText = `id: ${sender}, name: ${updates["name"]}`;
+    }
   });
 
-  // "windowClick"タイプのメッセージを受信したら、documentにdivタグを追加する。
-  m.addReceiver("windowClick", e=>{
-  //({detail: {body}})
-    console.log(e);
-    const {detail: {body}} = e;
-    const div = document.createElement("div");
-    div.innerText = body;
-    document.body.append(div);
+  document.getElementById("selfForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    m.setSelfPeerProfile("name", selfNameInput.value);
   });
-  m.addEventListener("roomProfileUpdated", ({detail})=>{
-    console.log(detail);
+  roomBgcolorInput.addEventListener("change", e=>{
+    e.preventDefault();
+    m.setRoomProfile("bgcolor", e.target.value);
   });
 });
 </script>
