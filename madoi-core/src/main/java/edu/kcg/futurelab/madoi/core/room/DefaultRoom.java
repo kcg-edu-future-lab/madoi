@@ -243,10 +243,10 @@ public class DefaultRoom implements Room{
 			case "UpdateRoomProfile": {
 				var msg = decodeAndSetSender(peer, message, UpdateRoomProfile.class);
 				if(msg.getUpdates() != null) for(Map.Entry<String, Object> e: msg.getUpdates().entrySet()) {
-					peer.getProfile().put(e.getKey(), e.getValue());
+					profile.put(e.getKey(), e.getValue());
 				}
 				if(msg.getDeletes() != null) for(String k: msg.getDeletes()) {
-					peer.getProfile().remove(k);
+					profile.remove(k);
 				}
 				forwardBroadcast(msg);
 				break;
