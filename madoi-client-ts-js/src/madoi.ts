@@ -557,7 +557,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private objectRevisions = new Map<number, number>();  // objectId -> revision (sum of modification count)
 	private url: string;
 	private ws: WebSocket | null = null;
-	private room?: RoomInfo;
+	private room: RoomInfo = {id: "", profile: {}};
 	private selfPeer: PeerInfo;
 	private peers = new Map<string, PeerInfo>();
 	private currentSender: string | null = null;
@@ -592,15 +592,17 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	}
 
 	setRoomProfile(name: string, value: any){
+		const m: {[key: string]: any} = {};
+		m[name] = value;
 		this.sendMessage(newUpdateRoomProfile(
-			{updates: {name: value}}
-		))
+			{updates: m}
+		));
 	}
 
 	removeRoomProfile(name: string){
 		this.sendMessage(newUpdateRoomProfile(
 			{deletes: [name]}
-		))
+		));
 	}
 
 	getSelfPeerId(){
@@ -613,8 +615,10 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 
 	setSelfPeerProfile(name: string, value: any){
 		this.selfPeer.profile[name] = value;
+		const m: {[key: string]: any} = {};
+		m[name] = value;
 		this.sendMessage(newUpdatePeerProfile(
-			{updates: {name: value}}
+			{updates: m}
 		));
 	}
 
@@ -671,7 +675,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			for(const [_, f] of this.enterRoomAllowedMethods){
 				f(msg.selfPeer, msg.otherPeers, msg.histories);
 			}
-			this.selfPeer.id = msg.selfPeer.id;
+			this.room = msg.room;
 			this.selfPeer.order = msg.selfPeer.order;
 			this.peers.set(msg.selfPeer.id, {...msg.selfPeer, profile: this.selfPeer.profile});
 			for(const p of msg.otherPeers){
@@ -683,7 +687,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			if(msg.histories) for(const m of msg.histories){
 				this.data(m);
 			}
-		} else if(msg.type == "EnterRoomDenied"){
+		} else if(msg.type === "EnterRoomDenied"){
 			for(const [_, f] of this.enterRoomDeniedMethods){
 				f();
 			}
@@ -693,36 +697,33 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				f();
 			}
 			this.fire("leaveRoomDone", {});
-		} else if(msg.type == "UpdateRoomProfile"){
-			const p = this.room;
-			if(msg.peerId && p){
-				if(msg.updates) for(const [key, value] of Object.entries(msg.updates)) {
-					p.profile[key] = value;
-				}
-				if(msg.deletes) for(const key of msg.deletes){
-					delete p.profile[key];
-				}
-				const v: RoomProfileUpdatedDetail = {...msg, roomId: msg.roomId};
-				for(const [_, f] of this.roomProfileUpdatedMethods){
-					f(v);
-				}
-				this.fire("roomProfileUpdated", v);
+		} else if(msg.type === "UpdateRoomProfile"){
+			if(msg.updates) for(const [key, value] of Object.entries(msg.updates)) {
+				this.room.profile[key] = value;
 			}
-		} else if(msg.type == "PeerEntered"){
+			if(msg.deletes) for(const key of msg.deletes){
+				delete this.room.profile[key];
+			}
+			const v: RoomProfileUpdatedDetail = {...msg, roomId: msg.roomId};
+			for(const [_, f] of this.roomProfileUpdatedMethods){
+				f(v);
+			}
+			this.fire("roomProfileUpdated", v);
+		} else if(msg.type === "PeerEntered"){
 			this.peers.set(msg.peer.id, msg.peer);
 			for(const [_, f] of this.peerEnteredMethods){
 				f(msg.peer);
 			}
 			this.fire("peerEntered", msg.peer);
-		} else if(msg.type == "PeerLeaved"){
+		} else if(msg.type === "PeerLeaved"){
 			this.peers.delete(msg.peerId);
 			for(const [_, f] of this.peerLeavedMethods){
 				f(msg.peerId);
 			}
 			this.fire("peerLeaved", msg.peerId);
-		} else if(msg.type == "UpdatePeerProfile"){
-			const p = this.peers.get(msg.peerId);
-			if(msg.peerId && p){
+		} else if(msg.type === "UpdatePeerProfile"){
+			const p = this.peers.get(msg.sender!);
+			if(msg.sender && p){
 				if(msg.updates) for(const [key, value] of Object.entries(msg.updates)) {
 					p.profile[key] = value;
 				}
@@ -735,7 +736,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				}
 				this.fire("peerProfileUpdated", v);
 			}
-		} else if(msg.type == "InvokeMethod"){
+		} else if(msg.type === "InvokeMethod"){
 			if(msg.objId){
 				// check consistency?
 				const rev = this.objectRevisions.get(msg.objId);
@@ -754,7 +755,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
             } else {
 				console.warn("no suitable method for ", msg);
 			}
-		} else if(msg.type == "InvokeFunction"){
+		} else if(msg.type === "InvokeFunction"){
 			const f = this.sharedFunctions[msg.funcId];
 			if(f){
                 const ret = this.applyInvocation(f, msg.args);
@@ -768,7 +769,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
             } else {
 				console.warn("no suitable function for ", msg);
 			}
-		} else if(msg.type == "UpdateObjectState"){
+		} else if(msg.type === "UpdateObjectState"){
 			const f = this.setStateMethods.get(msg.objId);
 			if(f){
 				f(JSON.parse(msg.state), msg.revision);
@@ -1033,7 +1034,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
         });
 		const self = this;
 		return [index, function(){
-			if(self.ws == null){
+			if(self.ws === null){
 				if(f) return f.apply(null, arguments);
 			} else{
                 let ret = null;

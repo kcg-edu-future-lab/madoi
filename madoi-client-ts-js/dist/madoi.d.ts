@@ -351,7 +351,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private objectRevisions;
     private url;
     private ws;
-    private room?;
+    private room;
     private selfPeer;
     private peers;
     private currentSender;
@@ -365,7 +365,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     });
     getRoomProfile(): {
         [key: string]: any;
-    } | undefined;
+    };
     setRoomProfile(name: string, value: any): void;
     removeRoomProfile(name: string): void;
     getSelfPeerId(): string;
