@@ -131,7 +131,7 @@ window.addEventListener("load", ()=>{
     const input = document.getElementById("input");
     // メッセージのブロードキャスト。
     // 引数はメッセージタイプとメッセージ内容(body)
-    m.send("chat", input.value)
+    m.send("chat", input.value);
     input.value = "";
   });
   // レシーバの登録。引数はタイプとレシーバ。
@@ -210,12 +210,12 @@ sequenceDiagram
 
 ### 関数実行の共有
 
-Madoiでは多人数参加型のツールの開発に必要なメッセージ配信機能が用意されています。さらに、このメッセージ配信機能を利用した、オブジェクトの状態や関数の実行を共有する機能を提供しています。この機能を使うと、メッセージをどのようにやりとりするかはMadoiに任せて、関数やオブジェクトをどう共有するかを意識してプログラミングが行えます。
+Madoiでは多人数参加型のツールの開発に必要なメッセージ配信機能が用意されています。さらに、このメッセージ配信機能を利用して、オブジェクトの状態や関数の実行を共有する機能を提供しています。この機能を使うと、メッセージをどのようにやりとりするかはMadoiに任せ、関数やオブジェクトをどう共有するかを意識したプログラミングが行えます。
 
-実際に例を見てみましょう。以下に示すコードは、先ほど実装したチャットを書き換えたものです。チャットログにメッセージを追加する部分が関数(chat)として切り出され、Madoiを使ってその関数の実行を共有するというスタイルに変わっています。
+実際に例を見てみましょう。以下に示すコードは、先ほど実装したチャットを書き換えたものです。チャットログにメッセージを追加する部分を関数(chat)として切り出し、Madoiを使ってその関数を共有するというスタイルに変わっています。
 
 [chat_by_function.html](madoi-volatileserver/webapp/chat_by_function.html)
-```html
+```html {.line-numbers}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -244,7 +244,7 @@ window.addEventListener("load", ()=>{
 
   // メッセージの追加処理を実装した関数。
   let chat = function(message){
-    document.getElementById("log").innerHTML += message + "<br />";
+    document.getElementById("log").innerHTML += `<div>${message}</div>\n`;
   };
 
   // 関数をmadoiに登録する。戻り値は、本来のchat関数の代わりに使用する関数。
@@ -265,14 +265,150 @@ window.addEventListener("load", ()=>{
 </html>
 ```
 
-共有したい処理を関数に切り出し、それをMadoiに登録し、以降は登録時に返された関数を実行するたびに、
-同じルームに参加している全てのピアで、その関数が実行されるようになります。
-登録時に返された関数を実行した際には、実際には本来の関数は実行されず、サーバへのメッセージ送信のみが行われます。
-その後サーバからメッセージが全てのピアに送信され、ピアでそれを受信した際に、本来の関数が実行されます。
-この振る舞いにより、全てのピアで同じ順番で関数が実行されるため、各ピアの状態が同期されやすくなります
-(本来の関数内で乱数を利用していたり、共有すべき関数が登録されていないなど、同期が保たれない状況は複数あり得るため、
-"同期されやすくなる"という表現にとどめます)。
+Madoiに関数を登録すると、代替の関数が返されます。その関数を実行すると、実際には元の関数は実行されず、サーバへのメッセージ送信のみが行われます。
+その後サーバからメッセージが全てのピアに送信され、ピアでそれを受信した際に、元の関数が実行されます。
+この振る舞いにより、全てのピアで同じ順番で関数が実行されるため、各ピアの状態が同期されます。ただし、元の関数内で乱数を利用していたり、他にも共有すべき関数があるが登録されていないなど、同期が保たれなくなる状況は複数あり得るため、アプリケーション内で共有したい状態に変更を起こす関数をすべて登録するようにしてください。
 
+関数の実行はサーバ側で履歴が管理されており、新規に参加してきたピアに今までの履歴が送信されます。これにより、新規のピアも現在の状態に追いつくことができます。ただし、同期対象の関数が頻繁に実行される場合は、その分履歴の数が多くなり、新規に参加してきたピアに送られる履歴も多くなり時間がかかります。また、履歴には上限があるため(デフォルトでは1000件)、全ての履歴を残すこともできません。これらを解消するには、オブジェクトの同期機能を利用する必要があります。
+
+### オブジェクトの共有
+
+アプリケーションの状態を共有する手段として、Madoiでは、オブジェクト共有機能を提供しています。
+これは関数の共有をさらに発展させたもので、オブジェクトの状態取得・設定と、メソッド実行の共有が行えます。
+コード例を以下に示します。
+
+[chat_by_class.html](madoi-volatileserver/webapp/chat_by_class.html)
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="./js/madoi.js"></script>
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" class="form-control" placeholder="enter to send">
+  </label>
+  <div id="log"></div>
+</form>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAPI KEY。
+  const m = new madoi.Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+
+  // Chatクラスのインスタンスを作成する
+  const c = new Chat("form", "input", "log");
+
+  // Maodiに登録する。chatメソッドを共有するよう指定する。
+  // c.chatメソッドは、呼び出しの通知をサーバにBroadcastする代替メソッドで置き換えられる。
+  // レシーバも内部で用意され、通知がサーバから届くと本来のchatメソッドが実行される。
+  m.register(c, [
+    {method: c.chat, share: {maxLog: 1000}},
+    {method: c.getState, getState: {maxInterval: 3000}},
+    {method: c.setState, setState: {}}
+  ]);
+});
+
+//チャット処理を実装するクラス。
+class Chat{
+  constructor(formId, inputId, logId){
+    this.id = 0;
+    this.chatLog = [];
+    this.logDiv = document.getElementById(logId);
+    // フォームがsubmitされると、テキストボックスに入っている内容を
+    // 取り出しchatメソッドを呼び出す。
+    document.getElementById(formId).addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = document.getElementById(inputId);
+      this.chat(input.value);
+      input.value = "";
+    });
+  }
+  chat(message){
+    this.addChatLog(`chatlog_${this.id++}`, message);
+  }
+  // 状態取得のため定期的に呼び出される
+  getState(){
+    return this.chatLog;
+  }
+  // 状態設定のため参加時に一度だけ呼び出される
+  setState(state){
+    for(const l of state){
+      this.addChatLog(l.id, l.message);
+    }
+  }
+  addChatLog(id, message){
+    // チャットログに追加(getStateで返す用)
+    this.chatLog.push({id: id, message: message});
+    // メッセージを表示するdivを作成して追加
+    this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
+    // メッセージが100件を超えていたら古いものを削除
+    if(this.chatLog.length > 100){
+      document.getElementById(this.chatLog[0].id).remove();
+      this.chatLog.shift();
+    }
+  }
+}
+</script>
+</body>
+</html>
+```
+
+オブジェクトの共有は、共有対象の状態をクラスで管理することから始まります。
+今回は、Chatクラスで状態の管理を行なっています(表示の更新も行なっています)。
+状態に関係したメソッドは chat, getState, setState の3つで、これらはMadoiへの登録時にも指定されています。Madoiでは、メソッドを以下の3種類に分けて、状態管理に使用します。
+
+* 状態変更を起こすメソッド(chat)
+  * オブジェクトの状態を変更するメソッド。登録時に、`share` というパラメータとともに登録する。
+  * 関数の共有と同様に扱われ、メソッドが呼び出されるとサーバ側にメッセージが送信され、それがピアに届くと本来のメソッドが実行される。
+  * 呼び出し履歴もサーバ側で管理される。
+* 状態を取得するメソッド(getState)
+  * オブジェクトの状態を取得するメソッド。登録時に、`getState` というパラメータとともに登録する。1つのオブジェクトにつき1つしか登録できない。
+  * 状態変更が行われた後に呼び出され、オブジェクトの状態を示す値を返す。返された値はJSONに変換されサーバに送信される。
+  * サーバ側では、オブジェクトの状態として、このメソッドが返した値を保持する。また、状態がサーバに送信されると、それまでのメソッドの実行履歴は破棄される。
+* 状態を設定するメソッド(setState)
+  * オブジェクトの状態を設定するメソッド。登録時に、`setState`というパラメータとともに登録する。1つのオブジェクトにつき1つしか登録できない。
+  * 初回接続時に、オブジェクトの状態をサーバが管理している状態に更新するために呼び出される。ただし、オブジェクトの状態がサーバに記録されていない場合には呼び出されない。
+
+状態変更を起こすメソッドは複数存在しても構いませんが、取得と設定は1つずつである必要があります。これらのメソッドを使用して、ピアを跨いでオブジェクトの状態が同期されます。状態同期を実現する一連のやり取りを、以下に示します。
+
+```mermaid
+sequenceDiagram
+  participant Peer1
+  participant Server
+  participant Peer2
+  Peer1->>Server: 接続
+  Peer1->>Server: chat("hello")
+  Server->>Peer1: chat("hello")
+  Peer1->>Peer1: chat("hello")
+  Peer1->>Peer1: getState
+  Peer1->>Server: UpdateObjectState[{id: 0, message: "chat"}]
+  Peer2->>Server: 接続
+  Server->>Peer2: UpdateObjectState[{id: 0, message: "chat"}]
+  Peer2->>Peer2: setState[{id: 0, message: "chat"}]
+  Peer1->>Server: chat("world")
+  Server->>Peer1: chat("world")
+  Server->>Peer2: chat("world")
+  Peer1->>Peer1: chat("world")
+  Peer2->>Peer2: chat("world")
+  Peer1->>Peer1: getState
+  Peer1->>Server: UpdateObjectState([{id: 0, message: "hello"},{id: 1, message: "world}])
+```
+
+状態変更を起こすメソッドが実行されると、getStateメソッドが呼び出され、状態の取得が行われます。取得された状態はサーバに送信され(UpdateObjectStateメッセージ)、サーバ上で保持されます。
+新しいピアが参加した際に、その状態が送信され、ピア上ではsetStateメソッドが呼び出された状態が設定されます。
+その後状態変更を起こすメソッドが実行されると、再度それがサーバを経由してブロードキャストされ、続いてgetState呼び出しやUpdateObjectState送信が行われます。
+
+この仕組みにより、効率的にオブジェクトの状態が同期されます。
 
 
 
