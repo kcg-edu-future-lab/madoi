@@ -16,11 +16,11 @@ interface EnterRoomAllowedDetail{
 	otherPeers: PeerInfo[];
 }
 interface EnterRoomDeniedDetail{
+	message: string;
 }
 interface LeaveRoomDoneDetail{
 }
 interface RoomProfileUpdatedDetail{
-	roomId: string;
 	updates?: {[key: string]: any};
 	deletes?: string[];
 }
@@ -363,6 +363,7 @@ export interface EnterRoomAllowed extends ServerToPeerMessage{
 }
 export interface EnterRoomDenied extends ServerToPeerMessage{
 	type: "EnterRoomDenied";
+	message: string;
 }
 
 export interface LeaveRoomBody{
@@ -544,12 +545,12 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private sharedObjects: object[] = []
 	private getStateMethods = new Map<number, {method: Function, config: GetStateConfig, lastGet: number}>();
 	private setStateMethods = new Map<number, Function>(); // objectId -> @SetState method
-	private enterRoomAllowedMethods = new Map<number, (selfPeer: PeerInfo, otherPeers: PeerInfo[], histories: StoredMessageType[])=>void>();
-	private enterRoomDeniedMethods = new Map<number, ()=>void>();
+	private enterRoomAllowedMethods = new Map<number, (detail: EnterRoomAllowedDetail)=>void>();
+	private enterRoomDeniedMethods = new Map<number, (detail: EnterRoomDeniedDetail)=>void>();
 	private leaveRoomDoneMethods = new Map<number, ()=>void>();
 	private roomProfileUpdatedMethods = new Map<number, (detail: RoomProfileUpdatedDetail)=>void>();
-	private peerEnteredMethods = new Map<number, (peer: PeerInfo)=>void>();
-	private peerLeavedMethods = new Map<number, (peerId: string)=>void>();
+	private peerEnteredMethods = new Map<number, (detail: PeerEnteredDetail)=>void>();
+	private peerLeavedMethods = new Map<number, (detail: PeerLeavedDetail)=>void>();
 	private peerProfileUpdatedMethods = new Map<number, (detail: PeerProfileUpdatedDetail)=>void>();
 
 	private promises: any = {};
@@ -672,49 +673,51 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private data(msg: DownStreamMessageType){
 		if(msg.type == "Pong"){
 		} else if(msg.type === "EnterRoomAllowed"){
+			const m: EnterRoomAllowedDetail = msg as EnterRoomAllowed;
 			for(const [_, f] of this.enterRoomAllowedMethods){
-				f(msg.selfPeer, msg.otherPeers, msg.histories);
+				f(m);
 			}
 			this.room = msg.room;
 			this.selfPeer.order = msg.selfPeer.order;
-			this.peers.set(msg.selfPeer.id, {...msg.selfPeer, profile: this.selfPeer.profile});
-			for(const p of msg.otherPeers){
+			this.peers.set(m.selfPeer.id, {...m.selfPeer, profile: this.selfPeer.profile});
+			for(const p of m.otherPeers){
 				this.peers.set(p.id, p);
 			}
-			this.fire("enterRoomAllowed", {
-				room: msg.room, selfPeer: msg.selfPeer,
-				otherPeers: msg.otherPeers});
-			if(msg.histories) for(const m of msg.histories){
-				this.data(m);
+			this.fire("enterRoomAllowed", m);
+			if(msg.histories) for(const h of msg.histories){
+				this.data(h);
 			}
 		} else if(msg.type === "EnterRoomDenied"){
+			const m = msg as EnterRoomDenied;
+			const d: EnterRoomDeniedDetail = m;
 			for(const [_, f] of this.enterRoomDeniedMethods){
-				f();
+				f(d);
 			}
-			this.fire("enterRoomDenied", {});
+			this.fire("enterRoomDenied", d);
 		} else if(msg.type == "LeaveRoomDone"){
 			for(const [_, f] of this.leaveRoomDoneMethods){
 				f();
 			}
 			this.fire("leaveRoomDone", {});
 		} else if(msg.type === "UpdateRoomProfile"){
+			const m = msg as UpdateRoomProfile;
 			if(msg.updates) for(const [key, value] of Object.entries(msg.updates)) {
 				this.room.profile[key] = value;
 			}
 			if(msg.deletes) for(const key of msg.deletes){
 				delete this.room.profile[key];
 			}
-			const v: RoomProfileUpdatedDetail = {...msg, roomId: msg.roomId};
 			for(const [_, f] of this.roomProfileUpdatedMethods){
-				f(v);
+				f(m);
 			}
-			this.fire("roomProfileUpdated", v);
+			this.fire("roomProfileUpdated", m);
 		} else if(msg.type === "PeerEntered"){
-			this.peers.set(msg.peer.id, msg.peer);
+			const m: PeerEnteredDetail = msg as PeerEntered;
+			this.peers.set(m.peer.id, m.peer);
 			for(const [_, f] of this.peerEnteredMethods){
-				f(msg.peer);
+				f(m);
 			}
-			this.fire("peerEntered", msg.peer);
+			this.fire("peerEntered", {peer: m.peer});
 		} else if(msg.type === "PeerLeaved"){
 			this.peers.delete(msg.peerId);
 			for(const [_, f] of this.peerLeavedMethods){
@@ -787,8 +790,8 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		"EnterRoom", "EnterRoomAllowed", "EnterRoomDenied",
 		"LeaveRoom", "LeaveRoomDone", "UpdateRoomProfile",
 		"PeerArrived", "PeerLeaved", "UpdatePeerProfile",
-		"DefineObject", "DefineFunction",
-		"InvokeMethod", "InvokeFunction", "UpdateObjectState"
+		"DefineFunction", "DefineObject", 
+		"InvokeFunction", "UpdateObjectState", "InvokeMethod"
 	];
 	private isSystemMessageType(type: string){
 		return type in this.systemMessageTypes;

@@ -20,11 +20,11 @@ interface EnterRoomAllowedDetail {
     otherPeers: PeerInfo[];
 }
 interface EnterRoomDeniedDetail {
+    message: string;
 }
 interface LeaveRoomDoneDetail {
 }
 interface RoomProfileUpdatedDetail {
-    roomId: string;
     updates?: {
         [key: string]: any;
     };
@@ -229,6 +229,7 @@ export interface EnterRoomAllowed extends ServerToPeerMessage {
 }
 export interface EnterRoomDenied extends ServerToPeerMessage {
     type: "EnterRoomDenied";
+    message: string;
 }
 export interface LeaveRoomBody {
 }
