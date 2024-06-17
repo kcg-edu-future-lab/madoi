@@ -57,12 +57,10 @@ class Chat{
   }
   // 状態取得のため定期的に呼び出される
   getState(){
-    console.log("getState");
     return this.chatLog;
   }
   // 状態設定のため参加時に一度だけ呼び出される
   setState(state){
-    console.log("setState");
     for(const l of state){
       this.addChatLog(l.id, l.message);
     }
