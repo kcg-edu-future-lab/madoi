@@ -523,21 +523,21 @@ removeRoomProfile|name: string|ルームのプロファイル情報を削除す�
 <body>
 <h4>ルーム</h4>
 <div>
-<form id="roomForm">
-色: <input id="roomColor" type="color">
-</form>
+  <form id="roomForm">
+    色: <input id="roomColor" type="color">
+  </form>
 </div>
 <h4>あなた</h4>
 <div>
-<form id="selfForm">
-id: <span id="selfId"></span>
-name: <input id="selfName" type="text" value="匿名">
-</form>
+  <form id="selfForm">
+    id: <span id="selfId"></span>
+    name: <input id="selfName" type="text" value="匿名">
+  </form>
 </div>
 <h4>他の参加者</h4>
 <div>
-<div id="peers">
-</div>
+  <div id="peers">
+  </div>
 </div>
 <script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
