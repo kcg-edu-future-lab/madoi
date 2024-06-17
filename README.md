@@ -499,8 +499,7 @@ Madoiでは、ルームへピアが参加/離脱した際の通知や、ルー�
 |roomProfileUpdated|ルームのプロファイルが更新された|{ updates?: {[key: string]: any};<br/>　	deletes?: string[];<br/>}|
 |peerEntered|ピアが参加した|{	peer: PeerInfo; }|
 |peerLeaved|ピアが離脱した|{ peerId: string; }|
-|peerProfileUpdated|ピアのプロファイルが更新された|{ 	peerId: string;<br/>　updates?: {[key: string]: any};<br/>　deletes?: string[];<br/>}
-|
+|peerProfileUpdated|ピアのプロファイルが更新された|{ 	peerId: string;<br/>　updates?: {[key: string]: any};<br/>　deletes?: string[];<br/>}|
 
 ルームと自身のプロファイルを変更するには、次のメソッドを使用します。
 
