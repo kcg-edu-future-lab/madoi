@@ -22,11 +22,11 @@ div#log{
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_function_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
+  const m = new madoi.Madoi("chat_by_function_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
 
   // メッセージの追加処理を実装した関数。
   let chat = function(message){
-    document.getElementById("log").innerHTML += message + "<br />";
+    document.getElementById("log").innerHTML += `<div>${message}</div>\n`;
   };
 
   // 関数をmadoiに登録する。戻り値は、本来のchat関数の代わりに使用する関数。
