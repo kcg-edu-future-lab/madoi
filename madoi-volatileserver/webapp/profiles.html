@@ -54,14 +54,13 @@ window.addEventListener("load", ()=>{
       roomBgcolorInput.value = updates["bgcolor"];
     }
   });
-  m.addEventListener("peerEntered", ({detail: {id, profile}})=>{
+  m.addEventListener("peerEntered", ({detail: {peer: {id, profile}}})=>{
     addPeer(id, profile);
   });
   m.addEventListener("peerLeaved", ({detail: peerId})=>{
     document.getElementById(`peer_${peerId}`).remove();
   });
   m.addEventListener("peerProfileUpdated", ({detail: {sender, updates, deletes}})=>{
-    console.log("peerProfileUpdated", sender, updates);
     if("name" in updates){
       const p = document.getElementById(`peer_${sender}`);
       p.innerText = `id: ${sender}, name: ${updates["name"]}`;
