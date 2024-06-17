@@ -22,7 +22,7 @@ div#log{
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat0000?apikey=ahfuTep6ooDi7Oa4");
+  const m = new madoi.Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する
   const c = new Chat("form", "input", "log");
@@ -31,14 +31,18 @@ window.addEventListener("load", ()=>{
   // c.chatメソッドは、呼び出しの通知をサーバにBroadcastする代替メソッドで置き換えられる。
   // レシーバも内部で用意され、通知がサーバから届くと本来のchatメソッドが実行される。
   m.register(c, [
-    {method: c.chat, share: {maxLog: 1000}}
+    {method: c.chat, share: {maxLog: 1000}},
+    {method: c.getState, getState: {maxInterval: 3000}},
+    {method: c.setState, setState: {}}
   ]);
 });
 
 //チャット処理を実装するクラス。
 class Chat{
   constructor(formId, inputId, logId){
-    this.log = document.getElementById(logId);
+    this.id = 0;
+    this.chatLog = [];
+    this.logDiv = document.getElementById(logId);
     // フォームがsubmitされると、テキストボックスに入っている内容を
     // 取り出しchatメソッドを呼び出す。
     document.getElementById(formId).addEventListener("submit", e=>{
@@ -49,8 +53,30 @@ class Chat{
     });
   }
   chat(message){
-    // ログを表示するdivタグに、messaageを含んだdivタグを追加する。
-    this.log.innerHTML += `<div>${message}</div>\n`;
+    this.addChatLog(`chatlog_${this.id++}`, message);
+  }
+  // 状態取得のため定期的に呼び出される
+  getState(){
+    console.log("getState");
+    return this.chatLog;
+  }
+  // 状態設定のため参加時に一度だけ呼び出される
+  setState(state){
+    console.log("setState");
+    for(const l of state){
+      this.addChatLog(l.id, l.message);
+    }
+  }
+  addChatLog(id, message){
+    // チャットログに追加(getStateで返す用)
+    this.chatLog.push({id: id, message: message});
+    // メッセージを表示するdivを作成して追加
+    this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
+    // メッセージが100件を超えていたら古いものを削除
+    if(this.chatLog.length > 100){
+      document.getElementById(this.chatLog[0].id).remove();
+      this.chatLog.shift();
+    }
   }
 }
 </script>
