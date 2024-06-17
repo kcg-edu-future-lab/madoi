@@ -7,19 +7,10 @@ public class UpdateRoomProfile extends Message{
 	public UpdateRoomProfile() {
 	}
 
-	public UpdateRoomProfile(String sender, String roomId, Map<String, Object> updates, List<String> deletes) {
+	public UpdateRoomProfile(String sender, Map<String, Object> updates, List<String> deletes) {
 		setSender(sender);
-		this.roomId = roomId;
 		this.updates = updates;
 		this.deletes = deletes;
-	}
-
-	public String getRoomId() {
-		return roomId;
-	}
-
-	public void setRoomId(String roomId) {
-		this.roomId = roomId;
 	}
 
 	public Map<String, Object> getUpdates() {
@@ -38,7 +29,6 @@ public class UpdateRoomProfile extends Message{
 		this.deletes = deletes;
 	}
 
-	private String roomId;
 	private Map<String, Object> updates;
 	private List<String> deletes;
 }
