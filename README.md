@@ -110,7 +110,6 @@ div#log{
   min-height: 300px;
 }
 </style>
-<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 </head>
 <body>
 <form id="form">
@@ -119,6 +118,7 @@ div#log{
   </label>
   <div id="log"></div>
 </form>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
@@ -220,7 +220,6 @@ Madoiでは多人数参加型のツールの開発に必要なメッセージ配
 <html lang="ja">
 <head>
 <meta encoding="utf-8">
-<script src="./js/madoi.js"></script>
 <style>
 div#log{
   border: 1px solid;
@@ -236,6 +235,7 @@ div#log{
   </label>
   <div id="log"></div>
 </form>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
@@ -283,7 +283,6 @@ Madoiに関数を登録すると、代替の関数が返されます。その関
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<script src="./js/madoi.js"></script>
 <style>
 div#log{
   border: 1px solid;
@@ -299,6 +298,7 @@ div#log{
   </label>
   <div id="log"></div>
 </form>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
@@ -411,4 +411,135 @@ sequenceDiagram
 この仕組みにより、効率的にオブジェクトの状態が同期されます。
 
 
+### ピアの入退室管理やプロファイルの管理
 
+Madoiでは、ルームへピアが参加/離脱した際の通知や、ルームとピアのプロファイル情報の通知機能が提供されています。
+これらを利用することで、参加者のリストやプロファイルの表示、ルーム固有の設定の管理が行えます。
+
+ルームのプロファイルは、どのピアでも変更できます。一方、ピアのプロファイルは、ピア自身しか変更できません。
+どちらも、変更したことが他のピアに通知されます。
+また、新規に参加したピアには、現在のルームのプロファイルと、既存のピアのプロファイルが送信されます。
+
+これらのイベントを取得するには、addEventListenerメソッドを使用します。
+
+以下に、各イベントの詳細を示します。
+
+|イベント名|発生するタイミング|詳細(イベントのdetailプロパティ)|
+|---|---|---|
+|enterRoomAllowed|ルームに参加した|{ room: RoomInfo;<br/>　selfPeer: PeerInfo;<br/>　	otherPeers: PeerInfo[];<br/> }|
+|enterRoomDenied|ルームに参加拒否された|{ message: string; }|
+|roomProfileUpdated|ルームのプロファイルが更新された|{ updates?: {[key: string]: any};<br/>　	deletes?: string[];<br/>}|
+|peerEntered|ピアが参加した|{	peer: PeerInfo; }|
+|peerLeaved|ピアが離脱した|{ peerId: string; }|
+|peerProfileUpdated|ピアのプロファイルが更新された|{ 	peerId: string;<br/>　updates?: {[key: string]: any};<br/>　deletes?: string[];<br/>}
+|
+
+ルームと自身のプロファイルを変更するには、次のメソッドを使用します。
+
+メソッド|引数|説明
+---|---|---
+setSelfPeerProfile|name: string, value: string|自身のプロファイル情報を変更する
+removeSelfPeerProfile|name: string|自身のプロファイル情報を削除する
+setRoomProfile|name: string, value: string|ルームのプロファイル情報を変更する
+removeRoomProfile|name: string|ルームのプロファイル情報を削除する
+
+これらのイベントやメソッドを利用して、参加者のリスト管理とルームの設定(色)管理を行うサンプルを以下に示します。
+
+[profiles.html](madoi-volatileserver/webapp/profiles.html)
+```html
+
+<html lang="ja">
+<head>
+<meta charset="utf8">
+</head>
+<body>
+<h4>ルーム</h4>
+<div>
+<form id="roomForm">
+色: <input id="roomColor" type="color">
+</form>
+</div>
+<h4>あなた</h4>
+<div>
+<form id="selfForm">
+id: <span id="selfId"></span>
+name: <input id="selfName" type="text" value="匿名">
+</form>
+</div>
+<h4>他の参加者</h4>
+<div>
+<div id="peers">
+</div>
+</div>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 最初の引数はルームのIDとAPI KEY。
+  // 2番目の引数に自身のプロファイル、3番目にルームのプロファイルを指定する。
+  // 二人目以降の参加者のルームプロファイル指定は無視される。
+  const m = new madoi.Madoi(
+    "profiles_avmeLdkj34is?apikey=ahfuTep6ooDi7Oa4",
+    {"profile": {"name": "匿名"}},
+    {"color": "#ffffff"});
+
+  // 後で参照するフォーム要素を取得しておく
+  const selfIdSpan = document.getElementById("selfId");
+  const selfNameInput = document.getElementById("selfName");
+  const roomColorInput = document.getElementById("roomColor");
+  const peersDiv = document.getElementById("peers");
+
+  // ピアの追加処理
+  const addPeer = (id, profile)=>{
+    const p = document.createElement("div");
+    p.setAttribute("id", `peer_${id}`);
+    p.innerText = `id: ${id}, name: ${profile["name"]}`;
+    peersDiv.append(p);
+  };
+
+  // ルームに参加した際に発生するイベント。ルームや自身の情報を画面に反映する
+  m.addEventListener("enterRoomAllowed", ({detail: {room, selfPeer, otherPeers}})=>{
+    roomColorInput.value = room.profile["color"];
+    selfIdSpan.innerText = selfPeer.id;
+    selfNameInput.value = selfPeer.profile["name"];
+    for(const p of otherPeers){
+      addPeer(p.id, p.profile);
+    }
+  });
+  // ルームのプロファイルが変更された際に発生するイベント。ルームの色情報を画面に反映する
+  m.addEventListener("roomProfileUpdated", ({detail: {updates, deletes}})=>{
+    if("color" in updates){
+      roomColorInput.value = updates["color"];
+    }
+  });
+  // 他のピアが参加した際に発生するイベント。ピアリストを更新する
+  m.addEventListener("peerEntered", ({detail: {peer: {id, profile}}})=>{
+    addPeer(id, profile);
+  });
+  // 他のピアが離脱した際に発生するイベント。ピアリストを更新する
+  m.addEventListener("peerLeaved", ({detail: peerId})=>{
+    document.getElementById(`peer_${peerId}`).remove();
+  });
+  // 他のピアのプロファイルが更新された際に発生するイベント。ピアの名前を更新する
+  m.addEventListener("peerProfileUpdated", ({detail: {sender, updates, deletes}})=>{
+    if("name" in updates){
+      const p = document.getElementById(`peer_${sender}`);
+      p.innerText = `id: ${sender}, name: ${updates["name"]}`;
+    }
+  });
+
+  // 自身の名前の変更を通知する
+  document.getElementById("selfForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    m.setSelfPeerProfile("name", selfNameInput.value);
+  });
+  // ルームの色情報を変更する
+  roomColorInput.addEventListener("change", e=>{
+    e.preventDefault();
+    m.setRoomProfile("color", e.target.value);
+  });
+});
+</script>
+</body>
+</html>
+```
