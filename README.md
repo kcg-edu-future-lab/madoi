@@ -86,7 +86,7 @@ madoi_volatileserver-1  | 2024-06-16T14:20:06.153Z  INFO 7 --- [           main]
 madoi_volatileserver-1  | 2024-06-16T14:20:06.170Z  INFO 7 --- [           main] e.k.f.madoi.volatileserver.Application   : Started Application in 3.427 seconds (process running for 3.999)
 ```
 
-`Start Application`と出力されると、サーバが起動しています。この状態で `http://localhost:8080/madoi/chat_message.html` にブラウザでアクセスすると、チャットサンプルが表示されます。
+`Start Application`と出力されると、サーバが起動しています。この状態で `http://localhost:8080/madoi/chat_by_sendrecv.html` にブラウザでアクセスすると、チャットサンプルが表示されます。
 
 
 ## クライアントライブラリの使い方
