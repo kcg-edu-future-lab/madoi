@@ -183,12 +183,6 @@ public class DefaultRoom implements Room{
 		var otherPeers = peers.values().stream().map(p -> newPeerInfo(p))
 				.collect(Collectors.toList());
 		var histories = new ArrayList<Object>();
-		for(var oi : objectRuntimeInfos.values()) {
-			if(oi.getState() != null) {
-				histories.add(new UpdateObjectState(
-						oi.getDefinition().getObjId(), oi.getState(), oi.getRevision()));
-			}
-		}
 		for(var h : this.histories) {
 			switch(h.getCastType()) {
 				case UNICAST:  case MULTICAST:
@@ -268,14 +262,40 @@ public class DefaultRoom implements Room{
 				forwardOthercast(msg);
 				break;
 			}
+			case "DefineFunction": {
+				var def = decodeAndSetSender(peer, message, DefineFunction.class).getDefinition();
+				functionRuntimeInfos.put(def.getFuncId(), new FunctionRuntimeInfo(def));
+				break;
+			}
 			case "DefineObject": {
 				var def = decodeAndSetSender(peer, message, DefineObject.class).getDefinition();
 				objectRuntimeInfos.put(def.getObjId(), new ObjectRuntimeInfo(def));
 				break;
 			}
-			case "DefineFunction": {
-				var def = decodeAndSetSender(peer, message, DefineFunction.class).getDefinition();
-				functionRuntimeInfos.put(def.getFuncId(), new FunctionRuntimeInfo(def));
+			case "InvokeFunction": {
+				var ifn = decodeAndSetSender(peer, message, InvokeFunction.class);
+				var fri = functionRuntimeInfos.get(ifn.getFuncId());
+				if(fri == null) {
+					var msg = String.format(
+							"Function not found. funcId: %d.",
+							ifn.getFuncId());
+					logger.warning(msg);
+					castFromServerToPeer(newError(msg), peer);
+					break;
+				}
+				// 履歴に追加
+				histories.add(MessageHistory.of(ifn));
+				if(histories.size() >= maxHistory) {
+					histories.remove(0);
+				}
+				// 送信
+				var fd = fri.getDefinition();
+				var cfg = fd.getConfig();
+				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
+					forwardBroadcast(ifn);
+				} else {
+					forwardOthercast(ifn);
+				}
 				break;
 			}
 			case "UpdateObjectState": {
@@ -287,26 +307,26 @@ public class DefaultRoom implements Room{
 					castFromServerToPeer(newError(msg), peer);
 					return;
 				}
-				ori.setState(uos.getState());
-/*
-				if(ori.getRevision() != uos.getRevision()) {
-					var msg = String.format(
-							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
-							uos.getObjId(), ori.getRevision(), uos.getRevision());
-					logger.warning(msg);
-				}
-*/				ori.setRevision(uos.getRevision());
-				// 更新されたオブジェクトに対するInvokeMethod履歴を削除
-				var it = histories.iterator();
-				while(it.hasNext()) {
-					var h = it.next();
-					if(!(h.getMessage() instanceof InvokeMethod)) continue;
-					var imh = (InvokeMethod)h.getMessage();
-					if(imh.getObjId() == uos.getObjId()) it.remove();
-				}
-				histories.add(MessageHistory.of(uos));
-				if(histories.size() >= maxHistory) {
-					histories.remove(0);
+				if(ori.getRevision() < uos.getRevision()) {
+					// 新しいリビジョンの情報であれば受け入れる。
+					ori.setState(uos.getState());
+					ori.setRevision(uos.getRevision());
+					// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
+					var it = histories.iterator();
+					while(it.hasNext()) {
+						var h = it.next();
+						if(h.getMessage() instanceof UpdateObjectState) {
+							var uo = (UpdateObjectState)h.getMessage();
+							if(uo.getObjId() == uos.getObjId()) it.remove();
+						} else if(h.getMessage() instanceof InvokeMethod) {
+							var imh = (InvokeMethod)h.getMessage();
+							if(imh.getObjId() == uos.getObjId()) it.remove();
+						}
+					}
+					histories.add(MessageHistory.of(uos));
+					if(histories.size() >= maxHistory) {
+						histories.remove(0);
+					}
 				}
 				break;
 			}
@@ -349,32 +369,6 @@ public class DefaultRoom implements Room{
 					forwardBroadcast(im);
 				} else {
 					forwardOthercast(im);
-				}
-				break;
-			}
-			case "InvokeFunction": {
-				var ifn = decodeAndSetSender(peer, message, InvokeFunction.class);
-				var fri = functionRuntimeInfos.get(ifn.getFuncId());
-				if(fri == null) {
-					var msg = String.format(
-							"Function not found. funcId: %d.",
-							ifn.getFuncId());
-					logger.warning(msg);
-					castFromServerToPeer(newError(msg), peer);
-					break;
-				}
-				// 履歴に追加
-				histories.add(MessageHistory.of(ifn));
-				if(histories.size() >= maxHistory) {
-					histories.remove(0);
-				}
-				// 送信
-				var fd = fri.getDefinition();
-				var cfg = fd.getConfig();
-				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
-					forwardBroadcast(ifn);
-				} else {
-					forwardOthercast(ifn);
 				}
 				break;
 			}
