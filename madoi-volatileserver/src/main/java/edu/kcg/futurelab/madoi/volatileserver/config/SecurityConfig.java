@@ -46,9 +46,7 @@ public class SecurityConfig {
 					frame -> frame.sameOrigin()))
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(
-							AntPathRequestMatcher.antMatcher("/h2-console/**"), // for debug
-							AntPathRequestMatcher.antMatcher("/*.html"), // sample chat client
-							AntPathRequestMatcher.antMatcher("/signup"),
+							AntPathRequestMatcher.antMatcher("/*.html"), // sample codes
 							AntPathRequestMatcher.antMatcher("/js/**")
 							).permitAll()
 					.anyRequest()
