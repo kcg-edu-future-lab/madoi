@@ -14,8 +14,7 @@ FROM node:22 as nbuilder
 
 WORKDIR /madoi-client-ts-js
 COPY ./madoi-client-ts-js ./
-RUN \
-  --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm \
   npm ci && npm run build
 
 
