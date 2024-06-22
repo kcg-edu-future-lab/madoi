@@ -134,14 +134,14 @@ window.addEventListener("load", ()=>{
     e.preventDefault();
     const input = document.getElementById("input");
     // メッセージのブロードキャスト。
-    // 引数はメッセージタイプとメッセージ内容(body)
+    // 引数はメッセージタイプとメッセージ内容(content)
     m.send("chat", input.value);
     input.value = "";
   });
   // レシーバの登録。引数はタイプとレシーバ。
-  // レシーバのパラメータはCustomEvent型で、detailのbodyに送信内容が格納されている。
-  m.addReceiver("chat", ({detail: {body}})=>{
-    document.getElementById("log").innerHTML += `<div>${body}</div>\n`;
+  // レシーバのパラメータはCustomEvent型で、detailのcontentに送信内容が格納されている。
+  m.addReceiver("chat", ({detail: {content}})=>{
+    document.getElementById("log").innerHTML += `<div>${content}</div>\n`;
   });
 });
 </script>
@@ -185,14 +185,14 @@ sequenceDiagram
   currentTarget: Madoi,
   detail: {
     type: string;
-    body: any;
+    content: any;
     ...
   }
   ...
 }
 ```
 
-イベントオブジェクトのcurrentTargetは常にMadoiのインスタンスになります。detailにメッセージの詳細が含まれており、typeにsendメソッドの最初の引数に渡した文字列、bodyに2番目の引数に渡した値が含まれています(正確には、送信時にJSON.stringifyでJSONにエンコーディングされ、受信時にJSON.parseでオブジェクトに戻された値です)。
+イベントオブジェクトのcurrentTargetは常にMadoiのインスタンスになります。detailにメッセージの詳細が含まれており、typeにsendメソッドの最初の引数に渡した文字列、contentに2番目の引数に渡した値が含まれています(正確には、送信時にJSON.stringifyでJSONにエンコーディングされ、受信時にJSON.parseでオブジェクトに戻された値です)。
 
 タイプには任意の文字列が指定できますが、Madoiが内部で使用している、次の文字列は使用できません。
 
