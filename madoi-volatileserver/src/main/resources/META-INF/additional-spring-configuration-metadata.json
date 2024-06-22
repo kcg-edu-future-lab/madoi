@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "madoi.websocket.max-text-message-buffer-size",
+    "type": "int",
+    "description": "A description for 'madoi.websocket.max-text-message-buffer-size'"
+  },
+  {
+    "name": "madoi.websocket.maxBinaryMessageBufferSize",
+    "type": "int",
+    "description": "A description for 'madoi.websocket.maxBinaryMessageBufferSize'"
+  }
+]}
