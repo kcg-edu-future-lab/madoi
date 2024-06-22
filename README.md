@@ -58,7 +58,9 @@ Madoiプロジェクトでは、メモリ上で動作する(ファイルやDBに
 git clone https://github.com/kcg-edu-future-lab/madoi
 ```
 
-次にcloneしたディレクトリないで、docker-composeコマンドを実行してください。
+次にcloneしたディレクトリ内で、docker-composeコマンドを実行してください。
+(お使いのdockerのバージョンが20.10.7未満の場合、環境変数 `DOCKER_BUILDKIT` に `1` を設定してください)
+
 
 ```bash
 cd madoi
