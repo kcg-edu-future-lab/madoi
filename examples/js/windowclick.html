@@ -1,9 +1,10 @@
-<html>
+<!DOCTYPE html>
+<html lang="ja">
 <head>
 <meta charset="utf-8">
 </head>
 <body>
-<script src="./js/madoi.js"></script>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
@@ -17,10 +18,8 @@ window.addEventListener("load", ()=>{
   });
 
   // "windowClick"タイプのメッセージを受信したら、documentにdivタグを追加する。
-  m.addReceiver("windowClick", ({detail: {body}})=>{
-    const div = document.createElement("div");
-    div.innerText = body;
-    document.body.append(div);
+  m.addReceiver("windowClick", ({detail: {content}})=>{
+    document.body.innerHTML += `<div>${content}</div>\n`;
   });
 });
 </script>

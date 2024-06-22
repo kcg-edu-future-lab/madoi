@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- オブジェクト共有機能を使ってチャットを実現するサンプルプログラム。 -->
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -17,12 +18,12 @@ div#log{
   </label>
   <div id="log"></div>
 </form>
-<script src="./js/madoi.js"></script>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+  const m = new madoi.Madoi("chat_by_object_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する
   const c = new Chat("form", "input", "log");

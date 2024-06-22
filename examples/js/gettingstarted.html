@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 接続先は↑のscriptタグのsrc属性から決定される。
+  // 引数はルームのIDとAPI KEY。
+  const m = new madoi.Madoi("gettingstarted_xsadfkj43?apikey=ahfuTep6ooDi7Oa4");
+
+  // ウィンドウがクリックされたら、メッセージを送信する。
+  m.send("greeting", "hello");
+
+  // "windowClick"タイプのメッセージを受信したら、documentにdivタグを追加する。
+  m.addReceiver("greeting", ({detail: {content}})=>{
+    document.body.innerHTML += `<div>${content}</div>`;
+  });
+});
+</script>
+</body>
+</html>
