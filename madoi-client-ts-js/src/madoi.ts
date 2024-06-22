@@ -573,11 +573,11 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				}));
 		const sep = roomId.indexOf("?") != -1 ? "&" : "?";
 		if(roomId.match(/^wss?:\/\//)){
-			this.url = `${roomId}${sep}token=${authToken}`;
+			this.url = `${roomId}${sep}authToken=${authToken}`;
 		} else{
 			const p = (document.querySelector("script[src$='madoi.js']") as HTMLScriptElement).src.split("\/", 5);
 			const contextUrl = (p[0] == "http:" ? "ws:" : "wss:") + "//" + p[2] + "/" + p[3];
-			this.url = `${contextUrl}/rooms/${roomId}${sep}token=${authToken}`;
+			this.url = `${contextUrl}/rooms/${roomId}${sep}authToken=${authToken}`;
 		}
 
 		this.ws = new WebSocket(this.url);
