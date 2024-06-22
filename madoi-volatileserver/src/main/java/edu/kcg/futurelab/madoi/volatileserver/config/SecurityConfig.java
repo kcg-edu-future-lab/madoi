@@ -2,6 +2,7 @@ package edu.kcg.futurelab.madoi.volatileserver.config;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,8 +31,14 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		var apiKeys = Arrays.asList(props.getApiKeys());
-		var allowedOrigins = Arrays.asList(props.getAllowedOrigins());
+		var apiKeys = Arrays.asList(props.getApiKeys()).stream()
+				.flatMap(value->Stream.of(value.split(",")))
+				.filter(v->!v.isBlank())
+				.toList();
+		var allowedOrigins = Arrays.asList(props.getAllowedOrigins()).stream()
+				.flatMap(value->Stream.of(value.split(",")))
+				.filter(v->!v.isBlank())
+				.toList();
 		System.out.println("allowed origins: " + allowedOrigins);
 		System.out.println("apikeys: " + apiKeys);
 		http.csrf(csrf -> csrf.disable())
