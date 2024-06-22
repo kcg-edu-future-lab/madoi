@@ -15,9 +15,9 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class ApiKeyAuthenticationFilter extends UsernamePasswordAuthenticationFilter{
-	public ApiKeyAuthenticationFilter(String[] apiKeys, String contextPath, String... paths){
-		this.apiKeys = apiKeys;
+public class AuthTokenAuthenticationFilter extends UsernamePasswordAuthenticationFilter{
+	public AuthTokenAuthenticationFilter(String[] authTokens, String contextPath, String... paths){
+		this.authTokens = authTokens;
 		this.contextPath = contextPath;
 		this.paths = paths;
 	}
@@ -35,27 +35,27 @@ public class ApiKeyAuthenticationFilter extends UsernamePasswordAuthenticationFi
 					break;
 				}
 			}
-			var keyHeader = r.getHeader("X-APIKEY");
-			var keyParam = r.getParameter("apikey");
-			String foundKey = null;
-			if(apiKeys.length == 0) {
-				var auth = new ApiKeyAuthentication("NO_APIKEY_DEFINITIONS", AuthorityUtils.NO_AUTHORITIES);
+			var keyHeader = r.getHeader("X-Auth-Token");
+			var keyParam = r.getParameter("authToken");
+			String foundToken = null;
+			if(authTokens.length == 0) {
+				var auth = new AuthTokenAuthentication("NO_AUTH_TOKEN_DEFINITIONS", AuthorityUtils.NO_AUTHORITIES);
 				SecurityContextHolder.getContext().setAuthentication(auth);
 			} else if(target){
 				for(var k : new String[]{keyHeader, keyParam}){
 					if(k != null) {
-						for(var apikey : apiKeys){
-							if(apikey.equals(k)){
-								foundKey = apikey;
+						for(var authToken : authTokens){
+							if(authToken.equals(k)){
+								foundToken = authToken;
 							}
 						}
 					}
 				}
-				if(foundKey != null){
-					var auth = new ApiKeyAuthentication(foundKey, AuthorityUtils.NO_AUTHORITIES);
+				if(foundToken != null){
+					var auth = new AuthTokenAuthentication(foundToken, AuthorityUtils.NO_AUTHORITIES);
 					SecurityContextHolder.getContext().setAuthentication(auth);
 				} else{
-					throw new BadCredentialsException("Invalid API Key");
+					throw new BadCredentialsException("Invalid Auth Token");
 				}
 			}
 			chain.doFilter(request, response);
@@ -72,6 +72,6 @@ public class ApiKeyAuthenticationFilter extends UsernamePasswordAuthenticationFi
 	}
 
 	private String contextPath;
-	private String[] apiKeys;
+	private String[] authTokens;
 	private String[] paths;
 }

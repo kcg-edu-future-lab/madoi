@@ -9,8 +9,8 @@ logging:
 #        security: TRACE
 
 madoi:
-  apiKeys:
-    - ${MADOI_API_KEYS}
+  authTokens:
+    - ${MADOI_AUTH_TOKENS}
   allowedOrigins:
     - ${MADOI_ALLOWED_ORIGINS}
   websocket:

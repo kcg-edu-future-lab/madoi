@@ -9,6 +9,6 @@ import lombok.Data;
 @ConfigurationProperties("madoi")
 @Data
 public class ApplicationProperties {
-	private String[] apiKeys;
+	private String[] authTokens;
 	private String[] allowedOrigins;
 }

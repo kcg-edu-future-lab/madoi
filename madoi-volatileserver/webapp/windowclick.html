@@ -7,8 +7,8 @@
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数はルームのIDとAPI KEY。
-  const m = new madoi.Madoi("tutorial001_xoeirj34f?apikey=ahfuTep6ooDi7Oa4");
+  // 引数はルームのIDとAuthToken。
+  const m = new madoi.Madoi("tutorial001_xoeirj34f", "ahfuTep6ooDi7Oa4");
 
   // ウィンドウがクリックされたら、メッセージを送信する。
   window.addEventListener("click", e=>{

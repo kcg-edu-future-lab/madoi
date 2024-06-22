@@ -18,7 +18,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 
 import edu.kcg.futurelab.madoi.volatileserver.ApplicationProperties;
-import edu.kcg.futurelab.madoi.volatileserver.config.auth.ApiKeyAuthenticationFilter;
+import edu.kcg.futurelab.madoi.volatileserver.config.auth.AuthTokenAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -31,7 +31,7 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		var apiKeys = Arrays.asList(props.getApiKeys()).stream()
+		var authTokens = Arrays.asList(props.getAuthTokens()).stream()
 				.flatMap(value->Stream.of(value.split(",")))
 				.filter(v->!v.isBlank())
 				.toList();
@@ -39,8 +39,6 @@ public class SecurityConfig {
 				.flatMap(value->Stream.of(value.split(",")))
 				.filter(v->!v.isBlank())
 				.toList();
-		System.out.println("allowed origins: " + allowedOrigins);
-		System.out.println("apikeys: " + apiKeys);
 		http.csrf(csrf -> csrf.disable())
 			.cors(cors -> cors.configurationSource(request -> {
 				var c = new CorsConfiguration();
@@ -59,7 +57,7 @@ public class SecurityConfig {
 					.anyRequest()
 							.authenticated())
 			.addFilterBefore(
-					new ApiKeyAuthenticationFilter(apiKeys.toArray(new String[] {}), contextPath, "/rooms"),
+					new AuthTokenAuthenticationFilter(authTokens.toArray(new String[] {}), contextPath, "/rooms"),
 					AnonymousAuthenticationFilter.class)
 			;
 

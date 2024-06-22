@@ -564,19 +564,20 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private peers = new Map<string, PeerInfo>();
 	private currentSender: string | null = null;
 
-	constructor(servicePath: string, selfPeer?: {id: string, profile: {[key: string]: string}}, roomProfile?: {[key: string]: string}){
+	constructor(roomId: string, authToken: string, selfPeer?: {id: string, profile: {[key: string]: string}}, roomProfile?: {[key: string]: string}){
 		super();
 		this.selfPeer = selfPeer ? {...selfPeer, order: -1} : {id: "", order: -1, profile: {}};
 		this.interimQueue = new Array();
 		this.doSendMessage(newEnterRoom({
 				roomProfile: roomProfile, selfPeer: {id: "", profile: {}, ...selfPeer, order: -1}
 				}));
-		if(servicePath.match(/^wss?:\/\//)){
-			this.url = `${servicePath}`;
+		const sep = roomId.indexOf("?") != -1 ? "&" : "?";
+		if(roomId.match(/^wss?:\/\//)){
+			this.url = `${roomId}${sep}token=${authToken}`;
 		} else{
 			const p = (document.querySelector("script[src$='madoi.js']") as HTMLScriptElement).src.split("\/", 5);
 			const contextUrl = (p[0] == "http:" ? "ws:" : "wss:") + "//" + p[2] + "/" + p[3];
-			this.url = `${contextUrl}/rooms/${servicePath}`;
+			this.url = `${contextUrl}/rooms/${roomId}${sep}token=${authToken}`;
 		}
 
 		this.ws = new WebSocket(this.url);

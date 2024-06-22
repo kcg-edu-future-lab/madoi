@@ -5,12 +5,12 @@ import java.util.Collection;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
-public class ApiKeyAuthentication extends AbstractAuthenticationToken {
+public class AuthTokenAuthentication extends AbstractAuthenticationToken {
 	private static final long serialVersionUID = 1022073316972351441L;
 
-	public ApiKeyAuthentication(String apiKey, Collection<? extends GrantedAuthority> authorities) {
+	public AuthTokenAuthentication(String authToken, Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
-		this.apiKey = apiKey;
+		this.authToken = authToken;
 		setAuthenticated(true);
 	}
 
@@ -21,8 +21,8 @@ public class ApiKeyAuthentication extends AbstractAuthenticationToken {
 
 	@Override
 	public Object getPrincipal() {
-		return apiKey;
+		return authToken;
 	}
 
-	private String apiKey;
+	private String authToken;
 }

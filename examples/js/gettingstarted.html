@@ -9,8 +9,8 @@
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 接続先は↑のscriptタグのsrc属性から決定される。
-  // 引数はルームのIDとAPI KEY。
-  const m = new madoi.Madoi("gettingstarted_xsadfkj43?apikey=ahfuTep6ooDi7Oa4");
+  // 引数はルームのIDとAuthToken。
+  const m = new madoi.Madoi("gettingstarted_xsadfkj43", "ahfuTep6ooDi7Oa4");
 
   // ウィンドウがクリックされたら、メッセージを送信する。
   m.send("greeting", "hello");

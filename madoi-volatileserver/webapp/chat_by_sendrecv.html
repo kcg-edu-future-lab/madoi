@@ -21,8 +21,8 @@ div#log{
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j", "ahfuTep6ooDi7Oa4");
 
   // フォームのsubmit時に、メッセージを送信する。
   document.getElementById("form").addEventListener("submit", e=>{

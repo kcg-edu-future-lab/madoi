@@ -21,8 +21,8 @@ div#log{
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("chat_by_class_slkjf2sas", "ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する
   const c = new Chat("form", "input", "log");

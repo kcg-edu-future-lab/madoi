@@ -126,8 +126,8 @@ div#log{
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j", "ahfuTep6ooDi7Oa4");
 
   // フォームのsubmit時に、メッセージを送信する。
   document.getElementById("form").addEventListener("submit", e=>{
@@ -243,8 +243,8 @@ div#log{
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_function_sdkfj2j?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("chat_by_function_sdkfj2j", "ahfuTep6ooDi7Oa4");
 
   // メッセージの追加処理を実装した関数。
   let chat = function(message){
@@ -306,8 +306,8 @@ div#log{
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new madoi.Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("chat_by_class_slkjf2sas", "ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する
   const c = new Chat("form", "input", "log");
@@ -423,8 +423,8 @@ TypeScriptでは、デコレータを利用して共有すべきメソッド、�
 ```TypeScript
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAPI KEY。
-  const m = new Madoi("chat_by_class_slkjf2sas?apikey=ahfuTep6ooDi7Oa4");
+  // 引数は任意のルームIDとAuthToken。
+  const m = new Madoi("chat_by_class_slkjf2sas", "ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する
   const c = new Chat("form", "input", "log");
@@ -546,11 +546,11 @@ removeRoomProfile|name: string|ルームのプロファイル情報を削除す�
 <script>
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 最初の引数はルームのIDとAPI KEY。
-  // 2番目の引数に自身のプロファイル、3番目にルームのプロファイルを指定する。
+  // 引数はルームのIDとAuthToken、
+  // 3番目に自身のプロファイル、4番目にルームのプロファイルを指定する。
   // 二人目以降の参加者のルームプロファイル指定は無視される。
   const m = new madoi.Madoi(
-    "profiles_avmeLdkj34is?apikey=ahfuTep6ooDi7Oa4",
+    "profiles_avmeLdkj34is", "ahfuTep6ooDi7Oa4",
     {"profile": {"name": "匿名"}},
     {"color": "#ffffff"});
 
