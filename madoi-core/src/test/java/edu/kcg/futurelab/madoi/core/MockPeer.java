@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.kcg.futurelab.madoi.core.message.CustomMessage;
+import edu.kcg.futurelab.madoi.core.message.UserMessage;
 import edu.kcg.futurelab.madoi.core.message.EnterRoom;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomAllowed;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomDenied;
@@ -81,7 +81,7 @@ public class MockPeer implements Peer {
 				case "InvokeFunction":{m = om.readValue(text, InvokeFunction.class); break;}
 				case "InvokeMethod":{m = om.readValue(text, InvokeMethod.class); break;}
 				case "UpdateObjectState":{m = om.readValue(text, UpdateObjectState.class); break;}
-				default:{m = om.readValue(text, CustomMessage.class); break;}
+				default:{m = om.readValue(text, UserMessage.class); break;}
 				}
 				messages.add(m);
 			}

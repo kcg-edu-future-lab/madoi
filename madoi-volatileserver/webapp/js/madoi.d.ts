@@ -40,12 +40,12 @@ interface PeerProfileUpdatedDetail {
     };
     deletes?: string[];
 }
-interface MessageDetail {
+interface UserMessageDetail {
     type: string;
     sender?: string;
     castType?: CastType;
     recipients?: string[];
-    body: any;
+    content: any;
 }
 interface ErrorDetail {
     error: any;
@@ -97,7 +97,7 @@ export type RoomProfileUpdatedListener = TypedEventListenerOrEventListenerObject
 export type PeerEnteredListener = TypedEventListenerOrEventListenerObject<Madoi, PeerEnteredDetail> | null;
 export type PeerLeavedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerLeavedDetail> | null;
 export type PeerProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerProfileUpdatedDetail> | null;
-export type MessageListener = TypedEventListenerOrEventListenerObject<Madoi, MessageDetail> | null;
+export type UserMessageListener = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail> | null;
 export type ErrorListener = TypedEventListenerOrEventListenerObject<Madoi, ErrorDetail> | null;
 export declare function ShareClass(config?: {
     className?: string;
@@ -321,11 +321,11 @@ export interface UpdateObjectState extends BroadcastMessage {
     type: "UpdateObjectState";
 }
 export declare function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState;
-export interface CustomMessage extends Message {
-    body: any;
+export interface UserMessage extends Message {
+    content: any;
 }
 export type UpstreamMessageType = Ping | EnterRoom | LeaveRoom | UpdateRoomProfile | UpdatePeerProfile | DefineObject | DefineFunction | InvokeMethod | InvokeFunction | UpdateObjectState;
-export type DownStreamMessageType = Pong | EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile | PeerEntered | PeerLeaved | UpdatePeerProfile | InvokeMethod | InvokeFunction | UpdateObjectState | CustomMessage;
+export type DownStreamMessageType = Pong | EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile | PeerEntered | PeerLeaved | UpdatePeerProfile | InvokeMethod | InvokeFunction | UpdateObjectState | UserMessage;
 export type StoredMessageType = InvokeMethod | InvokeFunction | UpdateObjectState;
 export type MethodAndConfigParam = {
     method: Function;
@@ -383,14 +383,14 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private data;
     private systemMessageTypes;
     private isSystemMessageType;
-    send(type: string, body: any, castType?: "UNICAST" | "MULTICAST" | "BROADCAST" | "SELFCAST" | "OTHERCAST" | "PEERTOSERVER"): void;
-    unicast(type: string, body: any, recipient: string): void;
-    multicast(type: string, body: any, recipients: string[]): void;
-    broadcast(type: string, body: any): void;
-    othercast(type: string, body: any): void;
+    send(type: string, content: any, castType?: "UNICAST" | "MULTICAST" | "BROADCAST" | "SELFCAST" | "OTHERCAST" | "PEERTOSERVER"): void;
+    unicast(type: string, content: any, recipient: string): void;
+    multicast(type: string, content: any, recipients: string[]): void;
+    broadcast(type: string, content: any): void;
+    othercast(type: string, content: any): void;
     sendMessage(msg: Message): void;
-    addReceiver(type: string, listener: MessageListener): void;
-    removeReceiver(type: string, listener: MessageListener): void;
+    addReceiver(type: string, listener: UserMessageListener): void;
+    removeReceiver(type: string, listener: UserMessageListener): void;
     private doSendMessage;
     register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     registerFunction(func: Function, config?: MethodConfig): Function;

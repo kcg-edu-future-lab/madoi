@@ -35,12 +35,12 @@ interface PeerProfileUpdatedDetail{
 	updates?: {[key: string]: any};
 	deletes?: string[];
 }
-interface MessageDetail{
+interface UserMessageDetail{
 	type: string;
 	sender?: string;
 	castType?: CastType;
 	recipients?: string[];
-	body: any;
+	content: any;
 }
 interface ErrorDetail{
 	error: any;
@@ -112,7 +112,7 @@ export type RoomProfileUpdatedListener = TypedEventListenerOrEventListenerObject
 export type PeerEnteredListener = TypedEventListenerOrEventListenerObject<Madoi, PeerEnteredDetail> | null;
 export type PeerLeavedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerLeavedDetail> | null;
 export type PeerProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerProfileUpdatedDetail> | null;
-export type MessageListener = TypedEventListenerOrEventListenerObject<Madoi, MessageDetail> | null;
+export type UserMessageListener = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail> | null;
 export type ErrorListener = TypedEventListenerOrEventListenerObject<Madoi, ErrorDetail> | null;
 
 
@@ -514,8 +514,8 @@ export function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectS
     };
 }
 
-export interface CustomMessage extends Message{
-    body: any;
+export interface UserMessage extends Message{
+    content: any;
 }
 
 export type UpstreamMessageType =
@@ -528,7 +528,7 @@ export type DownStreamMessageType =
 	Pong |
 	EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile |
 	PeerEntered | PeerLeaved | UpdatePeerProfile |
-	InvokeMethod | InvokeFunction | UpdateObjectState | CustomMessage;
+	InvokeMethod | InvokeFunction | UpdateObjectState | UserMessage;
 export type StoredMessageType = InvokeMethod | InvokeFunction | UpdateObjectState;
 
 
@@ -797,7 +797,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		return type in this.systemMessageTypes;
 	}
 
-	send(type: string, body: any,
+	send(type: string, content: any,
 		castType: "UNICAST" | "MULTICAST" | "BROADCAST" |
 			"SELFCAST" | "OTHERCAST" | "PEERTOSERVER" = "BROADCAST"
 	){
@@ -805,41 +805,41 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		this.sendMessage({
 			type: type,
 			castType: castType,
-			body: body
+			content: content
 		});
 	}
 
-	unicast(type: string, body: any, recipient: string){
+	unicast(type: string, content: any, recipient: string){
 		this.sendMessage({
 			type: type,
 			castType: "UNICAST",
 			recipients: [recipient],
-			body: body
+			content: content
 		});
 	}
 
-	multicast(type: string, body: any, recipients: string[]){
+	multicast(type: string, content: any, recipients: string[]){
 		this.sendMessage({
 			type: type,
 			castType: "MULTICAST",
 			recipients: recipients,
-			body: body
+			content: content
 		});
 	}
 
-	broadcast(type: string, body: any){
+	broadcast(type: string, content: any){
 		this.sendMessage({
 			type: type,
 			castType: "BROADCAST",
-			body: body
+			content: content
 		});
 	}
 
-	othercast(type: string, body: any){
+	othercast(type: string, content: any){
 		this.sendMessage({
 			type: type,
 			castType: "OTHERCAST",
-			body: body
+			content: content
 		});
 	}
 
@@ -849,13 +849,13 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		this.doSendMessage(msg);
 	}
 
-	addReceiver(type: string, listener: MessageListener){
+	addReceiver(type: string, listener: UserMessageListener){
 		if(this.isSystemMessageType(type))
 			throw new Error("システムメッセージのレシーバは登録できません。");
 		this.addEventListener(type, listener as EventListener);
 	}
 
-	removeReceiver(type: string, listener: MessageListener){
+	removeReceiver(type: string, listener: UserMessageListener){
 		this.removeEventListener(type, listener as EventListener);
 	}
 
