@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" autofocus placeholder="enter to send">
+  </label>
+</form>
+<div id="log"></div>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAuthToken。
+  const m = new madoi.Madoi("intro_3_esfjo3i4as", "ahfuTep6ooDi7Oa4");
+
+  // ①Chatクラスのインスタンスを作成する。引数はそれぞれ、
+  // 投稿フォームタグのid、チャットを入力inputタグのid、ログを表示するdivタグのidを想定
+  const c = new Chat("form", "input", "log");
+
+  // ②Maodiに登録する。chatメソッドを共有するよう指定する。
+  // c.chatメソッドは、呼び出しの通知をサーバにBroadcastする代替メソッドで置き換えられる。
+  // レシーバも内部で用意され、通知がサーバから届くと本来のchatメソッドが実行される。
+  m.register(c, [
+    {method: c.chat, share: {maxLog: 1000}},
+    {method: c.getState, getState: {maxInterval: 3000}},
+    {method: c.setState, setState: {}}
+  ]);
+});
+
+//チャットのログ管理と画面表示処理を実装するクラス。
+class Chat{
+  constructor(formId, inputId, logId){
+    this.id = 0;
+    this.chatLog = [];
+    this.logDiv = document.getElementById(logId);
+    // フォームがsubmitされると、テキストボックスに入っている内容を
+    // 取り出しchatメソッドを呼び出す。
+    document.getElementById(formId).addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = document.getElementById(inputId);
+      this.chat(input.value);  // ③メソッドを実行する
+      input.value = "";
+    });
+  }
+  // ④共有メソッド。登録時に代替メソッドで置き換えられ、メッセージ受信時に実行される
+  chat(message){
+    this.addChatLog(`chatlog_${this.id++}`, message);
+  }
+  // ⑤状態取得のため、Madoiから定期的に呼び出される
+  getState(){
+    return this.chatLog;
+  }
+  // ⑥状態設定のため、参加時に一度だけMadoiから呼び出される
+  setState(state){
+    for(const l of state){
+      this.addChatLog(l.id, l.message);
+    }
+  }
+  addChatLog(id, message){
+    // チャットログに追加(getStateで返す用)
+    this.chatLog.push({id: id, message: message});
+    // メッセージを表示するdivを作成して追加
+    this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
+    // メッセージが100件を超えていたら古いものを削除
+    if(this.chatLog.length > 100){
+      document.getElementById(this.chatLog[0].id).remove();
+      this.chatLog.shift();
+    }
+  }
+}
+</script>
+</body>
+</html>

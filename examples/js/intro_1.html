@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<!-- ① -->
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  // ②サーバに接続する。接続先は↑のscriptタグのsrc属性から決定される。
+  // コンストラクタの引数はルームIDとAuthToken(サーバのdocker-compose.yml内で指定)。
+  const m = new madoi.Madoi("intro_1_flej4as", "ahfuTep6ooDi7Oa4");
+  // ③メッセージをブロードキャスト。
+  m.send("greeting", "hello world");
+  // ④メッセージを受け取ったらbodyタグに追加。
+  m.addReceiver("greeting", ({detail: {content}})=>{
+    document.body.innerHTML += `<div>${content}</div>\n`;
+  });
+});
+</script>
+</body>
+</html>

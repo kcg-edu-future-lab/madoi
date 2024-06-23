@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+div#log{
+    border: 1px solid;
+    border-radius: 4px;
+    min-height: 300px;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" autofocus placeholder="enter to send">
+  </label>
+</form>
+<div id="log"></div>
+<script src="http://localhost:8080/madoi/js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  const m = new madoi.Madoi("intro_2_o4ijfslkdd", "ahfuTep6ooDi7Oa4");
+
+  // ①メッセージの追加処理を実装した関数。
+  let chat = function(message){
+    document.getElementById("log").innerHTML += `<div>${message}</div>\n`;
+  };
+
+  // ②関数をmadoiに登録する。戻り値は、呼び出されたことをサーバにBroadcastする関数。
+  // 内部でレシーバも用意されており、サーバからBroadcastが来れば、本来の関数が呼び出される。
+  chat = m.registerFunction(chat);
+
+  // フォームのsubmit時に、chat関数を呼び出す。
+  document.getElementById("form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const input = document.getElementById("input");
+    chat(input.value);  // ③関数を実行する
+    input.value = "";
+  });
+});
+</script>
+</body>
+</html>
