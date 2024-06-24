@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.kcg.futurelab.madoi.core.message.UserMessage;
 import edu.kcg.futurelab.madoi.core.message.EnterRoom;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomAllowed;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomDenied;
@@ -22,9 +21,11 @@ import edu.kcg.futurelab.madoi.core.message.PeerEntered;
 import edu.kcg.futurelab.madoi.core.message.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
 import edu.kcg.futurelab.madoi.core.message.Pong;
+import edu.kcg.futurelab.madoi.core.message.RoomInfo;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
+import edu.kcg.futurelab.madoi.core.message.UserMessage;
 import edu.kcg.futurelab.madoi.core.room.MessageSender;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.Room;
@@ -106,7 +107,7 @@ public class MockPeer implements Peer {
 		room.onPeerMessage(
 				this,
 				toJsonString(new EnterRoom(
-						room.getProfile(),
+						new RoomInfo(null, null, room.getProfile()),
 						new PeerInfo(id, order, profile))));
 	}
 

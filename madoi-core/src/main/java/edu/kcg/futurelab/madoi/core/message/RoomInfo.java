@@ -7,10 +7,11 @@ public class RoomInfo {
 		this(null);
 	}
 	public RoomInfo(String id) {
-		this(id, null);
+		this(id, null, null);
 	}
-	public RoomInfo(String id, Map<String, Object> profile) {
+	public RoomInfo(String id, RoomSpec spec, Map<String, Object> profile) {
 		this.id = id;
+		this.spec = spec;
 		this.profile = profile;
 	}
 	public String getId() {
@@ -19,6 +20,12 @@ public class RoomInfo {
 	public void setId(String id) {
 		this.id = id;
 	}
+	public RoomSpec getSpec() {
+		return spec;
+	}
+	public void setSpec(RoomSpec spec) {
+		this.spec = spec;
+	}
 	public Map<String, Object> getProfile() {
 		return profile;
 	}
@@ -26,5 +33,6 @@ public class RoomInfo {
 		this.profile = profile;
 	}
 	private String id;
+	private RoomSpec spec;
 	private Map<String, Object> profile;
 }

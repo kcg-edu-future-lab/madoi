@@ -1,7 +1,5 @@
 package edu.kcg.futurelab.madoi.core.message;
 
-import java.util.Map;
-
 /**
  * ルームに入室する際にクライアントからサーバへ送るメッセージ。
  */
@@ -15,17 +13,17 @@ public class EnterRoom extends Message{
 	 * @param peerId 自身のpeerId。自動で生成する場合はnull。
 	 * @param peerProfile 名前などのprofile情報。
 	 */
-	public EnterRoom(Map<String, Object> roomProfile, PeerInfo selfPeer) {
-		this.roomProfile = roomProfile;
+	public EnterRoom(RoomInfo room, PeerInfo selfPeer) {
+		this.room = room;
 		this.selfPeer = selfPeer;
 	}
 
-	public Map<String, Object> getRoomProfile() {
-		return roomProfile;
+	public RoomInfo getRoom() {
+		return room;
 	}
 
-	public void setRoom(Map<String, Object> roomProfile) {
-		this.roomProfile = roomProfile;
+	public void setRoom(RoomInfo room) {
+		this.room = room;
 	}
 
 	public PeerInfo getSelfPeer() {
@@ -36,6 +34,6 @@ public class EnterRoom extends Message{
 		this.selfPeer = selfPeer;
 	}
 
-	private Map<String, Object> roomProfile;
+	private RoomInfo room;
 	private PeerInfo selfPeer;
 }

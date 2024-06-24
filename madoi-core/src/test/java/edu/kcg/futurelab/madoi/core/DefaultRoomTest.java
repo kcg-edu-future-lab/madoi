@@ -28,7 +28,7 @@ import edu.kcg.futurelab.madoi.core.room.logger.OnMemoryEventLogger;
 public class DefaultRoomTest {
 	@Test
 	public void test_waitingPeer() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
@@ -48,7 +48,7 @@ public class DefaultRoomTest {
 
 	@Test
 	public void test_peerEntered() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null,null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
@@ -65,7 +65,7 @@ public class DefaultRoomTest {
 
 	@Test
 	public void test_peerLeaved() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		var peer3 = new MockPeer("peer3", "Peer3", room);
@@ -85,7 +85,7 @@ public class DefaultRoomTest {
 
 	@Test
 	public void test_updatePeerProfile() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		var peer3 = new MockPeer("peer3", "Peer3", room);
@@ -108,7 +108,7 @@ public class DefaultRoomTest {
 
 	@Test
 	public void test_enterRoom() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
@@ -136,7 +136,7 @@ public class DefaultRoomTest {
 	@Test
 	public void test_execAndSend() throws Throwable{
 		var el = new OnMemoryEventLogger();
-		var room = new DefaultRoom("room1", null, el);
+		var room = new DefaultRoom("room1", null, null, el);
 		var peer = new MockPeer("peer1", "Peer1", room);
 
 		peer.peerArriveAndLoginRoom();
@@ -173,7 +173,7 @@ public class DefaultRoomTest {
 	 */
 	@Test
 	public void test_eliminateLogs() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		peer1.peerArriveAndLoginRoom();
 		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
@@ -201,7 +201,7 @@ public class DefaultRoomTest {
 	 */
 	@Test
 	public void test_eliminateLogs2() throws Throwable{
-		var room = new DefaultRoom("room1", null, new NullRoomEventLogger());
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 
@@ -242,7 +242,7 @@ public class DefaultRoomTest {
 	@Test
 	public void test_peerLeaveOnIOE() throws Throwable{
 		var el = new OnMemoryEventLogger();
-		var room = new DefaultRoom("room1", null, el);
+		var room = new DefaultRoom("room1", null, null, el);
 		var peer1 = new MockPeer("peer1", "Peer1", room);
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 

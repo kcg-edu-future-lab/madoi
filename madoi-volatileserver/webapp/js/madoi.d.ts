@@ -353,7 +353,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private selfPeer;
     private peers;
     private currentSender;
-    constructor(roomId: string, authToken: string, selfPeer?: {
+    constructor(roomIdOrUrl: string, authToken: string, selfPeer?: {
         id: string;
         profile: {
             [key: string]: string;

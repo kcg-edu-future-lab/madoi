@@ -76,7 +76,7 @@ public class DefaultRoomManager implements RoomManager{
 	}
 
 	protected Room newRoom(String roomId){
-		return new DefaultRoom(roomId, null, new PrintRoomEventLogger());
+		return new DefaultRoom(roomId, null, null, new PrintRoomEventLogger());
 	}
 
 	protected Peer newPeer(MessageSender sender) {

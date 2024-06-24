@@ -20,9 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 import edu.kcg.futurelab.madoi.core.message.CastType;
+import edu.kcg.futurelab.madoi.core.message.RoomSpec;
 
 public interface Room {
 	String getId();
+	RoomSpec getSpec();
 	Map<String, Object> getProfile();
 
 	Collection<Peer> getPeers();

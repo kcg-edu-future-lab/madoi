@@ -49,6 +49,7 @@ import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
 import edu.kcg.futurelab.madoi.core.message.Ping;
 import edu.kcg.futurelab.madoi.core.message.Pong;
 import edu.kcg.futurelab.madoi.core.message.RoomInfo;
+import edu.kcg.futurelab.madoi.core.message.RoomSpec;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
@@ -60,8 +61,9 @@ import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
  * 参加状態になる。この際、既存のPeerにはPeerEnteredメッセージが送られる。
  */
 public class DefaultRoom implements Room{
-	public DefaultRoom(String id, Map<String, Object> profile, RoomEventLogger eventLogger) {
+	public DefaultRoom(String id, RoomSpec spec, Map<String, Object> profile, RoomEventLogger eventLogger) {
 		this.id = id;
+		this.spec = spec;
 		this.profile = profile;
 		this.eventLogger = eventLogger;
 	}
@@ -69,6 +71,11 @@ public class DefaultRoom implements Room{
 	@Override
 	public String getId() {
 		return id;
+	}
+
+	@Override
+	public RoomSpec getSpec() {
+		return spec;
 	}
 
 	@Override
@@ -148,10 +155,17 @@ public class DefaultRoom implements Room{
 						new EnterRoomDenied("Login error."));
 				return;
 			}
+			var r = er.getRoom();
 			if(profile == null) {
-				profile = er.getRoomProfile() != null ?
-					er.getRoomProfile() : new HashMap<>();
+				profile = r != null && r.getProfile() != null ?
+					r.getProfile() : new HashMap<>();
 			}
+			System.out.println("room: " + new ObjectMapper().writeValueAsString(r));
+			if(spec == null) {
+				spec = r != null && r.getSpec() != null ?
+					r.getSpec() : new RoomSpec(1000);
+			}
+			System.out.println("spec: " + new ObjectMapper().writeValueAsString(spec));
 			String peerId = null;
 			Map<String, Object> peerProfile = null;
 			if(er.getSelfPeer() != null) {
@@ -206,7 +220,7 @@ public class DefaultRoom implements Room{
 			}
 		}
 		var era = new EnterRoomAllowed(
-				new RoomInfo(id, profile), newPeerInfo(peer),
+				new RoomInfo(id, spec, profile), newPeerInfo(peer),
 				otherPeers, histories);
 		peers.put(peer.getId(), peer);
 		try {
@@ -285,7 +299,7 @@ public class DefaultRoom implements Room{
 				}
 				// 履歴に追加
 				histories.add(MessageHistory.of(ifn));
-				if(histories.size() >= maxHistory) {
+				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
 				// 送信
@@ -324,7 +338,7 @@ public class DefaultRoom implements Room{
 						}
 					}
 					histories.add(MessageHistory.of(uos));
-					if(histories.size() >= maxHistory) {
+					if(histories.size() >= spec.getMaxLog()) {
 						histories.remove(0);
 					}
 				}
@@ -359,7 +373,7 @@ public class DefaultRoom implements Room{
 				mri.onInvoked();
 				// 履歴に追加
 				histories.add(MessageHistory.of(im));
-				if(histories.size() >= maxHistory) {
+				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
 				// 送信
@@ -374,7 +388,7 @@ public class DefaultRoom implements Room{
 			}
 			default:{
 				histories.add(new SOMHistory(m));
-				if(histories.size() >= maxHistory) {
+				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
 				castMessage(m);
@@ -604,6 +618,7 @@ public class DefaultRoom implements Room{
 	}
 
 	private String id;
+	private RoomSpec spec;
 	private Map<String, Object> profile;
 	private int peerOrder = 1;
 	private RoomEventLogger eventLogger;
@@ -673,7 +688,6 @@ public class DefaultRoom implements Room{
 		}
 	}
 	private LinkedList<History> histories = new LinkedList<>();
-	private int maxHistory = 1024;
 
 	private Map<String, Peer> waitingPeers = new HashMap<>();
 	private Map<String, Peer> peers = new LinkedHashMap<>();

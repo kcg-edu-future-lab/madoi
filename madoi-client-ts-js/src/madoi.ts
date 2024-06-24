@@ -12,8 +12,12 @@ export interface Message{
 	[name: string]: any;
 }
 
+export interface RoomSpec{
+	maxLog: number;
+}
 export interface RoomInfo{
 	id: string;
+	spec: RoomSpec;
 	profile: {[key: string]: any};
 }
 export interface PeerInfo{
@@ -75,7 +79,10 @@ export interface Pong extends ServerToPeerMessage{
 }
 
 export interface EnterRoomBody{
-	roomProfile?: {[key: string]: string};
+	room?: {
+		spec: RoomSpec;
+		profile: {[key: string]: string};
+	};
 	selfPeer?: PeerInfo;
 }
 export interface EnterRoom extends PeerToServerMessage, EnterRoomBody{
@@ -559,20 +566,18 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private objectRevisions = new Map<number, number>();  // objectId -> revision (sum of modification count)
 	private url: string;
 	private ws: WebSocket | null = null;
-	private room: RoomInfo = {id: "", profile: {}};
+	private room: RoomInfo = {id: "", spec: {maxLog: 1000}, profile: {}};
 	private selfPeer: PeerInfo;
 	private peers = new Map<string, PeerInfo>();
 	private currentSender: string | null = null;
 
 	constructor(roomIdOrUrl: string, authToken: string,
 			selfPeer?: {id: string, profile: {[key: string]: string}},
-			roomProfile?: {[key: string]: string}){
+			room?: {spec: RoomSpec, profile: {[key: string]: string}}){
 		super();
 		this.selfPeer = selfPeer ? {...selfPeer, order: -1} : {id: "", order: -1, profile: {}};
 		this.interimQueue = new Array();
-		this.doSendMessage(newEnterRoom({
-				roomProfile: roomProfile, selfPeer: {id: "", profile: {}, ...selfPeer, order: -1}
-				}));
+		this.doSendMessage(newEnterRoom({ room: room, selfPeer: this.selfPeer }));
 		const sep = roomIdOrUrl.indexOf("?") != -1 ? "&" : "?";
 		if(roomIdOrUrl.match(/^wss?:\/\//)){
 			this.url = `${roomIdOrUrl}${sep}authToken=${authToken}`;

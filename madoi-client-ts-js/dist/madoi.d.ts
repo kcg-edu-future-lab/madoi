@@ -6,8 +6,12 @@ export interface Message {
     recipients: string[] | undefined;
     [name: string]: any;
 }
+export interface RoomSpec {
+    maxLog: number;
+}
 export interface RoomInfo {
     id: string;
+    spec: RoomSpec;
     profile: {
         [key: string]: any;
     };
@@ -49,8 +53,11 @@ export interface Pong extends ServerToPeerMessage {
     body: object | undefined;
 }
 export interface EnterRoomBody {
-    roomProfile?: {
-        [key: string]: string;
+    room?: {
+        spec: RoomSpec;
+        profile: {
+            [key: string]: string;
+        };
     };
     selfPeer?: PeerInfo;
 }
@@ -353,13 +360,16 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private selfPeer;
     private peers;
     private currentSender;
-    constructor(roomId: string, authToken: string, selfPeer?: {
+    constructor(roomIdOrUrl: string, authToken: string, selfPeer?: {
         id: string;
         profile: {
             [key: string]: string;
         };
-    }, roomProfile?: {
-        [key: string]: string;
+    }, room?: {
+        spec: RoomSpec;
+        profile: {
+            [key: string]: string;
+        };
     });
     getRoomProfile(): {
         [key: string]: any;
