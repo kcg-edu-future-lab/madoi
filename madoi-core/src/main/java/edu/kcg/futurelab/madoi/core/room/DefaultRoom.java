@@ -160,12 +160,10 @@ public class DefaultRoom implements Room{
 				profile = r != null && r.getProfile() != null ?
 					r.getProfile() : new HashMap<>();
 			}
-			System.out.println("room: " + new ObjectMapper().writeValueAsString(r));
 			if(spec == null) {
 				spec = r != null && r.getSpec() != null ?
 					r.getSpec() : new RoomSpec(1000);
 			}
-			System.out.println("spec: " + new ObjectMapper().writeValueAsString(spec));
 			String peerId = null;
 			Map<String, Object> peerProfile = null;
 			if(er.getSelfPeer() != null) {
