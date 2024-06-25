@@ -26,7 +26,7 @@ export interface PeerInfo{
 	profile: {[key: string]: any};
 }
 
-// サーバ側でCastTypeが固定されているメッセージ用のinterface。
+// CastType別メッセージ用interface。
 export interface ServerToPeerMessage extends Message{
 	sender: "__SERVER__";
 	castType: "SERVERTOPEER";
@@ -43,7 +43,7 @@ const peerToServerMessageDefault = {
 };
 
 export interface PeerToPeerMessage extends Message{
-	castType: "UNICAST" | "MULTICAST" | "BROADCAST" | "OTHERCAST";
+	castType: "UNICAST" | "MULTICAST" | "BROADCAST" | "SELFCAST" | "OTHERCAST";
 }
 
 export interface BroadcastMessage extends PeerToPeerMessage{
@@ -60,6 +60,10 @@ export interface BroadcastOrOthercastMessage extends PeerToPeerMessage{
 	castType: "BROADCAST" | "OTHERCAST";
 	recipients: undefined;
 }
+const broadcastOrOthercastMessageDefault = {
+	sender: "__PEER__",
+	recipients: undefined
+};
 
 export interface Ping extends PeerToServerMessage{
 	type: "Ping";
@@ -219,9 +223,9 @@ export interface InvokeMethod extends BroadcastOrOthercastMessage, InvokeMethodB
 export function newInvokeMethod(castType: "BROADCAST" | "OTHERCAST", body: InvokeMethodBody): InvokeMethod{
     return {
         type: "InvokeMethod",
-		...broadcastMessageDefault,
-        ...body,
 		castType: castType,
+		...broadcastOrOthercastMessageDefault,
+        ...body,
 	};
 }
 export interface InvokeFunctionBody{
@@ -234,8 +238,8 @@ export interface InvokeFunction extends BroadcastOrOthercastMessage, InvokeFunct
 export function newInvokeFunction(castType: "BROADCAST" | "OTHERCAST", body: InvokeFunctionBody): InvokeFunction{
     return {
         type: "InvokeFunction",
-		...broadcastMessageDefault,
 		castType: castType,
+		...broadcastOrOthercastMessageDefault,
         ...body
     };
 }
@@ -245,13 +249,13 @@ export interface UpdateObjectStateBody{
 	state: string;
 	revision: number;
 }
-export interface UpdateObjectState extends BroadcastMessage{
+export interface UpdateObjectState extends PeerToServerMessage{
 	type: "UpdateObjectState";
 }
 export function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState{
     return {
         type: "UpdateObjectState",
-		...broadcastMessageDefault,
+		...peerToServerMessageDefault,
         ...body
     };
 }
