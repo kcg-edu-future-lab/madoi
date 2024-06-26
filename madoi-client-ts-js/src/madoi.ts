@@ -304,17 +304,17 @@ interface PeerProfileUpdatedDetail{
 	updates?: {[key: string]: any};
 	deletes?: string[];
 }
-interface UserMessageDetail{
+export interface UserMessageDetail<T>{
 	type: string;
 	sender?: string;
 	castType?: CastType;
 	recipients?: string[];
-	content: any;
+	content: T;
 }
 interface ErrorDetail{
 	error: any;
 }
-interface TypedCustomEvent<T extends TypedEventTarget<T>, D = any>
+export interface TypedCustomEvent<T extends TypedEventTarget<T>, D = any>
 extends CustomEvent<D>{
     currentTarget: T;
     detail: D;
@@ -330,7 +330,7 @@ export type TypedEventListenerOrEventListenerObject<T extends TypedEventTarget<T
     | TypedEventListenerObject<T, D>;
 type AnyEventListener<T extends TypedEventTarget<T>>
     = (evt: TypedCustomEvent<T, any>) => void;
-class TypedEventTarget<T extends TypedEventTarget<T>>
+export class TypedEventTarget<T extends TypedEventTarget<T>>
 extends EventTarget{
 }
 type MadoiAddEventListenerOption = boolean | AddEventListenerOptions | undefined;
@@ -381,7 +381,7 @@ export type RoomProfileUpdatedListener = TypedEventListenerOrEventListenerObject
 export type PeerEnteredListener = TypedEventListenerOrEventListenerObject<Madoi, PeerEnteredDetail> | null;
 export type PeerLeavedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerLeavedDetail> | null;
 export type PeerProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerProfileUpdatedDetail> | null;
-export type UserMessageListener = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail> | null;
+export type UserMessageListener<T> = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail<T>> | null;
 export type ErrorListener = TypedEventListenerOrEventListenerObject<Madoi, ErrorDetail> | null;
 
 
@@ -869,13 +869,13 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		this.doSendMessage(msg);
 	}
 
-	addReceiver(type: string, listener: UserMessageListener){
+	addReceiver<T>(type: string, listener: UserMessageListener<T>){
 		if(this.isSystemMessageType(type))
 			throw new Error("システムメッセージのレシーバは登録できません。");
 		this.addEventListener(type, listener as EventListener);
 	}
 
-	removeReceiver(type: string, listener: UserMessageListener){
+	removeReceiver<T>(type: string, listener: UserMessageListener<T>){
 		this.removeEventListener(type, listener as EventListener);
 	}
 
