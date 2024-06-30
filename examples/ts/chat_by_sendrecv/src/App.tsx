@@ -1,4 +1,3 @@
-import React from 'react'
 import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Madoi } from './madoi/madoi';
