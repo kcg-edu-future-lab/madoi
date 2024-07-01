@@ -342,6 +342,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private interimQueue;
     private sharedFunctions;
     private sharedObjects;
+    private sharedMethods;
     private getStateMethods;
     private setStateMethods;
     private enterRoomAllowedMethods;
@@ -351,9 +352,6 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private peerEnteredMethods;
     private peerLeavedMethods;
     private peerProfileUpdatedMethods;
-    private promises;
-    private objectModifications;
-    private objectRevisions;
     private url;
     private ws;
     private room;
@@ -404,7 +402,8 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private doSendMessage;
     register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     registerFunction(func: Function, config?: MethodConfig): Function;
-    private addSharedFunction;
+    private createFunctionProxy;
+    private createMethodProxy;
     private addHostOnlyFunction;
     saveStates(): void;
     private applyInvocation;

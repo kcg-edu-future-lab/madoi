@@ -6,8 +6,12 @@ export interface Message {
     recipients: string[] | undefined;
     [name: string]: any;
 }
+export interface RoomSpec {
+    maxLog: number;
+}
 export interface RoomInfo {
     id: string;
+    spec: RoomSpec;
     profile: {
         [key: string]: any;
     };
@@ -29,7 +33,7 @@ export interface PeerToServerMessage extends Message {
     recipients: undefined;
 }
 export interface PeerToPeerMessage extends Message {
-    castType: "UNICAST" | "MULTICAST" | "BROADCAST" | "OTHERCAST";
+    castType: "UNICAST" | "MULTICAST" | "BROADCAST" | "SELFCAST" | "OTHERCAST";
 }
 export interface BroadcastMessage extends PeerToPeerMessage {
     castType: "BROADCAST";
@@ -49,8 +53,11 @@ export interface Pong extends ServerToPeerMessage {
     body: object | undefined;
 }
 export interface EnterRoomBody {
-    roomProfile?: {
-        [key: string]: string;
+    room?: {
+        spec: RoomSpec;
+        profile: {
+            [key: string]: string;
+        };
     };
     selfPeer?: PeerInfo;
 }
@@ -158,7 +165,7 @@ export interface UpdateObjectStateBody {
     state: string;
     revision: number;
 }
-export interface UpdateObjectState extends BroadcastMessage {
+export interface UpdateObjectState extends PeerToServerMessage {
     type: "UpdateObjectState";
 }
 export declare function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState;
@@ -197,17 +204,17 @@ interface PeerProfileUpdatedDetail {
     };
     deletes?: string[];
 }
-interface UserMessageDetail {
+export interface UserMessageDetail<T> {
     type: string;
     sender?: string;
     castType?: CastType;
     recipients?: string[];
-    content: any;
+    content: T;
 }
 interface ErrorDetail {
     error: any;
 }
-interface TypedCustomEvent<T extends TypedEventTarget<T>, D = any> extends CustomEvent<D> {
+export interface TypedCustomEvent<T extends TypedEventTarget<T>, D = any> extends CustomEvent<D> {
     currentTarget: T;
     detail: D;
 }
@@ -216,7 +223,7 @@ export interface TypedEventListenerObject<T extends TypedEventTarget<T>, D = any
     handleEvent(object: TypedCustomEvent<T, D>): void;
 }
 export type TypedEventListenerOrEventListenerObject<T extends TypedEventTarget<T>, D = any> = TypedEventListener<T, D> | TypedEventListenerObject<T, D>;
-declare class TypedEventTarget<T extends TypedEventTarget<T>> extends EventTarget {
+export declare class TypedEventTarget<T extends TypedEventTarget<T>> extends EventTarget {
 }
 type MadoiAddEventListenerOption = boolean | AddEventListenerOptions | undefined;
 interface MadoiEventListeners {
@@ -254,7 +261,7 @@ export type RoomProfileUpdatedListener = TypedEventListenerOrEventListenerObject
 export type PeerEnteredListener = TypedEventListenerOrEventListenerObject<Madoi, PeerEnteredDetail> | null;
 export type PeerLeavedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerLeavedDetail> | null;
 export type PeerProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerProfileUpdatedDetail> | null;
-export type UserMessageListener = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail> | null;
+export type UserMessageListener<T> = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail<T>> | null;
 export type ErrorListener = TypedEventListenerOrEventListenerObject<Madoi, ErrorDetail> | null;
 export declare function ShareClass(config?: {
     className?: string;
@@ -335,6 +342,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private interimQueue;
     private sharedFunctions;
     private sharedObjects;
+    private sharedMethods;
     private getStateMethods;
     private setStateMethods;
     private enterRoomAllowedMethods;
@@ -344,9 +352,6 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     private peerEnteredMethods;
     private peerLeavedMethods;
     private peerProfileUpdatedMethods;
-    private promises;
-    private objectModifications;
-    private objectRevisions;
     private url;
     private ws;
     private room;
@@ -358,8 +363,11 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
         profile: {
             [key: string]: string;
         };
-    }, roomProfile?: {
-        [key: string]: string;
+    }, room?: {
+        spec: RoomSpec;
+        profile: {
+            [key: string]: string;
+        };
     });
     getRoomProfile(): {
         [key: string]: any;
@@ -389,12 +397,13 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     broadcast(type: string, content: any): void;
     othercast(type: string, content: any): void;
     sendMessage(msg: Message): void;
-    addReceiver(type: string, listener: UserMessageListener): void;
-    removeReceiver(type: string, listener: UserMessageListener): void;
+    addReceiver<T>(type: string, listener: UserMessageListener<T>): void;
+    removeReceiver<T>(type: string, listener: UserMessageListener<T>): void;
     private doSendMessage;
     register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     registerFunction(func: Function, config?: MethodConfig): Function;
-    private addSharedFunction;
+    private createFunctionProxy;
+    private createMethodProxy;
     private addHostOnlyFunction;
     saveStates(): void;
     private applyInvocation;
