@@ -6,20 +6,20 @@ import edu.kcg.futurelab.madoi.core.message.config.ShareConfig;
 public class MethodDefinition {
 	public MethodDefinition() {
 	}
-	public MethodDefinition(Integer methodId, String name, MethodConfig config) {
+	public MethodDefinition(int methodId, String name, MethodConfig config) {
 		this.methodId = methodId;
 		this.name = name;
 		this.config = config;
 	}
-	public MethodDefinition(Integer methodId, String name, ShareConfig config) {
+	public MethodDefinition(int methodId, String name, ShareConfig config) {
 		this.methodId = methodId;
 		this.name = name;
 		this.config = new MethodConfig(config);
 	}
-	public Integer getMethodId() {
+	public int getMethodId() {
 		return methodId;
 	}
-	public void setMethodId(Integer methodId) {
+	public void setMethodId(int methodId) {
 		this.methodId = methodId;
 	}
 	public String getName() {
@@ -34,7 +34,7 @@ public class MethodDefinition {
 	public void setConfig(MethodConfig config) {
 		this.config = config;
 	}
-	private Integer methodId;
+	private int methodId;
 	private String name;
 	private MethodConfig config;
 }
