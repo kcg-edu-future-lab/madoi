@@ -113,6 +113,18 @@ export interface UpdatePeerProfile extends BroadcastMessage, UpdatePeerProfileBo
     type: "UpdatePeerProfile";
 }
 export declare function newUpdatePeerProfile(body: UpdatePeerProfileBody): UpdatePeerProfile;
+export interface FunctionDefinition {
+    funcId: number;
+    name: string;
+    config: MethodConfig;
+}
+export interface DefineFunctionBody {
+    definition: FunctionDefinition;
+}
+export interface DefineFunction extends PeerToServerMessage, DefineFunctionBody {
+    type: "DefineFunction";
+}
+export declare function newDefineFunction(body: DefineFunctionBody): DefineFunction;
 export interface MethodDefinition {
     methodId: number;
     name: string;
@@ -130,28 +142,6 @@ export interface DefineObject extends PeerToServerMessage, DefineObjectBody {
     type: "DefineObject";
 }
 export declare function newDefineObject(body: DefineObjectBody): DefineObject;
-export interface FunctionDefinition {
-    funcId: number;
-    name: string;
-    config: MethodConfig;
-}
-export interface DefineFunctionBody {
-    definition: FunctionDefinition;
-}
-export interface DefineFunction extends PeerToServerMessage, DefineFunctionBody {
-    type: "DefineFunction";
-}
-export declare function newDefineFunction(body: DefineFunctionBody): DefineFunction;
-export interface InvokeMethodBody {
-    objId?: number;
-    objRevision?: number;
-    methodId: number;
-    args: any[];
-}
-export interface InvokeMethod extends BroadcastOrOthercastMessage, InvokeMethodBody {
-    type: "InvokeMethod";
-}
-export declare function newInvokeMethod(castType: "BROADCAST" | "OTHERCAST", body: InvokeMethodBody): InvokeMethod;
 export interface InvokeFunctionBody {
     funcId: number;
     args: any[];
@@ -169,11 +159,21 @@ export interface UpdateObjectState extends PeerToServerMessage {
     type: "UpdateObjectState";
 }
 export declare function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState;
+export interface InvokeMethodBody {
+    objId?: number;
+    objRevision?: number;
+    methodId: number;
+    args: any[];
+}
+export interface InvokeMethod extends BroadcastOrOthercastMessage, InvokeMethodBody {
+    type: "InvokeMethod";
+}
+export declare function newInvokeMethod(castType: "BROADCAST" | "OTHERCAST", body: InvokeMethodBody): InvokeMethod;
 export interface UserMessage extends Message {
     content: any;
 }
-export type UpstreamMessageType = Ping | EnterRoom | LeaveRoom | UpdateRoomProfile | UpdatePeerProfile | DefineObject | DefineFunction | InvokeMethod | InvokeFunction | UpdateObjectState;
-export type DownStreamMessageType = Pong | EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile | PeerEntered | PeerLeaved | UpdatePeerProfile | InvokeMethod | InvokeFunction | UpdateObjectState | UserMessage;
+export type UpstreamMessageType = Ping | EnterRoom | LeaveRoom | UpdateRoomProfile | UpdatePeerProfile | DefineFunction | DefineObject | InvokeFunction | UpdateObjectState | InvokeMethod;
+export type DownStreamMessageType = Pong | EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile | PeerEntered | PeerLeaved | UpdatePeerProfile | InvokeFunction | UpdateObjectState | InvokeMethod | UserMessage;
 export type StoredMessageType = InvokeMethod | InvokeFunction | UpdateObjectState;
 interface EnterRoomAllowedDetail {
     room: RoomInfo;
@@ -400,8 +400,8 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     addReceiver<T>(type: string, listener: UserMessageListener<T>): void;
     removeReceiver<T>(type: string, listener: UserMessageListener<T>): void;
     private doSendMessage;
-    register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     registerFunction(func: Function, config?: MethodConfig): Function;
+    register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     private createFunctionProxy;
     private createMethodProxy;
     private addHostOnlyFunction;

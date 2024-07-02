@@ -168,6 +168,24 @@ export function newUpdatePeerProfile(body: UpdatePeerProfileBody): UpdatePeerPro
 	};
 }
 
+export interface FunctionDefinition{
+	funcId: number;
+	name: string;
+	config: MethodConfig;
+}
+export interface DefineFunctionBody{
+	definition: FunctionDefinition;
+}
+export interface DefineFunction extends PeerToServerMessage, DefineFunctionBody{
+	type: "DefineFunction";
+}
+export function newDefineFunction(body: DefineFunctionBody): DefineFunction{
+    return {
+        type: "DefineFunction",
+		...peerToServerMessageDefault,
+        ...body
+    };
+}
 export interface MethodDefinition{
 	methodId: number;
 	name: string;
@@ -192,25 +210,36 @@ export function newDefineObject(body: DefineObjectBody): DefineObject{
 	}
 }
 
-export interface FunctionDefinition{
+export interface InvokeFunctionBody{
 	funcId: number;
-	name: string;
-	config: MethodConfig;
+	args: any[];
 }
-export interface DefineFunctionBody{
-	definition: FunctionDefinition;
+export interface InvokeFunction extends BroadcastOrOthercastMessage, InvokeFunctionBody{
+	type: "InvokeFunction";
 }
-export interface DefineFunction extends PeerToServerMessage, DefineFunctionBody{
-	type: "DefineFunction";
-}
-export function newDefineFunction(body: DefineFunctionBody): DefineFunction{
+export function newInvokeFunction(castType: "BROADCAST" | "OTHERCAST", body: InvokeFunctionBody): InvokeFunction{
     return {
-        type: "DefineFunction",
+        type: "InvokeFunction",
+		castType: castType,
+		...broadcastOrOthercastMessageDefault,
+        ...body
+    };
+}
+export interface UpdateObjectStateBody{
+	objId: number;
+	state: string;
+	revision: number;
+}
+export interface UpdateObjectState extends PeerToServerMessage{
+	type: "UpdateObjectState";
+}
+export function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState{
+    return {
+        type: "UpdateObjectState",
 		...peerToServerMessageDefault,
         ...body
     };
 }
-
 export interface InvokeMethodBody{
 	objId?: number;
 	objRevision?: number;  // メソッド実行前のリビジョン
@@ -228,37 +257,6 @@ export function newInvokeMethod(castType: "BROADCAST" | "OTHERCAST", body: Invok
         ...body,
 	};
 }
-export interface InvokeFunctionBody{
-	funcId: number;
-	args: any[];
-}
-export interface InvokeFunction extends BroadcastOrOthercastMessage, InvokeFunctionBody{
-	type: "InvokeFunction";
-}
-export function newInvokeFunction(castType: "BROADCAST" | "OTHERCAST", body: InvokeFunctionBody): InvokeFunction{
-    return {
-        type: "InvokeFunction",
-		castType: castType,
-		...broadcastOrOthercastMessageDefault,
-        ...body
-    };
-}
-
-export interface UpdateObjectStateBody{
-	objId: number;
-	state: string;
-	revision: number;
-}
-export interface UpdateObjectState extends PeerToServerMessage{
-	type: "UpdateObjectState";
-}
-export function newUpdateObjectState(body: UpdateObjectStateBody): UpdateObjectState{
-    return {
-        type: "UpdateObjectState",
-		...peerToServerMessageDefault,
-        ...body
-    };
-}
 
 export interface UserMessage extends Message{
     content: any;
@@ -268,13 +266,14 @@ export type UpstreamMessageType =
 	Ping |
 	EnterRoom | LeaveRoom |
 	UpdateRoomProfile | UpdatePeerProfile |
-	DefineObject | DefineFunction |
-	InvokeMethod | InvokeFunction | UpdateObjectState;
+	DefineFunction | DefineObject | 
+	InvokeFunction | UpdateObjectState | InvokeMethod;
 export type DownStreamMessageType =
 	Pong |
 	EnterRoomAllowed | EnterRoomDenied | LeaveRoomDone | UpdateRoomProfile |
 	PeerEntered | PeerLeaved | UpdatePeerProfile |
-	InvokeMethod | InvokeFunction | UpdateObjectState | UserMessage;
+	InvokeFunction | UpdateObjectState | InvokeMethod |
+	UserMessage;
 export type StoredMessageType = InvokeMethod | InvokeFunction | UpdateObjectState;
 
 
@@ -770,6 +769,26 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				}
 				this.fire("peerProfileUpdated", v);
 			}
+		} else if(msg.type === "InvokeFunction"){
+			const id = `${msg.funcId}`;
+			const f = this.sharedFunctions.get(id);
+			if(f){
+                const ret = this.applyInvocation(f.original, msg.args);
+                if(ret instanceof Promise){
+                    ret.then(()=>{
+                       f.resolve?.apply(null, arguments);
+                    }).catch(()=>{
+                       f.reject?.apply(null, arguments);
+                    });
+                }
+            } else {
+				console.warn("no suitable function for ", msg);
+			}
+		} else if(msg.type === "UpdateObjectState"){
+			const f = this.setStateMethods.get(msg.objId);
+			if(f) f(JSON.parse(msg.state), msg.revision);
+			const o = this.sharedObjects.get(msg.objId);
+			if(o) o.revision = msg.revision;
 		} else if(msg.type === "InvokeMethod"){
 			if(msg.objId){
 				// check consistency?
@@ -792,26 +811,6 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
             } else {
 				console.warn("no suitable method for ", msg);
 			}
-		} else if(msg.type === "InvokeFunction"){
-			const id = `${msg.funcId}`;
-			const f = this.sharedFunctions.get(id);
-			if(f){
-                const ret = this.applyInvocation(f.original, msg.args);
-                if(ret instanceof Promise){
-                    ret.then(()=>{
-                       f.resolve?.apply(null, arguments);
-                    }).catch(()=>{
-                       f.reject?.apply(null, arguments);
-                    });
-                }
-            } else {
-				console.warn("no suitable function for ", msg);
-			}
-		} else if(msg.type === "UpdateObjectState"){
-			const f = this.setStateMethods.get(msg.objId);
-			if(f) f(JSON.parse(msg.state), msg.revision);
-			const o = this.sharedObjects.get(msg.objId);
-			if(o) o.revision = msg.revision;
 		} else if(msg.type){
 			this.dispatchEvent(new CustomEvent(msg.type, {detail: msg}));
 		} else{
@@ -907,6 +906,32 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		} else{
 			this.interimQueue.push(msg);
 		}
+	}
+
+	registerFunction(func: Function, config: MethodConfig = {share: {}}){
+		if("hostOnly" in config){
+			return this.addHostOnlyFunction(func, config);
+		} else if("share" in config){
+			// デフォルト値チェック
+			if(!config.share.type) config.share.type = shareConfigDefault.type;
+			if(!config.share.maxLog) config.share.maxLog = shareConfigDefault.maxLog;
+
+			const funcName = func.name;
+			const funcId = this.sharedFunctions.size;
+			const f = this.createFunctionProxy(func, config.share, funcId);
+			const ret = function(){
+				return f.apply(null, arguments);
+			};
+			this.doSendMessage(newDefineFunction({
+				definition: {
+					funcId: funcId,
+					name: funcName,
+					config: config
+				}
+			}));
+			return ret;
+		}
+		return func;
 	}
 
 	register<T>(object: T, methodAndConfigs: MethodAndConfigParam[] = []): T{
@@ -1038,32 +1063,6 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		return object;
 	}
 
-	registerFunction(func: Function, config: MethodConfig = {share: {}}){
-		if("hostOnly" in config){
-			return this.addHostOnlyFunction(func, config);
-		} else if("share" in config){
-			// デフォルト値チェック
-			if(!config.share.type) config.share.type = shareConfigDefault.type;
-			if(!config.share.maxLog) config.share.maxLog = shareConfigDefault.maxLog;
-
-			const funcName = func.name;
-			const funcId = this.sharedFunctions.size;
-			const f = this.createFunctionProxy(func, config.share, funcId);
-			const ret = function(){
-				return f.apply(null, arguments);
-			};
-			this.doSendMessage(newDefineFunction({
-				definition: {
-					funcId: funcId,
-					name: funcName,
-					config: config
-				}
-			}));
-			return ret;
-		}
-		return func;
-	}
-
 	private createFunctionProxy(f: Function, config: ShareConfig, funcId: number): Function{
 		const id = `${funcId}`;
 		const fe: FunctionEntry = {original: f};
@@ -1093,7 +1092,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			}
 		};
 	}
-		
+
 	private createMethodProxy(f: Function, config: ShareConfig, objId: number, methodId: number): Function{
 		const id = `${objId}:${methodId}`;
 		const me: MethodEntry = {original: f}
