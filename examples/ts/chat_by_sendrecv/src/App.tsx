@@ -2,28 +2,25 @@ import { FormEventHandler, useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Madoi } from './madoi/madoi';
 
-let madoi: Madoi;
-
 function App() {
   const [logs, setLogs] = useState<string[]>([]);
   const input = useRef<HTMLInputElement>(null);
-  const first = useRef(true);
+  const madoi = useRef<Madoi>();
 
   useEffect(()=>{
-    if(first.current){
-      first.current = false;
-      madoi = new Madoi(
+    if(!madoi.current){
+      madoi.current = new Madoi(
         "ws://localhost:8080/madoi/rooms/chat_by_sendrecv_ts_oii24Jwke",
         "ahfuTep6ooDi7Oa4");
-      madoi.addReceiver<string>("chat", ({detail: {content}})=>{
+      madoi.current.addReceiver<string>("chat", ({detail: {content}})=>{
         setLogs(logs=>[...logs, content]);
       });
     }
   }, []);
   const onSubmit: FormEventHandler = e=>{
     e.preventDefault();
-    if(input.current === null || !input.current.value || madoi === null) return;
-    madoi.send("chat", input.current.value);
+    if(input.current === null || !input.current.value || !madoi.current) return;
+    madoi.current.send("chat", input.current.value);
     input.current.value = "";
   };
 
