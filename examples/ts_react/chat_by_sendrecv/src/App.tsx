@@ -10,7 +10,7 @@ function App() {
   useEffect(()=>{
     if(!madoi.current){
       madoi.current = new Madoi(
-        "ws://localhost:8080/madoi/rooms/chat_by_sendrecv_ts_oii24Jwke",
+        "ws://localhost:8080/madoi/rooms/chat_by_sendrecv_ts_react_oii24Jwke",
         "ahfuTep6ooDi7Oa4");
       madoi.current.addReceiver<string>("chat", ({detail: {content}})=>{
         setLogs(logs=>[...logs, content]);

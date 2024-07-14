@@ -8,7 +8,7 @@ export class MadoiObjects{
 
   constructor(){
     const m = new Madoi(
-      "ws://localhost:8080/madoi/rooms/chat_by_sendrecv_ts_eoai24rJwke",
+      "ws://localhost:8080/madoi/rooms/chat_by_object_ts_react_eoai24rJwke",
       "ahfuTep6ooDi7Oa4");
     this.madoi = m;
     // vite5.3.3ではexperimentalDecoratorsが正常に動作しないため暫定措置。
