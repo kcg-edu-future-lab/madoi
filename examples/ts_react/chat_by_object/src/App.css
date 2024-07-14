@@ -1,0 +1,5 @@
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
