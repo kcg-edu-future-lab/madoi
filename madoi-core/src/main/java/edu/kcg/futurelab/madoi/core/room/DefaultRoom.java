@@ -213,7 +213,12 @@ public class DefaultRoom implements Room{
 						histories.add(h.getMessage());
 					}
 					break;
-				case SERVERTOPEER:  case PEERTOSERVER:
+				case SERVERTOPEER:
+					if(h.getMessageType().equals("UpdateObjectState")) {
+						histories.add(h.getMessage());
+					}
+					break;
+				case PEERTOSERVER:
 					break;
 			}
 		}
@@ -319,8 +324,8 @@ public class DefaultRoom implements Room{
 					castFromServerToPeer(newError(msg), peer);
 					return;
 				}
-				if(ori.getRevision() < uos.getRevision()) {
-					// 新しいリビジョンの情報であれば受け入れる。
+				if(ori.getRevision() <= uos.getRevision()) {
+					// 同じか新しいリビジョンの情報であれば受け入れる。
 					ori.setState(uos.getState());
 					ori.setRevision(uos.getRevision());
 					// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
@@ -335,6 +340,7 @@ public class DefaultRoom implements Room{
 							if(imh.getObjId() == uos.getObjId()) it.remove();
 						}
 					}
+					uos.setCastType(CastType.SERVERTOPEER);
 					histories.add(MessageHistory.of(uos));
 					if(histories.size() >= spec.getMaxLog()) {
 						histories.remove(0);
