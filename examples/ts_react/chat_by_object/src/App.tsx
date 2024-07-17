@@ -1,6 +1,6 @@
 import { FormEventHandler, useContext, useRef } from 'react'
 import './App.css'
-import { MadoiContext } from './MadoiContext';
+import { MadoiContext } from './MadoiObjects';
 import { useSharedObject } from './madoi/helpers';
 
 function App() {
