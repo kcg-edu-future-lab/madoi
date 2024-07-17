@@ -327,8 +327,6 @@ extends EventListenerObject{
 export type TypedEventListenerOrEventListenerObject<T extends TypedEventTarget<T>, D = any> =
     | TypedEventListener<T, D>
     | TypedEventListenerObject<T, D>;
-type AnyEventListener<T extends TypedEventTarget<T>>
-    = (evt: TypedCustomEvent<T, any>) => void;
 export class TypedEventTarget<T extends TypedEventTarget<T>>
 extends EventTarget{
 }
