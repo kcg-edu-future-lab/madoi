@@ -3,10 +3,10 @@ package edu.kcg.futurelab.madoi.core.message;
 public class UpdateObjectState extends Message {
 	public UpdateObjectState() {
 	}
-	public UpdateObjectState(int objId, String state, int revision) {
+	public UpdateObjectState(int objId, Object state, int objRevision) {
 		this.objId = objId;
 		this.state = state;
-		this.revision = revision;
+		this.objRevision = objRevision;
 	}
 	public int getObjId() {
 		return objId;
@@ -14,20 +14,20 @@ public class UpdateObjectState extends Message {
 	public void setObjId(int objId) {
 		this.objId = objId;
 	}
-	public String getState() {
+	public Object getState() {
 		return state;
 	}
-	public void setState(String state) {
+	public void setState(Object state) {
 		this.state = state;
 	}
-	public int getRevision() {
-		return revision;
+	public int getObjRevision() {
+		return objRevision;
 	}
-	public void setRevision(int revision) {
-		this.revision = revision;
+	public void setObjRevision(int objRevision) {
+		this.objRevision = objRevision;
 	}
 
 	private int objId;
-	private String state;
-	private int revision;
+	private Object state;
+	private int objRevision;
 }

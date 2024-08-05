@@ -324,10 +324,10 @@ public class DefaultRoom implements Room{
 					castFromServerToPeer(newError(msg), peer);
 					return;
 				}
-				if(ori.getRevision() <= uos.getRevision()) {
+				if(ori.getRevision() <= uos.getObjRevision()) {
 					// 同じか新しいリビジョンの情報であれば受け入れる。
 					ori.setState(uos.getState());
-					ori.setRevision(uos.getRevision());
+					ori.setRevision(uos.getObjRevision());
 					// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
 					var it = histories.iterator();
 					while(it.hasNext()) {

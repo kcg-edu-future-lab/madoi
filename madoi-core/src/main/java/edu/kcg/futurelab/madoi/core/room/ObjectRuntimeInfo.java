@@ -10,7 +10,7 @@ import edu.kcg.futurelab.madoi.core.message.definition.ObjectDefinition;
 
 public class ObjectRuntimeInfo {
 	private ObjectDefinition definition;
-	private String state;
+	private Object state;
 	private int revision = 0;
 	private Map<Integer, MethodRuntimeInfo> methodRuntimeInfos = new LinkedHashMap<>();
 	public ObjectRuntimeInfo(ObjectDefinition definition) {
@@ -28,10 +28,10 @@ public class ObjectRuntimeInfo {
 	public void setDefinition(ObjectDefinition definition) {
 		this.definition = definition;
 	}
-	public String getState() {
+	public Object getState() {
 		return state;
 	}
-	public void setState(String state) {
+	public void setState(Object state) {
 		this.state = state;
 	}
 	public int getRevision() {
