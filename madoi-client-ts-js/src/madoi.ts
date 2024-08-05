@@ -1013,7 +1013,6 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 					objId, mc.methodId);
 				obj[f.name] = function(){
 					objEntry.modification++;
-					objEntry.revision++;
 					return newf.apply(null, arguments);
 				};
 			} else if("hostOnly" in c){
@@ -1113,6 +1112,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				self.sendMessage(newInvokeMethod(
 					castType, {
 						objId: objId,
+						objRevision: self.sharedObjects.get(objId)?.revision,
 						methodId: methodId,
 						args: Array.from(arguments)
 					}
