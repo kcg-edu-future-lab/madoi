@@ -227,8 +227,8 @@ export function newInvokeFunction(castType: "BROADCAST" | "OTHERCAST", body: Inv
 }
 export interface UpdateObjectStateBody{
 	objId: number;
+	objRevision: number;
 	state: string;
-	revision: number;
 }
 export interface UpdateObjectState extends PeerToServerMessage{
 	type: "UpdateObjectState";
@@ -784,9 +784,9 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			}
 		} else if(msg.type === "UpdateObjectState"){
 			const f = this.setStateMethods.get(msg.objId);
-			if(f) f(JSON.parse(msg.state), msg.revision);
+			if(f) f(msg.state, msg.objRevision);
 			const o = this.sharedObjects.get(msg.objId);
-			if(o) o.revision = msg.revision;
+			if(o) o.revision = msg.objRevision;
 		} else if(msg.type === "InvokeMethod"){
 			if(msg.objId){
 				// check consistency?
@@ -1148,8 +1148,8 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				info.config.maxInterval && info.config.maxInterval <= (curTick - info.lastGet)){
 				this.doSendMessage(newUpdateObjectState({
 					objId: objId,
-					state: JSON.stringify(info.method()),
-					revision: oe.revision
+					objRevision: oe.revision,
+					state: info.method()
 					}));
 				info.lastGet = curTick;
 				oe.modification = 0;
