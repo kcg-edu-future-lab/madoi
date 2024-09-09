@@ -751,7 +751,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			for(const [_, f] of this.peerLeavedMethods){
 				f(msg.peerId);
 			}
-			this.fire("peerLeaved", msg.peerId);
+			this.fire("peerLeaved", {peerId: msg.peerId});
 		} else if(msg.type === "UpdatePeerProfile"){
 			const p = this.peers.get(msg.sender!);
 			if(msg.sender && p){

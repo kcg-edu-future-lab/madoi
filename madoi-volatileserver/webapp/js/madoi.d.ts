@@ -152,8 +152,8 @@ export interface InvokeFunction extends BroadcastOrOthercastMessage, InvokeFunct
 export declare function newInvokeFunction(castType: "BROADCAST" | "OTHERCAST", body: InvokeFunctionBody): InvokeFunction;
 export interface UpdateObjectStateBody {
     objId: number;
+    objRevision: number;
     state: string;
-    revision: number;
 }
 export interface UpdateObjectState extends PeerToServerMessage {
     type: "UpdateObjectState";
