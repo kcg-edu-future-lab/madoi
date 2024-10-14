@@ -30,7 +30,7 @@ ProxyTimeout 1800
   ProxyPass http://localhost:8080/madoi
   ProxyPassReverse http://localhost:8080/madoi
 </Location>
-<Location /app/rooms>
+<Location /madoi/rooms>
   ProxyPass ws://localhost:8080/madoi/rooms
 </Location>
 ```
