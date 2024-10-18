@@ -109,10 +109,13 @@ public class DefaultRoom implements Room{
 		eventLogger.createRoom(id);
 	}
 
+	/**
+	 * ピアが接続した際に呼ばれるメソッド。
+	 */
 	@Override
 	public synchronized void onPeerArrive(Peer peer) {
 		eventLogger.receiveOpen(id, peer.getId());
-		waitingPeers.put(peer.getId(), peer);
+		enteringPeers.put(peer.getId(), peer);
 	}
 
 	@Override
@@ -124,7 +127,7 @@ public class DefaultRoom implements Room{
 	public synchronized void onPeerLeave(Peer peer) {
 		var peerId = peer.getId();
 		System.err.printf("peer #%s removed.%n", peerId);
-		waitingPeers.remove(peerId);
+		enteringPeers.remove(peerId);
 		eventLogger.receiveClose(id, peerId);
 		peers.remove(peerId);
 		if(peers.size() > 0) {
@@ -147,7 +150,12 @@ public class DefaultRoom implements Room{
 		return true;
 	}
 
-	private void onWaitingPeerMessage(DefaultPeer peer, String message) {
+	/**
+	 * 入室しようとしている(初回接続後にメッセージを送ってきた)ピアの処理。
+	 * @param peer
+	 * @param message
+	 */
+	private void onEnteringPeerMessage(DefaultPeer peer, String message) {
 		EnterRoom er = null;
 		try {
 			er = om.readValue(message, EnterRoom.class);
@@ -236,7 +244,8 @@ public class DefaultRoom implements Room{
 	public synchronized void onPeerMessage(Peer peer, String message) {
 		var p = (DefaultPeer)peer;
 		if(p.getState().equals(Peer.State.CONNECTED)) {
-			onWaitingPeerMessage(p, message);
+			// 初回メッセージは別メソッドで処理する
+			onEnteringPeerMessage(p, message);
 			return;
 		}
 		var peerId = p.getId();
@@ -691,7 +700,7 @@ public class DefaultRoom implements Room{
 	}
 	private LinkedList<History> histories = new LinkedList<>();
 
-	private Map<String, Peer> waitingPeers = new HashMap<>();
+	private Map<String, Peer> enteringPeers = new HashMap<>();
 	private Map<String, Peer> peers = new LinkedHashMap<>();
 
 	private static PeerEntered newPeerEntered(Peer peer) {
