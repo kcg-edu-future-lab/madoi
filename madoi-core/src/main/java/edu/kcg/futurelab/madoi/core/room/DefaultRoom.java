@@ -54,6 +54,7 @@ import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
 import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
+import edu.kcg.futurelab.madoi.core.util.StringUtil;
 
 /**
  * Peerは最初は入室待ち状態になる。
@@ -198,11 +199,8 @@ public class DefaultRoom implements Room{
 		for(var h : this.histories) {
 			switch(h.getCastType()) {
 				case UNICAST:  case MULTICAST:
-					for(var r : h.getRecipients()) {
-						if(r.equals(peer.getId())) {
-							histories.add(h.getMessage());
-							break;
-						}
+					if(StringUtil.contains(peer.getId(), h.getRecipients())) {
+						histories.add(h.getMessage());
 					}
 					break;
 				case BROADCAST:  case OTHERCAST:
