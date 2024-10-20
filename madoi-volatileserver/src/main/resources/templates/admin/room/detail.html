@@ -105,7 +105,7 @@ Objects:
       <td th:text="${method.definition.methodId}"></td>
       <td th:text="${method.definition.name}"></td>
       <td th:text="${method.invocationCount}"></td>
-      <td><span th:if="${method.lastInvocation} != null" th:text="${method.lastInvocation}"></span></td>
+      <td><span th:if="${method.lastInvocation} != null" th:text="${#dates.format(method.lastInvocation, 'yyyy/MM/dd HH:mm:ss')}"></span></td>
     </tr>
     </tbody>
     </table>

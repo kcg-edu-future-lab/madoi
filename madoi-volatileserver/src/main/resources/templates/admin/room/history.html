@@ -53,7 +53,7 @@
 </thead>
 <tbody class="table-group-divider">
 <tr th:each="h : ${history}">
-  <td><div style="max-width: 120px" th:text="${h.received}">received</div></td>
+  <td><div style="max-width: 120px" th:text="${#dates.format(h.received, 'yyyy/MM/dd HH:mm:ss')}">received</div></td>
   <td th:text="${h.sender != null} ? ${h.sender} : ''">sender</td>
   <td th:text="${h.type}">type</td>
   <td th:text="${h.target}">target</td>
