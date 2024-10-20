@@ -9,7 +9,7 @@ logging:
 #        security: TRACE
 
 madoi:
-  adminUser: admin
+  adminUser: madoiadmin
   adminPass: sdfj3osadkvc
   authTokens:
     - ${MADOI_AUTH_TOKENS:ahfuTep6ooDi7Oa4}
