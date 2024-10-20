@@ -788,10 +788,10 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			const o = this.sharedObjects.get(msg.objId);
 			if(o) o.revision = msg.objRevision;
 		} else if(msg.type === "InvokeMethod"){
-			if(msg.objId){
+			if(msg.objId !== undefined){
 				// check consistency?
 				const o = this.sharedObjects.get(msg.objId);
-				if(o){
+				if(o !== undefined){
 					o.revision++;
 				}
 			}
