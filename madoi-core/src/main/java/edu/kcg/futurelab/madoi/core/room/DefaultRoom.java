@@ -608,6 +608,7 @@ public class DefaultRoom implements Room{
 		private Date received;
 		public MessageHistory(T message, Date received) {
 			this.message = message;
+			this.received = received;
 		}
 		@Override
 		public String getSender() {
