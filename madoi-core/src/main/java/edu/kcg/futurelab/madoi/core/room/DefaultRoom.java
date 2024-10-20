@@ -45,16 +45,16 @@ import edu.kcg.futurelab.madoi.core.message.InvokeFunction;
 import edu.kcg.futurelab.madoi.core.message.InvokeMethod;
 import edu.kcg.futurelab.madoi.core.message.Message;
 import edu.kcg.futurelab.madoi.core.message.PeerEntered;
-import edu.kcg.futurelab.madoi.core.message.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
 import edu.kcg.futurelab.madoi.core.message.Ping;
 import edu.kcg.futurelab.madoi.core.message.Pong;
-import edu.kcg.futurelab.madoi.core.message.RoomInfo;
-import edu.kcg.futurelab.madoi.core.message.RoomSpec;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
 import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
+import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
+import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
+import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
 import edu.kcg.futurelab.madoi.core.util.StringUtil;
 
 /**

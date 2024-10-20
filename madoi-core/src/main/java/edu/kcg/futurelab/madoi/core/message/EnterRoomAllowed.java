@@ -3,6 +3,9 @@ package edu.kcg.futurelab.madoi.core.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
+import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
+
 public class EnterRoomAllowed extends Message{
 	public EnterRoomAllowed() {
 	}

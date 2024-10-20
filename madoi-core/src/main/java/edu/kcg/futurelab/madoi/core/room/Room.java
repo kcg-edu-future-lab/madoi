@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.kcg.futurelab.madoi.core.message.CastType;
-import edu.kcg.futurelab.madoi.core.message.RoomSpec;
+import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
 
 public interface Room {
 	String getId();

@@ -3,7 +3,7 @@ package edu.kcg.futurelab.madoi.volatileserver.controller.dto;
 import java.util.Collection;
 import java.util.Map;
 
-import edu.kcg.futurelab.madoi.core.message.RoomSpec;
+import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

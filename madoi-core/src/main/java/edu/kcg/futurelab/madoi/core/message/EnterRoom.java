@@ -1,5 +1,8 @@
 package edu.kcg.futurelab.madoi.core.message;
 
+import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
+import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
+
 /**
  * ルームに入室する際にクライアントからサーバへ送るメッセージ。
  */

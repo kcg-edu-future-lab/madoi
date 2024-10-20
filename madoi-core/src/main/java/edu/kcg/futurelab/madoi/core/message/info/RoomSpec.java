@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.core.message;
+package edu.kcg.futurelab.madoi.core.message.info;
 
 import java.util.HashMap;
 
