@@ -69,10 +69,10 @@ class Chat{
     // チャットログに追加(getStateで返す用)
     this.chatLog.push({id: id, message: message});
     // メッセージを表示するdivを作成して追加
-    this.logDiv.innerHTML += `<div id="${id}">${message}</div>\n`;
+    this.logDiv.innerHTML += `<div id="chatlog_${id}">${message}</div>\n`;
     // メッセージが100件を超えていたら古いものを削除
     if(this.chatLog.length > 100){
-      document.getElementById(this.chatLog[0].id).remove();
+      document.getElementById(`chatlog_${this.chatLog[0].id}`).remove();
       this.chatLog.shift();
     }
   }
