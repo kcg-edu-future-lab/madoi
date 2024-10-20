@@ -16,6 +16,7 @@
 package edu.kcg.futurelab.madoi.core.room;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public interface Room {
 	Collection<Peer> getPeers();
 	Map<Integer, FunctionRuntimeInfo> getFunctionRuntimeInfos();
 	Map<Integer, ObjectRuntimeInfo> getObjectRuntimeInfos();
-	Collection<History> getMessageHistories();
+	List<History> getMessageHistories();
 
 	void onRoomCreated();
 	void onPeerArrive(Peer peer);
@@ -47,5 +48,6 @@ public interface Room {
 		String getMessageType();
 		CastType getCastType();
 		String[] getRecipients();
+		Date getReceived();
 	}
 }

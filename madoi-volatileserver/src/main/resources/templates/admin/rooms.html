@@ -1,0 +1,40 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+</head>
+<body>
+<main>
+<div class="container">
+  <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+    <a th:href="@{/admin/rooms}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+      <span class="fs-4">Madoi Server Admin Console</span>
+    </a>
+  </header>
+  <div class="row">
+    <div class="col">Room一覧</div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <ul>
+        <li th:each="room : ${rooms}">
+          <span th:text="${room.id}"></span>
+          <span>参加者の数: </span><span th:text="${room.peerCount}">,</span>
+          <span>オブジェクトの数: </span><span th:text="${room.objectCount}">,</span>
+          <span>関数(Function)の数: </span><span th:text="${room.functionCount}">,</span>
+          <span>メッセージ履歴の数: </span><span th:text="${room.historyCount}"></span>
+          <br/>
+          <a th:href="${'rooms/' + room.id + '/detail'}">詳細</a> 
+          <a th:href="${'rooms/' + room.id + '/history'}">履歴</a> 
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+</body>
+</html>

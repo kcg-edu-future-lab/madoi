@@ -11,4 +11,6 @@ import lombok.Data;
 public class ApplicationProperties {
 	private String[] authTokens;
 	private String[] allowedOrigins;
+	private String adminUser;
+	private String adminPass;
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -242,6 +243,7 @@ public class DefaultRoom implements Room{
 
 	@Override
 	public synchronized void onPeerMessage(Peer peer, String message) {
+		var received = new Date();
 		var p = (DefaultPeer)peer;
 		if(p.getState().equals(Peer.State.CONNECTED)) {
 			// 初回メッセージは別メソッドで処理する
@@ -308,7 +310,7 @@ public class DefaultRoom implements Room{
 					break;
 				}
 				// 履歴に追加
-				histories.add(MessageHistory.of(ifn));
+				histories.add(MessageHistory.of(ifn, received));
 				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
@@ -348,7 +350,7 @@ public class DefaultRoom implements Room{
 						}
 					}
 					uos.setCastType(CastType.SERVERTOPEER);
-					histories.add(MessageHistory.of(uos));
+					histories.add(MessageHistory.of(uos, received));
 					if(histories.size() >= spec.getMaxLog()) {
 						histories.remove(0);
 					}
@@ -383,7 +385,7 @@ public class DefaultRoom implements Room{
 */				ori.setRevision(im.getObjRevision() + 1);
 				mri.onInvoked();
 				// 履歴に追加
-				histories.add(MessageHistory.of(im));
+				histories.add(MessageHistory.of(im, received));
 				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
@@ -398,7 +400,7 @@ public class DefaultRoom implements Room{
 				break;
 			}
 			default:{
-				histories.add(new SOMHistory(m));
+				histories.add(new SOMHistory(m, received));
 				if(histories.size() >= spec.getMaxLog()) {
 					histories.remove(0);
 				}
@@ -527,48 +529,6 @@ public class DefaultRoom implements Room{
 				recipients != null ? Arrays.asList(recipients) : Collections.emptyList(),
 				message.getSender(), message.getType(),
 				encode(message));
-/*
-		var recipients = new ArrayList<Peer>();
-		switch(message.getCastType()) {
-			case UNICAST:
-			case SERVERTOPEER:
-				recipients.add(peers.get(message.getRecipients()[0]));
-				break;
-			case MULTICAST:
-				for(var r : message.getRecipients()) {
-					recipients.add(peers.get(r));
-				}
-				break;
-			case BROADCAST:
-				for(var p : peers.values()) {
-					recipients.add(p);
-				}
-				break;
-			case SELFCAST:
-				recipients.add(peers.get(message.getSender()));
-				break;
-			case OTHERCAST:
-				for(var p : peers.values()) {
-					if(p.getId().equals(message.getSender())) continue;
-					recipients.add(p);
-				}
-				break;
-			case PEERTOSERVER:
-		}
-		var m = encode(message);
-		var failPeers = new ArrayList<Peer>();
-		for(var p : recipients) {
-			try{
-				p.getSender().sendText(m);
-			} catch (IOException e) {
-				failPeers.add(p);
-			}
-		}
-		for(var p : failPeers) {
-			if(peers.containsKey(p.getId())) {
-				onPeerLeave(p);
-			}
-		}*/
 	}
 
 	private void castFromServerToPeer(Message message, Peer peer) {
@@ -645,7 +605,8 @@ public class DefaultRoom implements Room{
 	 */
 	static class MessageHistory<T extends Message> implements History{
 		private T message;
-		public MessageHistory(T message) {
+		private Date received;
+		public MessageHistory(T message, Date received) {
 			this.message = message;
 		}
 		@Override
@@ -668,14 +629,20 @@ public class DefaultRoom implements Room{
 		public String[] getRecipients() {
 			return message.getRecipients();
 		}
-		public static <U extends Message> MessageHistory<U> of(U message){
-			return new MessageHistory<U>(message);
+		@Override
+		public Date getReceived() {
+			return received;
+		}
+		public static <U extends Message> MessageHistory<U> of(U message, Date received){
+			return new MessageHistory<U>(message, received);
 		}
 	}
 	static class SOMHistory implements History{
 		private Map<String, Object> message;
-		public SOMHistory(Map<String, Object> message) {
+		private Date received;
+		public SOMHistory(Map<String, Object> message, Date received) {
 			this.message = message;
+			this.received = received;
 		}
 		@Override
 		public String getSender() {
@@ -696,6 +663,10 @@ public class DefaultRoom implements Room{
 		@Override
 		public String[] getRecipients() {
 			return (String[])message.get("recipients");
+		}
+		@Override
+		public Date getReceived() {
+			return received;
 		}
 	}
 	private LinkedList<History> histories = new LinkedList<>();

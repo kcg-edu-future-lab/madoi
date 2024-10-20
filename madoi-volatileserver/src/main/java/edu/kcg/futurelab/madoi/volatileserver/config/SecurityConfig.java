@@ -8,10 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -24,6 +27,11 @@ import edu.kcg.futurelab.madoi.volatileserver.config.auth.AuthTokenAuthenticatio
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
 	@Bean
 	static GrantedAuthorityDefaults grantedAuthorityDefaults() {
 		return new GrantedAuthorityDefaults("");
@@ -52,6 +60,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(
 							AntPathRequestMatcher.antMatcher("/*.html"), // sample codes
+							AntPathRequestMatcher.antMatcher("/lib/**"),
 							AntPathRequestMatcher.antMatcher("/js/**")
 							).permitAll()
 					.anyRequest()
@@ -59,6 +68,8 @@ public class SecurityConfig {
 			.addFilterBefore(
 					new AuthTokenAuthenticationFilter(authTokens.toArray(new String[] {}), contextPath, "/rooms"),
 					AnonymousAuthenticationFilter.class)
+			.formLogin(Customizer.withDefaults())
+			.logout(Customizer.withDefaults())
 			;
 
 		return http.build();

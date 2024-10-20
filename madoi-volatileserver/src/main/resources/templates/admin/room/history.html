@@ -1,0 +1,76 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+</head>
+<body>
+<main>
+<div class="container">
+  <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+    <a th:href="@{/admin/rooms}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+      <span class="fs-4">Madoi Server Admin Console</span>
+    </a>
+  </header>
+  <div class="row">
+    <div class="col">履歴: <span th:text="${room.id}"></span></div>
+  </div>
+</div>
+<div class="container" style="overflow-y: scroll; max-height: 600px">
+  <div class="row">
+    <div class="col">
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+    <li class="page-item">
+      <a class="page-link" th:if="${page != 0}" th:href="@{histories(page=${page-1},itemsPerPage=${itemsPerPage})}">&lt;</a>
+      <span class="page-link" th:if="${page == 0}">&lt;</span>
+    </li>
+    <li class="page-item" th:if="${maxPage > 0}" th:each="p, stat : ${#numbers.sequence(1, maxPage)}"
+        th:classappend="${stat.index == page}?active">
+      <a class="page-link" th:if="${stat.index != page}"
+        th:href="@{histories(page=${stat.index},itemsPerPage=${itemsPerPage})}" th:text="${p}"></a>
+      <span class="page-link" th:if="${stat.index == page}" th:text="${p}"></span>
+    </li>
+    <li class="page-item">
+      <a class="page-link" th:if="${page != maxPage - 1}" th:href="@{histories(page=${page+1},itemsPerPage=${itemsPerPage})}">&gt;</a>
+      <span class="page-link" th:if="${page == maxPage - 1}">&gt;</span>
+    </li>
+  </ul>
+  [[${firstItemIndex}]]-[[${lastItemIndex}]] of [[${totalItemCount}]] ([[${maxPage}]] pages)
+</nav>
+<div class="table-responsive">
+<table class="table table-light table-striped table-hover">
+<thead>
+<tr>
+  <th>received</th>
+  <th>sender</th>
+  <th>type</th>
+  <th>target<br/><small>[class(rev).](method|function)</small></th>
+  <th>args</th>
+</tr>
+</thead>
+<tbody class="table-group-divider">
+<tr th:each="h : ${history}">
+  <td><div style="max-width: 120px" th:text="${h.received}">received</div></td>
+  <td th:text="${h.sender != null} ? ${h.sender} : ''">sender</td>
+  <td th:text="${h.type}">type</td>
+  <td th:text="${h.target}">target</td>
+  <td>
+    <div style="overflow: scroll;" th:if="${h.content != null}">
+      <pre class="prettyprint" th:text="${h.content}"
+        style="font-size: small; max-width: 640px; word-break: break-all;"></pre>
+    </div>
+  </td>
+</tr>
+</tbody>
+</table>
+</div>
+
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

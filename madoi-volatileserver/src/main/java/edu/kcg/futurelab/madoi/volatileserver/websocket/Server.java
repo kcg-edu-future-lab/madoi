@@ -8,4 +8,11 @@ import jakarta.websocket.server.ServerEndpoint;
 @Component
 @ServerEndpoint("/rooms/{roomId}")
 public class Server extends WebSocketServer {
+	public static Server instance() {
+		return instance;
+	}
+	private static Server instance;
+	public Server() {
+		instance = this;
+	}
 }

@@ -9,10 +9,12 @@ logging:
 #        security: TRACE
 
 madoi:
+  adminUser: admin
+  adminPass: sdfj3osadkvc
   authTokens:
-    - ${MADOI_AUTH_TOKENS}
+    - ${MADOI_AUTH_TOKENS:ahfuTep6ooDi7Oa4}
   allowedOrigins:
-    - ${MADOI_ALLOWED_ORIGINS}
+    - ${MADOI_ALLOWED_ORIGINS:localhost}
   websocket:
     maxTextMessageBufferSize: ${MADOI_WEBSOCKET_MAXTEXTMESSAGEBUFFERSIZE:10485760}  # 10 * 1024 * 1024
     maxBinaryMessageBufferSize: ${MADOI_WEBSOCKET_MAXBINARYMESSAGEBUFFERSIZE:10485760}  # 10 * 1024 * 1024
