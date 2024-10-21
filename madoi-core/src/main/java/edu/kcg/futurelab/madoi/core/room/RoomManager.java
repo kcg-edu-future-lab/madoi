@@ -9,5 +9,6 @@ public interface RoomManager {
 	void onPeerMessage(String roomId, Peer peer, String message);
 	void onPeerMessage(String roomId, Peer peer, byte[] message);
 	Collection<Room> getRooms();
+	Room getOrCreateRoom(String roomId);
 	Room getRoom(String roomId);
 }

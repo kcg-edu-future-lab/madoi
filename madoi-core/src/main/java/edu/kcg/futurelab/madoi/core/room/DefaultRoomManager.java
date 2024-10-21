@@ -50,7 +50,7 @@ public class DefaultRoomManager implements RoomManager{
 	@Override
 	public Peer onPeerOpen(String roomId, MessageSender sender) {
 		synchronized(roomTtls) {
-			var r = getRoom(roomId);
+			var r = getOrCreateRoom(roomId);
 			var p = newPeer(sender);
 			r.onPeerArrive(p);
 			roomTtls.remove(roomId);
@@ -60,12 +60,12 @@ public class DefaultRoomManager implements RoomManager{
 
 	@Override
 	public void onPeerError(String roomId, Peer peer, Throwable cause) {
-		getRoom(roomId).onPeerError(peer, cause);
+		getOrCreateRoom(roomId).onPeerError(peer, cause);
 	}
 
 	@Override
 	public void onPeerClose(String roomId, Peer peer) {
-		Room r = getRoom(roomId);
+		Room r = getOrCreateRoom(roomId);
 		r.onPeerLeave(peer);
 		if(r.getPeers().size() == 0) {
 			roomTtls.put(roomId, System.currentTimeMillis() + TTL_ROOM);
@@ -74,21 +74,26 @@ public class DefaultRoomManager implements RoomManager{
 
 	@Override
 	public void onPeerMessage(String roomId, Peer peer, String message) {
-		getRoom(roomId).onPeerMessage(peer, message);
+		getOrCreateRoom(roomId).onPeerMessage(peer, message);
 	}
 
 	@Override
 	public void onPeerMessage(String roomId, Peer peer, byte[] message) {
-		getRoom(roomId).onPeerMessage(peer, message);
+		getOrCreateRoom(roomId).onPeerMessage(peer, message);
 	}
 
 	@Override
-	public Room getRoom(String roomId){
+	public Room getOrCreateRoom(String roomId){
 		return rooms.computeIfAbsent(roomId, ri->{
 			var r = newRoom(roomId);
 			r.onRoomCreated();
 			return r;
 		});
+	}
+
+	@Override
+	public Room getRoom(String roomId){
+		return rooms.get(roomId);
 	}
 
 	@Override
