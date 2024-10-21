@@ -1,5 +1,7 @@
 package edu.kcg.futurelab.madoi.volatileserver.config;
 
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -17,7 +19,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 
 import edu.kcg.futurelab.madoi.volatileserver.ApplicationProperties;
@@ -59,9 +60,10 @@ public class SecurityConfig {
 					frame -> frame.sameOrigin()))
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(
-							AntPathRequestMatcher.antMatcher("/*.html"), // sample codes
-							AntPathRequestMatcher.antMatcher("/lib/**"),
-							AntPathRequestMatcher.antMatcher("/js/**")
+							antMatcher("/"),
+							antMatcher("/*.html"),
+							antMatcher("/lib/**"),
+							antMatcher("/js/**")
 							).permitAll()
 					.anyRequest()
 							.authenticated())
