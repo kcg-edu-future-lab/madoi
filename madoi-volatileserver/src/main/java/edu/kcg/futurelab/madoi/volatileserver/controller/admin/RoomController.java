@@ -2,6 +2,7 @@ package edu.kcg.futurelab.madoi.volatileserver.controller.admin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -82,7 +83,7 @@ public class RoomController {
 		var first = itemsPerPage * page;
 		var items = values.subList(
 				Math.min(first, n), Math.min(first + itemsPerPage, n));
-		
+
 		var result = new ArrayList<History>();
 		for(var h : items) {
 			switch(h.getMessageType()) {
@@ -122,19 +123,27 @@ public class RoomController {
 					break;
 				}
 				default:{
-					var m = (UserMessage)h.getMessage();
+					String type = null;
+					Object content = null;
+					if(h.getMessage() instanceof UserMessage m) {
+						type = m.getType();
+						content = m.getContent();
+					} else if(h.getMessage() instanceof Map m){
+						type = m.get("type").toString();
+						content = m.get("content");
+					}
 					result.add(new History(
-						h.getReceived(), History.Type.UserMessage, h.getSender(),
-						null,
-						toString(m.getContent())));
+							h.getReceived(), History.Type.UserMessage, h.getSender(),
+							type,
+							toString(content)));
 					break;
 				}
 			}
 		}
-		
+
 		return new HistoryExtractionResult(maxPage, result);
 	}
-	
+
 	private String toString(Object value) {
 		try {
 			return om.writeValueAsString(value);
