@@ -32,6 +32,7 @@ public class RoomController {
 	@GetMapping("/rooms")
 	public String rooms(Model model) {
 		var rm = Server.instance().getRoomManager();
+		System.out.println("rooms: " + rm.getRooms().size());
 		try(var s = rm.getRooms().stream()){
 			model.addAttribute("rooms",
 					s.map(Util::summary).toList());
@@ -83,6 +84,7 @@ public class RoomController {
 		var first = itemsPerPage * page;
 		var items = values.subList(
 				Math.min(first, n), Math.min(first + itemsPerPage, n));
+		System.out.println("items: " + items.size());
 
 		var result = new ArrayList<History>();
 		for(var h : items) {

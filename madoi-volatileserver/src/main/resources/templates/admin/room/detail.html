@@ -73,6 +73,26 @@ Peers:
 </tbody>
 </table>
 
+Functions:
+<table class="table table-success table-striped" border="1">
+<thead>
+<tr>
+  <th>functionId</th>
+  <th>name</th>
+  <th>invocationCount</th>
+  <th>lastInvocaiton</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="f : ${room.functions}">
+  <td th:text="${f.definition.funcId}"></td>
+  <td th:text="${f.definition.name}"></td>
+  <td th:text="${f.invocationCount}"></td>
+  <td><span th:if="${f.lastInvocation} != null" th:text="${#dates.format(f.lastInvocation, 'yyyy/MM/dd HH:mm:ss')}"></span></td>
+</tr>
+</tbody>
+</table>
+
 Objects:
 <table class="table table-success table-striped" border="1">
 <thead>

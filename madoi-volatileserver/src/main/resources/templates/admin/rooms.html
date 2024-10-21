@@ -18,18 +18,26 @@
   </div>
   <div class="row">
     <div class="col">
-      <ul>
-        <li th:each="room : ${rooms}">
-          <span th:text="${room.id}"></span>
-          <span>参加者の数: </span><span th:text="${room.peerCount}">,</span>
-          <span>オブジェクトの数: </span><span th:text="${room.objectCount}">,</span>
-          <span>関数(Function)の数: </span><span th:text="${room.functionCount}">,</span>
-          <span>メッセージ履歴の数: </span><span th:text="${room.historyCount}"></span>
-          <br/>
-          <a th:href="${'rooms/' + room.id + '/detail'}">詳細</a> 
-          <a th:href="${'rooms/' + room.id + '/history'}">履歴</a> 
-        </li>
-      </ul>
+      <table class="table table-primary table-striped" border="1">
+      <thead>
+      <tr>
+        <th>id</th>
+        <th>参加者数</th>
+        <th>関数の数</th>
+        <th>オブジェクトの数</th>
+        <th>履歴の数</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="room : ${rooms}">
+        <td><a th:href="${'rooms/' + room.id + '/detail'}" th:text="${room.id}"></a></td>
+        <td><span th:text="${room.peerCount}">0</span></td>
+        <td><span th:text="${room.functionCount}">0</span></td>
+        <td><span th:text="${room.objectCount}">0</span></td>
+        <td><a th:href="${'rooms/' + room.id + '/history'}" th:text="${room.historyCount}"></a></td>
+      </tr>
+      </tbody>
+      </table>
     </div>
   </div>
 

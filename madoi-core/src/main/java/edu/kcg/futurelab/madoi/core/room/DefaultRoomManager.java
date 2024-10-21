@@ -11,6 +11,27 @@ import edu.kcg.futurelab.madoi.core.room.logger.PrintRoomEventLogger;
 
 public class DefaultRoomManager implements RoomManager{
 	public DefaultRoomManager() {
+/*
+		// dummy room
+		var dr = new DefaultRoom("dummyRoom", new RoomSpec(100),
+				Collections.emptyMap(), new NullRoomEventLogger());
+		dr.getFunctionRuntimeInfos().put(0, new FunctionRuntimeInfo(
+				new FunctionDefinition(0, "func", new FunctionConfig()),
+				1, new Date()));
+		var md = new MethodDefinition(0, "method", new MethodConfig());
+		dr.getObjectRuntimeInfos().put(0, new ObjectRuntimeInfo(
+				new ObjectDefinition(0, "obj", new ShareClassConfig("Object"),
+						new ArrayList<MethodDefinition>() {{
+							add(md);
+						}}
+						),
+				null, 0,
+				new LinkedHashMap<Integer, MethodRuntimeInfo>(){{
+					put(0, new MethodRuntimeInfo(md, 1, new Date()));
+				}}
+				));
+		rooms.put(dr.getId(), dr);
+//*/
 		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
 			synchronized(roomTtls) {
 				var it = roomTtls.entrySet().iterator();
