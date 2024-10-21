@@ -8,6 +8,11 @@ public class FunctionRuntimeInfo {
 	private FunctionDefinition definition;
 	private int invocationCount;
 	private Date lastInvocation;
+	public FunctionRuntimeInfo(FunctionDefinition definition, int invocationCount, Date lastInvocation) {
+		this(definition);
+		this.invocationCount = invocationCount;
+		this.lastInvocation = lastInvocation;
+	}
 	public FunctionRuntimeInfo(FunctionDefinition definition) {
 		this.definition = definition;
 	}

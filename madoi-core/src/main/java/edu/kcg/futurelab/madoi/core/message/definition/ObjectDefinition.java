@@ -13,7 +13,7 @@ public class ObjectDefinition {
 		this.objId = objId;
 		this.className = className;
 		this.config = config;
-		this.methods = methods;
+		this.methods.addAll(methods);
 	}
 	public int getObjId() {
 		return objId;

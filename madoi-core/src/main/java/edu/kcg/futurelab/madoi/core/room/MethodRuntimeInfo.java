@@ -8,6 +8,11 @@ public class MethodRuntimeInfo {
 	private MethodDefinition definition;
 	private int invocationCount;
 	private Date lastInvocation;
+	public MethodRuntimeInfo(MethodDefinition definition, int invocationCount, Date lastInvocation) {
+		this(definition);
+		this.invocationCount = invocationCount;
+		this.lastInvocation = lastInvocation;
+	}
 	public MethodRuntimeInfo(MethodDefinition definition) {
 		this.definition = definition;
 	}

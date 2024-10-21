@@ -13,6 +13,13 @@ public class ObjectRuntimeInfo {
 	private Object state;
 	private int revision = 0;
 	private Map<Integer, MethodRuntimeInfo> methodRuntimeInfos = new LinkedHashMap<>();
+	public ObjectRuntimeInfo(ObjectDefinition definition, Object state, int revision,
+			Map<Integer, MethodRuntimeInfo> methodRuntimeInfos) {
+		this(definition);
+		this.state = state;
+		this.revision = revision;
+		this.methodRuntimeInfos.putAll(methodRuntimeInfos);
+	}
 	public ObjectRuntimeInfo(ObjectDefinition definition) {
 		this.definition = definition;
 		var om = new ObjectMapper();
