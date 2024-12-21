@@ -6,45 +6,46 @@ import edu.kcg.futurelab.madoi.core.room.RoomEventLogger;
 
 public class PrintRoomEventLogger implements RoomEventLogger{
 	@Override
-	public void createRoom(String roomId) {
-		System.err.printf("[%s] createRoom()%n",
+	public void roomCreate(String roomId) {
+		System.err.printf("[%s] roomCreate()%n",
 				roomId);
 	}
 
 	@Override
-	public void receiveOpen(String roomId, String peerId) {
-		System.err.printf("[%s] receiveOpen(%s)%n",
+	public void roomDestroy(String roomId) {
+		System.err.printf("[%s] roomDestroy()%n",
+				roomId);
+	}
+
+	@Override
+	public void peerArrive(String roomId, String peerId) {
+		System.err.printf("[%s] peerOpen(%s)%n",
 				roomId, peerId);
 	}
 
 	@Override
-	public void receiveError(String roomId, String peerId, Throwable cause) {
-		System.err.printf("[%s] receiveError(%s, %s)%n",
-				roomId, peerId, cause.toString());
-		cause.printStackTrace(System.err);
-	}
-
-	@Override
-	public void receiveClose(String roomId, String peerId) {
-		System.err.printf("[%s] receiveClose(%s)%n",
+	public void peerLeave(String roomId, String peerId) {
+		System.err.printf("[%s] peerClose(%s)%n",
 				roomId, peerId);
 	}
 
 	@Override
-	public void receiveMessage(String roomId, String peerId, String messageType, String message) {
-		System.err.printf("[%s] receiveMessage(%s, %s)%n",
+	public void peerMessage(String roomId, String peerId, String messageType, String message) {
+		System.err.printf("[%s] peerMessage(%s, %s)%n",
 				roomId, peerId, message);
 	}
 
 	@Override
-	public void stateChange(String roomId, String state) {
-		System.err.printf("[%s] stateChange(%s, %s)%n",
-				roomId, state);
+	public void peerError(String roomId, String peerId, Throwable cause) {
+		System.err.printf("[%s] peerError(%s, %s)%n",
+				roomId, peerId, cause.toString());
+		cause.printStackTrace(System.err);
 	}
 
+
 	@Override
-	public void sendMessage(String roomId, String castType, String[] recipients, String messageType, String message) {
-		System.err.printf("[%s] sendMessagee(%s, [%s], %s)%n",
+	public void messageCast(String roomId, String castType, String[] recipients, String messageType, String message) {
+		System.err.printf("[%s] messageCast(%s, [%s], %s)%n",
 				roomId, castType, Arrays.toString(recipients), message);
 
 	}

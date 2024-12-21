@@ -39,8 +39,9 @@ public class DefaultRoomManager implements RoomManager{
 				while(it.hasNext()) {
 					var e = it.next();
 					if(cur > e.getValue()) {
-						rooms.remove(e.getKey());
+						var room = rooms.remove(e.getKey());
 						it.remove();
+						room.onRoomDestroyed();
 					}
 				}
 			}

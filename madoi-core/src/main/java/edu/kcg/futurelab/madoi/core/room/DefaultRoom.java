@@ -107,7 +107,12 @@ public class DefaultRoom implements Room{
 
 	@Override
 	public void onRoomCreated() {
-		eventLogger.createRoom(id);
+		eventLogger.roomCreate(id);
+	}
+
+	@Override
+	public void onRoomDestroyed() {
+		eventLogger.roomDestroy(id);
 	}
 
 	/**
@@ -115,13 +120,8 @@ public class DefaultRoom implements Room{
 	 */
 	@Override
 	public synchronized void onPeerArrive(Peer peer) {
-		eventLogger.receiveOpen(id, peer.getId());
+		eventLogger.peerArrive(id, peer.getId());
 		enteringPeers.put(peer.getId(), peer);
-	}
-
-	@Override
-	public void onPeerError(Peer peer, Throwable cause) {
-		eventLogger.receiveError(id, peer.getId(), cause);
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class DefaultRoom implements Room{
 		var peerId = peer.getId();
 		System.err.printf("peer #%s removed.%n", peerId);
 		enteringPeers.remove(peerId);
-		eventLogger.receiveClose(id, peerId);
+		eventLogger.peerLeave(id, peerId);
 		peers.remove(peerId);
 		if(peers.size() > 0) {
 			try {
@@ -139,6 +139,11 @@ public class DefaultRoom implements Room{
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public void onPeerError(Peer peer, Throwable cause) {
+		eventLogger.peerError(id, peer.getId(), cause);
 	}
 
 	/**
@@ -186,7 +191,7 @@ public class DefaultRoom implements Room{
 			peer.onEnterRoomAllowed(peerId, order, peerProfile);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOPEER, peer, new edu.kcg.futurelab.madoi.core.message.Error(e.toString()));
-			eventLogger.receiveMessage(id, peer.getId(), null, message);
+			eventLogger.peerMessage(id, peer.getId(), null, message);
 			return;
 		}
 		if(er.getSelfPeer().getProfile() != null) {
@@ -234,7 +239,7 @@ public class DefaultRoom implements Room{
 				otherPeers, histories);
 		peers.put(peer.getId(), peer);
 		try {
-			eventLogger.sendMessage(id, "SERVERTOPEER", new String[] {peer.getId()}, era);
+			eventLogger.messageCast(id, "SERVERTOPEER", new String[] {peer.getId()}, era);
 			peer.getSender().send(era);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -253,10 +258,10 @@ public class DefaultRoom implements Room{
 		var peerId = p.getId();
 		var m = decodeAndSetSender(peer, message);
 		if(m == null) {
-			eventLogger.receiveMessage(id, p.getId(), null, message);
+			eventLogger.peerMessage(id, p.getId(), null, message);
 			return;
 		}
-		eventLogger.receiveMessage(id, peerId, m.get("type").toString(), message);
+		eventLogger.peerMessage(id, peerId, m.get("type").toString(), message);
 
 		switch(m.get("type").toString()) {
 			case "Ping": {
@@ -416,7 +421,7 @@ public class DefaultRoom implements Room{
 
 	private void castMessageTo(CastType type, Peer peer, Message message) {
 		try {
-			eventLogger.sendMessage(id, CastType.SERVERTOPEER.name(), peer.getId(), message);
+			eventLogger.messageCast(id, CastType.SERVERTOPEER.name(), peer.getId(), message);
 			peer.getSender().send(message);
 		} catch(JsonProcessingException ex) {
 			throw new RuntimeException(ex);
@@ -507,7 +512,7 @@ public class DefaultRoom implements Room{
 					logger.log(Level.INFO, "Tried to send message to " + id, e);
 				}
 			}
-			eventLogger.sendMessage(id, ct.name(), ids.toArray(new String[]{}),
+			eventLogger.messageCast(id, ct.name(), ids.toArray(new String[]{}),
 				msg.getMessateType(), msg.getMessage());
 		}
 	}

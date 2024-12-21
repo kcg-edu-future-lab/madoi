@@ -11,38 +11,35 @@ import edu.kcg.futurelab.madoi.core.room.RoomEventLogger;
 
 public class OnMemoryEventLogger implements RoomEventLogger{
 	@Override
-	public void createRoom(String roomId) {
-		events.add(new Object[] {"createRoom", roomId});
-	}
-	@Override
-	public void receiveOpen(String roomId, String peerId) {
-		events.add(new Object[] {"receiveOpen", roomId, peerId});
+	public void roomCreate(String roomId) {
+		events.add(new Object[] {"roomCreate", roomId});
 	}
 
 	@Override
-	public void receiveError(String roomId, String peerId, Throwable cause) {
-		events.add(new Object[] {"receiveError", roomId, peerId, cause});
+	public void roomDestroy(String roomId) {
+		events.add(new Object[] {"roomDestroy", roomId});
 	}
 
 	@Override
-	public void receiveClose(String roomId, String peerId) {
-		events.add(new Object[] {"receiveClose", roomId, peerId});
+	public void peerArrive(String roomId, String peerId) {
+		events.add(new Object[] {"peerOpen", roomId, peerId});
 	}
-
 	@Override
-	public void receiveMessage(String roomId, String peerId, String messageType, String message) {
-		events.add(new Object[] {"receiveMessage", roomId, peerId, messageType, message});
+	public void peerLeave(String roomId, String peerId) {
+		events.add(new Object[] {"peerClose", roomId, peerId});
 	}
-
 	@Override
-	public void stateChange(String roomId, String state) {
-		events.add(new Object[] {"stateChange", roomId, state});
+	public void peerMessage(String roomId, String peerId, String messageType, String message) {
+		events.add(new Object[] {"peerMessage", roomId, peerId, messageType, message});
 	}
-
 	@Override
-	public void sendMessage(String roomId, String castType, String[] recipients, Message message) {
+	public void peerError(String roomId, String peerId, Throwable cause) {
+		events.add(new Object[] {"peerError", roomId, peerId, cause});
+	}
+	@Override
+	public void messageCast(String roomId, String castType, String[] recipients, Message message) {
 		try {
-			events.add(new Object[] {"sendMessage", roomId, castType, recipients,
+			events.add(new Object[] {"messageCast", roomId, castType, recipients,
 					message.getType(), om.writeValueAsString(message)});
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
@@ -50,8 +47,8 @@ public class OnMemoryEventLogger implements RoomEventLogger{
 	}
 
 	@Override
-	public void sendMessage(String roomId, String name, String[] strings, String messageType, String message) {
-		events.add(new Object[] {"sendMessage", roomId, name, strings, messageType, message});
+	public void messageCast(String roomId, String name, String[] strings, String messageType, String message) {
+		events.add(new Object[] {"messageCast", roomId, name, strings, messageType, message});
 	}
 
 	public List<Object[]> getEvents() {

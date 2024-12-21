@@ -34,6 +34,7 @@ public interface Room {
 	List<History> getMessageHistories();
 
 	void onRoomCreated();
+	void onRoomDestroyed();
 	void onPeerArrive(Peer peer);
 	void onPeerLeave(Peer peer);
 	void onPeerMessage(Peer peer, String message);
