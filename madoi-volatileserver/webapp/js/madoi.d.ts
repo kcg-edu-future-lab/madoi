@@ -277,40 +277,40 @@ export interface ShareConfig {
     };
 }
 export declare const shareConfigDefault: ShareConfig;
-export declare function Share(config?: ShareConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function Share(config?: ShareConfig): (target: any) => void;
 export interface GetStateConfig {
     maxInterval?: number;
     maxUpdates?: number;
 }
 export declare const getStateConfigDefault: GetStateConfig;
-export declare function GetState(config?: GetStateConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function GetState(config?: GetStateConfig): (target: any) => void;
 export interface SetStateConfig {
 }
-export declare function SetState(config?: SetStateConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function SetState(config?: SetStateConfig): (target: any) => void;
 export interface HostOnlyConfig {
 }
-export declare function HostOnly(config?: HostOnlyConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function HostOnly(config?: HostOnlyConfig): (target: any) => void;
 export interface EnterRoomAllowedConfig {
 }
-export declare function EnterRoomAllowed(config?: EnterRoomAllowedConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function EnterRoomAllowed(config?: EnterRoomAllowedConfig): (target: any) => void;
 export interface EnterRoomDeniedConfig {
 }
-export declare function EnterRoomDenied(config?: EnterRoomDeniedConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function EnterRoomDenied(config?: EnterRoomDeniedConfig): (target: any) => void;
 export interface LeaveRoomDoneConfig {
 }
-export declare function LeaveRoomDone(config?: LeaveRoomDoneConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function LeaveRoomDone(config?: LeaveRoomDoneConfig): (target: any) => void;
 export interface RoomProfileUpdatedConfig {
 }
-export declare function RoomProfileUpdated(config?: RoomProfileUpdatedConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function RoomProfileUpdated(config?: RoomProfileUpdatedConfig): (target: any) => void;
 export interface PeerEnteredConfig {
 }
-export declare function PeerEntered(config?: PeerEnteredConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function PeerEntered(config?: PeerEnteredConfig): (target: any) => void;
 export interface PeerLeavedConfig {
 }
-export declare function PeerLeaved(config?: PeerLeavedConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function PeerLeaved(config?: PeerLeavedConfig): (target: any) => void;
 export interface PeerProfileUpdatedConfig {
 }
-export declare function PeerProfileUpdated(config?: PeerProfileUpdatedConfig): (target: any, name: string, descriptor: PropertyDescriptor) => void;
+export declare function PeerProfileUpdated(config?: PeerProfileUpdatedConfig): (target: any) => void;
 export type MethodConfig = {
     share: ShareConfig;
 } | {
