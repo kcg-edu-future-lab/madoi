@@ -400,7 +400,7 @@ export declare class Madoi extends MadoiEventTarget<Madoi> implements MadoiEvent
     addReceiver<T>(type: string, listener: UserMessageListener<T>): void;
     removeReceiver<T>(type: string, listener: UserMessageListener<T>): void;
     private doSendMessage;
-    registerFunction(func: Function, config?: MethodConfig): Function;
+    registerFunction<T extends Function>(func: T, config?: MethodConfig): T;
     register<T>(object: T, methodAndConfigs?: MethodAndConfigParam[]): T;
     private createFunctionProxy;
     private createMethodProxy;

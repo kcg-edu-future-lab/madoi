@@ -669,6 +669,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 
 	close(){
 		this.ws?.close();
+		this.ws = null;
 	}
 
 	private sendPing(){
@@ -812,7 +813,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		} else if(msg.type){
 			this.dispatchEvent(new CustomEvent(msg.type, {detail: msg}));
 		} else{
-			console.log("Unknown message type.", msg);
+			console.warn("Unknown message type.", msg);
 		}
 	}
 
@@ -906,7 +907,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		}
 	}
 
-	registerFunction(func: Function, config: MethodConfig = {share: {}}){
+	registerFunction<T extends Function>(func: T, config: MethodConfig = {share: {}}): T{
 		if("hostOnly" in config){
 			return this.addHostOnlyFunction(func, config);
 		} else if("share" in config){
@@ -919,7 +920,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			const f = this.createFunctionProxy(func, config.share, funcId);
 			const ret = function(){
 				return f.apply(null, arguments);
-			};
+			} as any;
 			this.doSendMessage(newDefineFunction({
 				definition: {
 					funcId: funcId,
@@ -954,7 +955,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		const methodDefinitions = new Array<MethodDefinition>();
 		const methodToIndex = new Map<string, number>();
 			// デコレータから
-		Object.getOwnPropertyNames(obj.__proto__).forEach(methodName => {
+		Object.getOwnPropertyNames(Object.getPrototypeOf(obj)).forEach(methodName => {
 			const f = obj[methodName];
 			if(typeof(f) != "function") return;
 			if(!f.madoiMethodConfig_) return;
@@ -1011,7 +1012,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 					f.bind(obj),
 					c.share,
 					objId, mc.methodId);
-				obj[f.name] = function(){
+				obj[mc.name] = function(){
 					objEntry.modification++;
 					return newf.apply(null, arguments);
 				};
@@ -1019,7 +1020,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				// @HostOnlyの場合はメソッドを置き換え
 				const newf = this.addHostOnlyFunction(
 					f.bind(obj), c.hostOnly);
-				obj[f.name] = function(){
+				obj[mc.name] = function(){
 					return newf.apply(null, arguments);
 				}
 			} else if("getState" in c){
@@ -1122,7 +1123,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		};
 	}
 
-	private addHostOnlyFunction(f: Function, config: HostOnlyConfig): Function{
+	private addHostOnlyFunction<T extends Function>(f: T, config: HostOnlyConfig): T{
 		const self = this;
 		return function(){
 			// orderが最も小さければ実行。そうでなければ無視
@@ -1134,7 +1135,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			if(self.selfPeer.order === minOrder){
 				f.apply(null, arguments);
 			}
-		};
+		} as any;
 	}
 
 	public saveStates(){
@@ -1153,7 +1154,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 					}));
 				info.lastGet = curTick;
 				oe.modification = 0;
-				console.log(`state saved: ${objId}`)
+				console.debug(`state saved: ${objId}`)
 			}
 		}
 	}
