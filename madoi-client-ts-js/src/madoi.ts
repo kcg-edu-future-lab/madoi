@@ -405,7 +405,7 @@ export function Share(config: ShareConfig = shareConfigDefault) {
 	const c = config;
 	if(!c.type) c.type = "beforeExec";
 	if(!c.maxLog) c.maxLog = 0;
-    return (target: any, name: string, descriptor: PropertyDescriptor) => {
+    return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {share: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -421,7 +421,7 @@ export const getStateConfigDefault: GetStateConfig = {
 };
 export function GetState(config: GetStateConfig = getStateConfigDefault){
 	const c = config;
-    return (target: any, name: string, descriptor: PropertyDescriptor) => {
+    return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {getState: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -432,7 +432,7 @@ export interface SetStateConfig{
 }
 export function SetState(config: SetStateConfig = {}){
 	const c = config;
-    return (target: any, name: string, descriptor: PropertyDescriptor) => {
+    return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {setState: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -442,7 +442,7 @@ export function SetState(config: SetStateConfig = {}){
 export interface HostOnlyConfig{
 }
 export function HostOnly(config: HostOnlyConfig = {}){
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const c = config;
 		const mc: MethodConfig = {hostOnly: c};
 		target[name].madoiMethodConfig_ = mc;
@@ -454,7 +454,7 @@ export interface EnterRoomAllowedConfig{
 }
 export function EnterRoomAllowed(config: EnterRoomAllowedConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {enterRoomAllowed: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -465,7 +465,7 @@ export interface EnterRoomDeniedConfig{
 }
 export function EnterRoomDenied(config: EnterRoomDeniedConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {enterRoomDenied: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -476,7 +476,7 @@ export interface LeaveRoomDoneConfig{
 }
 export function LeaveRoomDone(config: LeaveRoomDoneConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {leaveRoomDone: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -487,7 +487,7 @@ export interface RoomProfileUpdatedConfig{
 }
 export function RoomProfileUpdated(config: RoomProfileUpdatedConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {roomProfileUpdated: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -498,7 +498,7 @@ export interface PeerEnteredConfig{
 }
 export function PeerEntered(config: PeerEnteredConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {peerEntered: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -509,7 +509,7 @@ export interface PeerLeavedConfig{
 }
 export function PeerLeaved(config: PeerLeavedConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {peerLeaved: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -520,7 +520,7 @@ export interface PeerProfileUpdatedConfig{
 }
 export function PeerProfileUpdated(config: PeerProfileUpdatedConfig = {}){
 	const c = config;
-	return (target: any, name: string, descriptor: PropertyDescriptor) => {
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
 		const mc: MethodConfig = {peerProfileUpdated: c};
 		target[name].madoiMethodConfig_ = mc;
     }
@@ -676,7 +676,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		this.ws?.send(JSON.stringify(newPing()));
 	}
 
-	private handleOnOpen(e: Event){
+	private handleOnOpen(_e: Event){
 		this.connecting = true;
 		for(let m of this.interimQueue){
 			this.ws?.send(JSON.stringify(m));
@@ -690,7 +690,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		this.ws = null;
 	}
 
-	private handleOnError(e: Event){
+	private handleOnError(_e: Event){
 	}
 
 	private handleOnMessage(e: MessageEvent){
@@ -1123,7 +1123,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		};
 	}
 
-	private addHostOnlyFunction<T extends Function>(f: T, config: HostOnlyConfig): T{
+	private addHostOnlyFunction<T extends Function>(f: T, _config: HostOnlyConfig): T{
 		const self = this;
 		return function(){
 			// orderが最も小さければ実行。そうでなければ無視
