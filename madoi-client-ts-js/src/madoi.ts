@@ -616,6 +616,10 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		setInterval(()=>{this.sendPing();}, 30000);
 	}
 
+	getRoomId(){
+		return this.room.id;
+	}
+
 	getRoomProfile(){
 		return this.room?.profile;
 	}
