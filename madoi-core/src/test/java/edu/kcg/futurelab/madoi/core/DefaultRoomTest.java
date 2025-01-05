@@ -33,7 +33,7 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", "Peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArrive();
-		peer1.getSender().send(new InvokeMethod(1, 1, 1, new Object[] {}));
+		peer1.getConnection().send(new InvokeMethod(1, 1, 1, new Object[] {}));
 		assertEquals(2, peer1.getSentMessageCount());
 		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer1.getSentMessageAt(0).getType());
 		assertEquals(InvokeMethod.class.getSimpleName(), peer1.getSentMessageAt(1).getType());

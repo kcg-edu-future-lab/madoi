@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultPeer implements Peer{
-	public DefaultPeer(MessageSender sender){
-		this.sender = sender;
+	public DefaultPeer(Connection conneciton){
+		this.conneciton = conneciton;
 	}
 
 	public void onEnterRoomAllowed(String id, int order, Map<String, Object> profile) {
@@ -36,13 +36,13 @@ public class DefaultPeer implements Peer{
 	}
 
 	@Override
-	public MessageSender getSender() {
-		return sender;
+	public Connection getConnection() {
+		return conneciton;
 	}
 
 	private State state = State.CONNECTED;
 	private String id;
 	private int order;
 	private Map<String, Object> profile = new HashMap<>();
-	private MessageSender sender;
+	private Connection conneciton;
 }

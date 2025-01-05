@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.kcg.futurelab.madoi.core.message.Message;
 import edu.kcg.futurelab.madoi.core.room.DefaultRoomManager;
-import edu.kcg.futurelab.madoi.core.room.MessageSender;
+import edu.kcg.futurelab.madoi.core.room.Connection;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.RoomManager;
 import jakarta.websocket.OnClose;
@@ -39,7 +39,7 @@ public class WebSocketServer {
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		try {
 			var om = new ObjectMapper();
-			var peer = getRoomManager().onPeerOpen(roomId, new MessageSender() {
+			var peer = getRoomManager().onPeerOpen(roomId, new Connection() {
 				@Override
 				public void sendText(String message) throws IOException {
 					session.getBasicRemote().sendText(message);
@@ -47,6 +47,10 @@ public class WebSocketServer {
 				@Override
 				public void send(Message message) throws IOException{
 					session.getBasicRemote().sendText(om.writeValueAsString(message));
+				}
+				@Override
+				public void close() throws IOException {
+					session.close();
 				}
 			});
 			session.getUserProperties().put("peer", peer);

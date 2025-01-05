@@ -10,5 +10,5 @@ public interface Peer {
 	String getId();
 	int getOrder();
 	Map<String, Object> getProfile();
-	MessageSender getSender();
+	Connection getConnection();
 }

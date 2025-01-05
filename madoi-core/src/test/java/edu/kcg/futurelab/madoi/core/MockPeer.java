@@ -26,7 +26,7 @@ import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
 import edu.kcg.futurelab.madoi.core.message.UserMessage;
 import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
-import edu.kcg.futurelab.madoi.core.room.MessageSender;
+import edu.kcg.futurelab.madoi.core.room.Connection;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.Room;
 
@@ -63,9 +63,8 @@ public class MockPeer implements Peer {
 	}
 
 	@Override
-	public MessageSender getSender() {
-		return new MessageSender() {
-
+	public Connection getConnection() {
+		return new Connection() {
 			@Override
 			public void sendText(String text) throws IOException {
 				if(ioeOnSend) throw new IOException();
@@ -90,6 +89,10 @@ public class MockPeer implements Peer {
 			@Override
 			public void send(Message message) throws IOException {
 				sendText(om.writeValueAsString(message));
+			}
+
+			@Override
+			public void close() throws IOException {
 			}
 		};
 	}

@@ -1,5 +1,6 @@
 package edu.kcg.futurelab.madoi.core.room;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,12 @@ public class DefaultRoomManager implements RoomManager{
 					if(cur > e.getValue()) {
 						var room = rooms.remove(e.getKey());
 						it.remove();
+						room.getPeers().forEach(p->{
+							try {
+								p.getConnection().close();
+							} catch(IOException ex) {
+							}
+						});
 						room.onRoomDestroyed();
 					}
 				}
@@ -49,7 +56,7 @@ public class DefaultRoomManager implements RoomManager{
 	}
 
 	@Override
-	public Peer onPeerOpen(String roomId, MessageSender sender) {
+	public Peer onPeerOpen(String roomId, Connection sender) {
 		synchronized(roomTtls) {
 			var r = getOrCreateRoom(roomId);
 			var p = newPeer(sender);
@@ -106,7 +113,7 @@ public class DefaultRoomManager implements RoomManager{
 		return new DefaultRoom(roomId, null, null, new PrintRoomEventLogger());
 	}
 
-	protected Peer newPeer(MessageSender sender) {
+	protected Peer newPeer(Connection sender) {
 		return new DefaultPeer(sender);
 	}
 

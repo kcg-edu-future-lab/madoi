@@ -201,7 +201,7 @@ public class DefaultRoom implements Room{
 		var pe = newPeerEntered(peer);
 		for(var p : peers.values()) {
 			try {
-				p.getSender().send(pe);
+				p.getConnection().send(pe);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -240,7 +240,7 @@ public class DefaultRoom implements Room{
 		peers.put(peer.getId(), peer);
 		try {
 			eventLogger.messageCast(id, "SERVERTOPEER", new String[] {peer.getId()}, era);
-			peer.getSender().send(era);
+			peer.getConnection().send(era);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -422,7 +422,7 @@ public class DefaultRoom implements Room{
 	private void castMessageTo(CastType type, Peer peer, Message message) {
 		try {
 			eventLogger.messageCast(id, CastType.SERVERTOPEER.name(), peer.getId(), message);
-			peer.getSender().send(message);
+			peer.getConnection().send(message);
 		} catch(JsonProcessingException ex) {
 			throw new RuntimeException(ex);
 		} catch(IOException e) {
@@ -502,7 +502,7 @@ public class DefaultRoom implements Room{
 			for(var id : ids){
 				try {
 					var p = peers.get(id);
-					if(p != null) p.getSender().sendText(msg.getMessage());
+					if(p != null) p.getConnection().sendText(msg.getMessage());
 				} catch (IOException e) {
 					peers.remove(id);
 					System.err.printf("peer #%s removed because of %s.%n", id, e);
