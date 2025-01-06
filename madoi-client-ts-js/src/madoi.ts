@@ -600,10 +600,12 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		const sep = roomIdOrUrl.indexOf("?") != -1 ? "&" : "?";
 		if(roomIdOrUrl.match(/^wss?:\/\//)){
 			this.url = `${roomIdOrUrl}${sep}authToken=${authToken}`;
+			this.room.id = roomIdOrUrl.split("rooms/")[1].split("?")[0];
 		} else{
 			const p = (document.querySelector("script[src$='madoi.js']") as HTMLScriptElement).src.split("\/", 5);
 			const contextUrl = (p[0] == "http:" ? "ws:" : "wss:") + "//" + p[2] + "/" + p[3];
 			this.url = `${contextUrl}/rooms/${roomIdOrUrl}${sep}authToken=${authToken}`;
+			this.room.id = roomIdOrUrl;
 		}
 
 		this.ws = new WebSocket(this.url);
