@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import edu.kcg.futurelab.madoi.core.message.CastType;
 import edu.kcg.futurelab.madoi.core.message.EnterRoom;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomAllowed;
 import edu.kcg.futurelab.madoi.core.message.EnterRoomDenied;
@@ -26,6 +27,7 @@ import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
 import edu.kcg.futurelab.madoi.core.message.UserMessage;
 import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
+import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
 import edu.kcg.futurelab.madoi.core.room.Connection;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.Room;
@@ -36,11 +38,12 @@ public class MockPeer implements Peer {
 		this.id = id;
 		this.profile = new HashMap<>(){{ put("name", name);}};
 		this.room = room;
+		this.state = State.CONNECTED;
 	}
 
 	@Override
 	public State getState() {
-		return State.ENTERED;
+		return state;
 	}
 
 	@Override
@@ -56,6 +59,14 @@ public class MockPeer implements Peer {
 	@Override
 	public Map<String, Object> getProfile() {
 		return profile;
+	}
+	
+	@Override
+	public void setAttributes(String id, int order, Map<String, Object> profile) {
+		this.id = id;
+		this.order = order;
+		this.profile = profile;
+		this.state = State.ENTERED;
 	}
 
 	public void setIoeOnSend(boolean ioeOnSend) {
@@ -107,11 +118,13 @@ public class MockPeer implements Peer {
 	}
 
 	public void loginRoom() {
+		var m = new EnterRoom(
+				new RoomInfo(null, new RoomSpec(), room.getProfile()),
+				new PeerInfo(id, order, profile));
+		m.setCastType(CastType.PEERTOSERVER);
 		room.onPeerMessage(
 				this,
-				toJsonString(new EnterRoom(
-						new RoomInfo(null, null, room.getProfile()),
-						new PeerInfo(id, order, profile))));
+				toJsonString(m));
 	}
 
 	public void peerLeave() {
@@ -156,6 +169,7 @@ public class MockPeer implements Peer {
 	private int order;
 	private Map<String, Object> profile;
 	private Room room;
+	private State state = State.CONNECTED;
 	private List<Message> messages = new ArrayList<>();
 	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 

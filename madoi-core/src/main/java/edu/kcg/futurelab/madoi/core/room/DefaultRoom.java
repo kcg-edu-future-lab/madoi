@@ -161,7 +161,7 @@ public class DefaultRoom implements Room{
 	 * @param peer
 	 * @param message
 	 */
-	private void onEnteringPeerMessage(DefaultPeer peer, String message) {
+	private void onEnteringPeerMessage(Peer peer, String message) {
 		EnterRoom er = null;
 		try {
 			er = om.readValue(message, EnterRoom.class);
@@ -188,7 +188,7 @@ public class DefaultRoom implements Room{
 			var order = peerOrder++;
 			if(peerId == null || peerId.isEmpty()) peerId = "" + order;
 			if(peerProfile == null) peerProfile = new HashMap<>();
-			peer.onEnterRoomAllowed(peerId, order, peerProfile);
+			peer.setAttributes(peerId, order, peerProfile);
 		} catch(JsonProcessingException e) {
 			castMessageTo(CastType.SERVERTOPEER, peer, new edu.kcg.futurelab.madoi.core.message.Error(e.toString()));
 			eventLogger.peerMessage(id, peer.getId(), null, message);
@@ -249,16 +249,15 @@ public class DefaultRoom implements Room{
 	@Override
 	public synchronized void onPeerMessage(Peer peer, String message) {
 		var received = new Date();
-		var p = (DefaultPeer)peer;
-		if(p.getState().equals(Peer.State.CONNECTED)) {
+		if(peer.getState().equals(Peer.State.CONNECTED)) {
 			// 初回メッセージは別メソッドで処理する
-			onEnteringPeerMessage(p, message);
+			onEnteringPeerMessage(peer, message);
 			return;
 		}
-		var peerId = p.getId();
+		var peerId = peer.getId();
 		var m = decodeAndSetSender(peer, message);
 		if(m == null) {
-			eventLogger.peerMessage(id, p.getId(), null, message);
+			eventLogger.peerMessage(id, peer.getId(), null, message);
 			return;
 		}
 		eventLogger.peerMessage(id, peerId, m.get("type").toString(), message);

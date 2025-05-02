@@ -11,4 +11,6 @@ public interface Peer {
 	int getOrder();
 	Map<String, Object> getProfile();
 	Connection getConnection();
+
+	void setAttributes(String id, int order, Map<String, Object> profile);
 }
