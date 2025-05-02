@@ -85,7 +85,7 @@ export interface Pong extends ServerToPeerMessage{
 export interface EnterRoomBody{
 	room?: {
 		spec: RoomSpec;
-		profile: {[key: string]: string};
+		profile: {[key: string]: any};
 	};
 	selfPeer?: PeerInfo;
 }
@@ -129,7 +129,7 @@ export interface LeaveRoomDone extends ServerToPeerMessage{
 }
 
 export interface UpdateRoomProfileBody{
-	updates?: {[key: string]: string};
+	updates?: {[key: string]: any};
 	deletes?: string[];
 }
 export interface UpdateRoomProfile extends BroadcastMessage, UpdateRoomProfileBody{
@@ -154,7 +154,7 @@ export interface PeerLeaved extends ServerToPeerMessage{
 }
 
 export interface UpdatePeerProfileBody{
-	updates?: {[key: string]: string};
+	updates?: {[key: string]: any};
 	deletes?: string[];
 }
 export interface UpdatePeerProfile extends BroadcastMessage, UpdatePeerProfileBody{
@@ -278,27 +278,27 @@ export type StoredMessageType = InvokeMethod | InvokeFunction | UpdateObjectStat
 
 
 //---- events ----
-interface EnterRoomAllowedDetail{
+export interface EnterRoomAllowedDetail{
 	room: RoomInfo;
 	selfPeer: PeerInfo;
 	otherPeers: PeerInfo[];
 }
-interface EnterRoomDeniedDetail{
+export interface EnterRoomDeniedDetail{
 	message: string;
 }
-interface LeaveRoomDoneDetail{
+export interface LeaveRoomDoneDetail{
 }
-interface RoomProfileUpdatedDetail{
+export interface RoomProfileUpdatedDetail{
 	updates?: {[key: string]: any};
 	deletes?: string[];
 }
-interface PeerEnteredDetail{
+export interface PeerEnteredDetail{
 	peer: PeerInfo;
 }
-interface PeerLeavedDetail{
+export interface PeerLeavedDetail{
 	peerId: string;
 }
-interface PeerProfileUpdatedDetail{
+export interface PeerProfileUpdatedDetail{
 	peerId: string;
 	updates?: {[key: string]: any};
 	deletes?: string[];
@@ -313,73 +313,39 @@ export interface UserMessageDetail<T>{
 interface ErrorDetail{
 	error: any;
 }
-export interface TypedCustomEvent<T extends TypedEventTarget<T>, D = any>
-extends CustomEvent<D>{
-    currentTarget: T;
-    detail: D;
-}
-export type TypedEventListener<T extends TypedEventTarget<T>, D = any>
-    = (evt: TypedCustomEvent<T, D>) => void;
-export interface TypedEventListenerObject<T extends TypedEventTarget<T>, D = any>
-extends EventListenerObject{
-    handleEvent(object: TypedCustomEvent<T, D>): void;
-}
-export type TypedEventListenerOrEventListenerObject<T extends TypedEventTarget<T>, D = any> =
-    | TypedEventListener<T, D>
-    | TypedEventListenerObject<T, D>;
-export class TypedEventTarget<T extends TypedEventTarget<T>>
-extends EventTarget{
-}
-type MadoiAddEventListenerOption = boolean | AddEventListenerOptions | undefined;
 
-interface MadoiEventListeners{
-	addEventListener(type: "enterRoomAllowed", callback: EnterRoomAllowedListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "enterRoomDenied", callback: EnterRoomDeniedListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "leaveRoomDone", callback: LeaveRoomDoneListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "roomProfileUpdated", callback: RoomProfileUpdatedListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "peerEntered", callback: PeerEnteredListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "peerProfileUpdated", callback: PeerProfileUpdatedListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "peerLeaved", callback: PeerLeavedListener,
-		options?: MadoiAddEventListenerOption): void;
-	addEventListener(type: "error", callback: ErrorListener,
-		options?: MadoiAddEventListenerOption): void;
-	removeEventListener(type: "enterRoomAllowed", callback: EnterRoomAllowedListener): void;
-	removeEventListener(type: "enterRoomDenied", callback: EnterRoomDeniedListener): void;
-	removeEventListener(type: "leaveRoomDone", callback: LeaveRoomDoneListener): void;
-	removeEventListener(type: "peerProfileUpdated", callback: PeerProfileUpdatedListener): void;
-	removeEventListener(type: "peerEntered", callback: PeerEnteredListener): void;
-	removeEventListener(type: "peerLeaved", callback: PeerLeavedListener): void;
-	removeEventListener(type: "peerProfileUpdated", callback: PeerProfileUpdatedListener): void;
-	removeEventListener(type: "error", callback: ErrorListener): void;
+export interface TypedCustomEvent<T extends EventTarget, D> extends CustomEvent<D>{
+	currentTarget: T;
+	detail: D;
 }
-class MadoiEventTarget<T extends MadoiEventTarget<T>> extends TypedEventTarget<T>{
-	protected fire(type: "enterRoomAllowed", detail: EnterRoomAllowedDetail): void;
-	protected fire(type: "enterRoomDenied", detail: EnterRoomDeniedDetail): void;
-	protected fire(type: "leaveRoomDone", detail: LeaveRoomDoneDetail): void;
-	protected fire(type: "roomProfileUpdated", detail: RoomProfileUpdatedDetail): void;
-	protected fire(type: "peerEntered", detail: PeerEnteredDetail): void;
-	protected fire(type: "peerLeaved", detail: PeerLeavedDetail): void;
-	protected fire(type: "peerProfileUpdated", detail: PeerProfileUpdatedDetail): void;
-	protected fire(type: "error", detail: ErrorDetail): void;
-	protected fire(type: string, detail: object){
-		super.dispatchEvent(new CustomEvent(type, {detail}));
+export interface TypedEventListener<T extends EventTarget, D>{
+    (evt: TypedCustomEvent<T, D>): void;
+}
+export interface TypedEventListenerObject<T extends EventTarget, D>{
+    handleEvent(evt: TypedCustomEvent<T, D>): void;
+}
+export type TypedEventListenerOrEventListenerObject<T extends EventTarget, D> =
+	TypedEventListener<T, D> | TypedEventListenerObject<T, D>;
+export class TypedEventTarget<T extends TypedEventTarget<T, Events>, Events extends Record<string, any>>
+extends EventTarget {
+    addEventListener<K extends keyof Events>(
+        type: K, listener: TypedEventListenerOrEventListenerObject<T, Events[K]> | null,
+        options?: AddEventListenerOptions | boolean): void;
+  	addEventListener(...args: Parameters<EventTarget["addEventListener"]>){
+		super.addEventListener(...args);
+	}
+  	removeEventListener<K extends keyof Events>(
+        type: K, listener: TypedEventListenerOrEventListenerObject<T, Events[K]> | null,
+        options?: EventListenerOptions | boolean): void;
+    removeEventListener(...args: Parameters<EventTarget["removeEventListener"]>){
+		super.removeEventListener(...args);
+	}
+    dispatchCustomEvent<K extends keyof Events>(
+        type: K,  detail?: Events[K]): boolean;
+	dispatchCustomEvent(type: string, detail: any){
+		return super.dispatchEvent(new CustomEvent(type, {detail}));
 	}
 }
-export type EnterRoomAllowedListener = TypedEventListenerOrEventListenerObject<Madoi, EnterRoomAllowedDetail> | null;
-export type EnterRoomDeniedListener = TypedEventListenerOrEventListenerObject<Madoi, EnterRoomDeniedDetail> | null;
-export type LeaveRoomDoneListener = TypedEventListenerOrEventListenerObject<Madoi, LeaveRoomDoneDetail> | null;
-export type RoomProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, RoomProfileUpdatedDetail> | null;
-export type PeerEnteredListener = TypedEventListenerOrEventListenerObject<Madoi, PeerEnteredDetail> | null;
-export type PeerLeavedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerLeavedDetail> | null;
-export type PeerProfileUpdatedListener = TypedEventListenerOrEventListenerObject<Madoi, PeerProfileUpdatedDetail> | null;
-export type UserMessageListener<T> = TypedEventListenerOrEventListenerObject<Madoi, UserMessageDetail<T>> | null;
-export type ErrorListener = TypedEventListenerOrEventListenerObject<Madoi, ErrorDetail> | null;
 
 
 //---- decorators ----
@@ -447,6 +413,17 @@ export function HostOnly(config: HostOnlyConfig = {}){
 		const mc: MethodConfig = {hostOnly: c};
 		target[name].madoiMethodConfig_ = mc;
     }
+}
+
+// Decorator
+export interface BeforeEnterRoomConfig{
+}
+export function BeforeEnterRoom(config: BeforeEnterRoomConfig = {}){
+	const c = config;
+	return (target: any, name: string, _descriptor: PropertyDescriptor) => {
+		const mc: MethodConfig = {beforeEnterRoom: c};
+		target[name].madoiMethodConfig_ = mc;
+	}
 }
 
 // Decorator
@@ -531,14 +508,15 @@ export type MethodConfig =
 	{hostOnly: HostOnlyConfig} |
 	{getState: GetStateConfig} |
 	{setState: SetStateConfig} |
+	{beforeEnterRoom: BeforeEnterRoomConfig} |
 	{enterRoomAllowed: EnterRoomAllowedConfig} |
 	{enterRoomDenied: EnterRoomDeniedConfig} |
 	{leaveRoomDone: LeaveRoomDoneConfig} |
 	{roomProfileUpdated: RoomProfileUpdatedConfig} |
 	{peerEntered: PeerEnteredConfig} |
 	{peerLeaved: PeerLeavedConfig} |
-	{peerProfileUpdated: PeerProfileUpdatedConfig;
-}
+	{peerProfileUpdated: PeerProfileUpdatedConfig};
+
 
 
 // ---- madoi ----
@@ -562,8 +540,18 @@ interface MethodEntry {
 	original: Function;
 }
 
+export type UserMessageListener<T extends EventTarget, D> = TypedEventListenerOrEventListenerObject<T, UserMessageDetail<D>> | null;
 
-export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListeners{
+export class Madoi extends TypedEventTarget<Madoi, {
+    enterRoomAllowed: EnterRoomAllowedDetail,
+	enterRoomDenied: EnterRoomDeniedDetail,
+	leaveRoomDone: LeaveRoomDoneDetail,
+	roomProfileUpdated: RoomProfileUpdatedDetail,
+	peerEntered: PeerEnteredDetail,
+	peerProfileUpdated: PeerProfileUpdatedDetail,
+	peerLeaved: PeerLeavedDetail,
+	error: ErrorDetail
+}>{
 	private connecting: boolean = false;
 
 	private interimQueue: Array<object>;
@@ -573,30 +561,31 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 	private sharedMethods = new Map<string, MethodEntry>();
 
 	// annotated methods
-	private getStateMethods = new Map<number, {method: Function, config: GetStateConfig, lastGet: number}>();
-	private setStateMethods = new Map<number, Function>(); // objectId -> @SetState method
-	private enterRoomAllowedMethods = new Map<number, (detail: EnterRoomAllowedDetail)=>void>();
-	private enterRoomDeniedMethods = new Map<number, (detail: EnterRoomDeniedDetail)=>void>();
-	private leaveRoomDoneMethods = new Map<number, ()=>void>();
-	private roomProfileUpdatedMethods = new Map<number, (detail: RoomProfileUpdatedDetail)=>void>();
-	private peerEnteredMethods = new Map<number, (detail: PeerEnteredDetail)=>void>();
-	private peerLeavedMethods = new Map<number, (detail: PeerLeavedDetail)=>void>();
-	private peerProfileUpdatedMethods = new Map<number, (detail: PeerProfileUpdatedDetail)=>void>();
+	private getStateMethods = new Map<number, {method: (madoi: Madoi)=>any, config: GetStateConfig, lastGet: number}>();
+	private setStateMethods = new Map<number, (state: any, madoi: Madoi)=>void>(); // objectId -> @SetState method
+	private beforeEnterRoomMethods = new Map<number, (selfProfile: {[key: string]: string}, madoi: Madoi)=>void>();
+	private enterRoomAllowedMethods = new Map<number, (detail: EnterRoomAllowedDetail, madoi: Madoi)=>void>();
+	private enterRoomDeniedMethods = new Map<number, (detail: EnterRoomDeniedDetail, madoi: Madoi)=>void>();
+	private leaveRoomDoneMethods = new Map<number, (madoi: Madoi)=>void>();
+	private roomProfileUpdatedMethods = new Map<number, (detail: RoomProfileUpdatedDetail, madoi: Madoi)=>void>();
+	private peerEnteredMethods = new Map<number, (detail: PeerEnteredDetail, madoi: Madoi)=>void>();
+	private peerLeavedMethods = new Map<number, (detail: PeerLeavedDetail, madoi: Madoi)=>void>();
+	private peerProfileUpdatedMethods = new Map<number, (detail: PeerProfileUpdatedDetail, madoi: Madoi)=>void>();
 
 	private url: string;
 	private ws: WebSocket | null = null;
 	private room: RoomInfo = {id: "", spec: {maxLog: 1000}, profile: {}};
-	private selfPeer: PeerInfo;
+	private selfPeer: PeerInfo = {id: "", order: -1, profile: {}};
 	private peers = new Map<string, PeerInfo>();
 	private currentSender: string | null = null;
 
 	constructor(roomIdOrUrl: string, authToken: string,
-			selfPeer?: {id: string, profile: {[key: string]: string}},
-			room?: {spec: RoomSpec, profile: {[key: string]: string}}){
+			selfPeer?: {id: string, profile: {[key: string]: any}},
+			room?: {spec: RoomSpec, profile: {[key: string]: any}}){
 		super();
-		this.selfPeer = selfPeer ? {...selfPeer, order: -1} : {id: "", order: -1, profile: {}};
+		if(room) this.room = {...this.room, ...room};
+		if(selfPeer) this.selfPeer = {...this.selfPeer, ...selfPeer, order: -1};
 		this.interimQueue = new Array();
-		this.doSendMessage(newEnterRoom({ room: room, selfPeer: this.selfPeer }));
 		const sep = roomIdOrUrl.indexOf("?") != -1 ? "&" : "?";
 		if(roomIdOrUrl.match(/^wss?:\/\//)){
 			this.url = `${roomIdOrUrl}${sep}authToken=${authToken}`;
@@ -648,7 +637,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		return this.selfPeer.profile;
 	}
 
-	setSelfPeerProfile(name: string, value: any){
+	updateSelfPeerProfile(name: string, value: any){
 		this.selfPeer.profile[name] = value;
 		const m: {[key: string]: any} = {};
 		m[name] = value;
@@ -684,6 +673,11 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 
 	private handleOnOpen(_e: Event){
 		this.connecting = true;
+
+		for(const [_, f] of this.beforeEnterRoomMethods){
+			f(this.selfPeer.profile, this);
+		}
+		this.doSendMessage(newEnterRoom({ room: this.room, selfPeer: this.selfPeer }));
 		for(let m of this.interimQueue){
 			this.ws?.send(JSON.stringify(m));
 		}
@@ -710,7 +704,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		} else if(msg.type === "EnterRoomAllowed"){
 			const m: EnterRoomAllowedDetail = msg as EnterRoomAllowed;
 			for(const [_, f] of this.enterRoomAllowedMethods){
-				f(m);
+				f(m, this);
 			}
 			this.room = msg.room;
 			this.selfPeer.order = msg.selfPeer.order;
@@ -718,7 +712,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			for(const p of m.otherPeers){
 				this.peers.set(p.id, p);
 			}
-			this.fire("enterRoomAllowed", m);
+			this.dispatchCustomEvent("enterRoomAllowed", m);
 			if(msg.histories) for(const h of msg.histories){
 				this.data(h);
 			}
@@ -726,14 +720,14 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			const m = msg as EnterRoomDenied;
 			const d: EnterRoomDeniedDetail = m;
 			for(const [_, f] of this.enterRoomDeniedMethods){
-				f(d);
+				f(d, this);
 			}
-			this.fire("enterRoomDenied", d);
+			this.dispatchCustomEvent("enterRoomDenied", d);
 		} else if(msg.type == "LeaveRoomDone"){
 			for(const [_, f] of this.leaveRoomDoneMethods){
-				f();
+				f(this);
 			}
-			this.fire("leaveRoomDone", {});
+			this.dispatchCustomEvent("leaveRoomDone");
 		} else if(msg.type === "UpdateRoomProfile"){
 			const m = msg as UpdateRoomProfile;
 			if(msg.updates) for(const [key, value] of Object.entries(msg.updates)) {
@@ -743,22 +737,23 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				delete this.room.profile[key];
 			}
 			for(const [_, f] of this.roomProfileUpdatedMethods){
-				f(m);
+				f(m, this);
 			}
-			this.fire("roomProfileUpdated", m);
+			this.dispatchCustomEvent("roomProfileUpdated", m);
 		} else if(msg.type === "PeerEntered"){
 			const m: PeerEnteredDetail = msg as PeerEntered;
 			this.peers.set(m.peer.id, m.peer);
 			for(const [_, f] of this.peerEnteredMethods){
-				f(m);
+				f(m, this);
 			}
-			this.fire("peerEntered", {peer: m.peer});
+			this.dispatchCustomEvent("peerEntered", m);
 		} else if(msg.type === "PeerLeaved"){
+			const m: PeerLeavedDetail = msg as PeerLeaved;
 			this.peers.delete(msg.peerId);
 			for(const [_, f] of this.peerLeavedMethods){
-				f(msg.peerId);
+				f(m, this);
 			}
-			this.fire("peerLeaved", {peerId: msg.peerId});
+			this.dispatchCustomEvent("peerLeaved", m);
 		} else if(msg.type === "UpdatePeerProfile"){
 			const p = this.peers.get(msg.sender!);
 			if(msg.sender && p){
@@ -768,11 +763,11 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				if(msg.deletes) for(const key of msg.deletes){
 					delete p.profile[key];
 				}
-				const v: PeerProfileUpdatedDetail = {...msg, peerId: msg.peerId};
+				const v: PeerProfileUpdatedDetail = {...msg, peerId: msg.sender};
 				for(const [_, f] of this.peerProfileUpdatedMethods){
-					f(v);
+					f(v, this);
 				}
-				this.fire("peerProfileUpdated", v);
+				this.dispatchCustomEvent("peerProfileUpdated", v);
 			}
 		} else if(msg.type === "InvokeFunction"){
 			const id = `${msg.funcId}`;
@@ -893,21 +888,27 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			throw new Error("システムメッセージは送信できません。");
 		this.doSendMessage(msg);
 	}
-
-	addReceiver<T>(type: string, listener: UserMessageListener<T>){
+	addReceiver<T>(type: string, listener: UserMessageListener<Madoi, T>){
 		if(this.isSystemMessageType(type))
 			throw new Error("システムメッセージのレシーバは登録できません。");
-		this.addEventListener(type, listener as EventListener);
+		this.addEventListener(type as any, listener as EventListener);
 	}
 
-	removeReceiver<T>(type: string, listener: UserMessageListener<T>){
-		this.removeEventListener(type, listener as EventListener);
+	removeReceiver<T>(type: string, listener: UserMessageListener<Madoi, T>){
+		this.removeEventListener(type as any, listener as EventListener);
 	}
 
+	private replacer(key: any, value: any) {
+		if (value instanceof Map) {
+			return Object.fromEntries(value);
+		} else {
+			return value;
+		}
+	}
 
 	private doSendMessage(msg: Message){
 		if(this.connecting){
-			this.ws?.send(JSON.stringify(msg));
+			this.ws?.send(JSON.stringify(msg, this.replacer));
 		} else{
 			this.interimQueue.push(msg);
 		}
@@ -1036,6 +1037,9 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 			} else if("setState" in c){
 				// @SetStateの場合はメソッドを登録
 				this.setStateMethods.set(objId, f.bind(obj));
+			} else if("beforeEnterRoom" in c){
+				// @BeforeEnterRoomの場合はメソッドを登録
+				this.beforeEnterRoomMethods.set(objId, f.bind(obj));
 			} else if("enterRoomAllowed" in c){
 				// @EnterRoomAllowedの場合はメソッドを登録
 				this.enterRoomAllowedMethods.set(objId, f.bind(obj));
@@ -1108,12 +1112,12 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 		const self = this;
 		return function(){
 			if(self.ws === null){
-				if(f) return f.apply(null, arguments);
+				if(f) return f.apply(null, [...arguments, self]);
 			} else{
 				let ret = null;
 				let castType: CastType = "BROADCAST";
 				if(config.type === "afterExec"){
-					ret = f.apply(null, arguments);
+					ret = f.apply(null, [...arguments, self]);
 					castType = "OTHERCAST";
 				}
 				self.sendMessage(newInvokeMethod(
@@ -1139,7 +1143,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 					minOrder = p.order;
 			}
 			if(self.selfPeer.order === minOrder){
-				f.apply(null, arguments);
+				f.apply(null, [...arguments, self]);
 			}
 		} as any;
 	}
@@ -1156,7 +1160,7 @@ export class Madoi extends MadoiEventTarget<Madoi> implements MadoiEventListener
 				this.doSendMessage(newUpdateObjectState({
 					objId: objId,
 					objRevision: oe.revision,
-					state: info.method()
+					state: info.method(this)
 					}));
 				info.lastGet = curTick;
 				oe.modification = 0;
