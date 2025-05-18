@@ -1028,6 +1028,7 @@ export class Madoi extends TypedEventTarget<Madoi, {
 				const newf = this.addHostOnlyFunction(
 					f.bind(obj), c.hostOnly);
 				obj[mc.name] = function(){
+					objEntry.modification++;
 					return newf.apply(null, arguments);
 				}
 			} else if("getState" in c){
