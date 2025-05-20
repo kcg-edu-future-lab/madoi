@@ -2,6 +2,7 @@
 
 コラボレーションツール用メッセージングサーバ "Madoi" (円居 or 惑い)のサーバ実装です。
 Springbootを使用しており、起動すると、websocket接続を待ち受けます。
+起動方法は、[このリポジトリのルートページ](https://github.com/kcg-edu-future-lab/madoi/)を参照してください。
 
 ## 概要
 
