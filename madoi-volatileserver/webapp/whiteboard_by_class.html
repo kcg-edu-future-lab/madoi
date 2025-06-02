@@ -59,6 +59,8 @@ class Whiteboard{
     });
     this.canvas.oncontextmenu = () => false;
   }
+
+  // 描画メソッド。共有対象。
   draw(prevX, prevY, x, y, size, color){
     if(!this.ctx) return;
     this.ctx.beginPath();
@@ -74,14 +76,15 @@ class Whiteboard{
   getState(){
     return this.canvas?.toDataURL("image/png") || "";
   }
+
   // 状態設定のため参加時に一度だけ呼び出される
   setState(state){
-      this.loading = true;
-      const img = new Image();
-      img.onload = () => {
-        if(this.ctx === null) return;
-        this.ctx.drawImage(img, 0, 0);
-        this.loading = false;
+    this.loading = true;
+    const img = new Image();
+    img.onload = () => {
+      if(this.ctx === null) return;
+      this.ctx.drawImage(img, 0, 0);
+      this.loading = false;
     };
     img.src = state;
   }
