@@ -1,13 +1,12 @@
 package edu.kcg.futurelab.madoi.volatileserver.config;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -59,11 +58,9 @@ public class SecurityConfig {
 			.headers(headers -> headers.frameOptions(
 					frame -> frame.sameOrigin()))
 			.authorizeHttpRequests(auth -> auth
+					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.requestMatchers(
-							antMatcher("/"),
-							antMatcher("/*.html"),
-							antMatcher("/lib/**"),
-							antMatcher("/js/**")
+							"/", "/*.html", "/lib/**", "/js/**"
 							).permitAll()
 					.anyRequest()
 							.authenticated())
