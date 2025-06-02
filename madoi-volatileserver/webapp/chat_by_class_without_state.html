@@ -22,6 +22,7 @@ div#log{
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
   // 引数は任意のルームIDとAuthToken。
+  // 第一引数にルームのID("ws[s]://"から始まらない文字列)を指定すると、ページの コンテキストパス/rooms/ルームID に接続しにいく。
   const m = new madoi.Madoi("chat_by_class_without_state_kl4sdfnlee", "ahfuTep6ooDi7Oa4");
 
   // Chatクラスのインスタンスを作成する

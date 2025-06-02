@@ -19,9 +19,11 @@ div#log{
 <div id="log"></div>
 <script src="./js/madoi.js"></script>
 <script>
+
 window.addEventListener("load", ()=>{
   // Madoiクライアントを作成しサーバに接続する。
-  // 引数は任意のルームIDとAuthToken。
+  // 引数はルームのURLもしくはIDとAuthToken。
+  // 第一引数にルームのID("ws[s]"から始まらない文字列)を指定すると、ページの コンテキストパス/rooms/ルームID に接続しにいく。
   const m = new madoi.Madoi("chat_by_sendrecv_sdkfj2j", "ahfuTep6ooDi7Oa4");
 
   // フォームのsubmit時に、メッセージを送信する。
