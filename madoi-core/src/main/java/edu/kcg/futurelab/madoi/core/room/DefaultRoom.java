@@ -51,6 +51,7 @@ import edu.kcg.futurelab.madoi.core.message.Pong;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
+import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig.NotifyType;
 import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
 import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
@@ -379,24 +380,21 @@ public class DefaultRoom implements Room{
 					castFromServerToPeer(newError(msg), peer);
 					break;
 				}
-				// 実行後にリビジョンが上がるので+1しておく
-/*				if(ori.getRevision() != im.getObjRevision()) {
-					var msg = String.format(
-							"Object revision not match. It's possible to be inconsistent. objId: %d, rev: %d, newRev: %d.",
-							im.getObjId(), ori.getRevision(), im.getObjRevision());
-					logger.warning(msg);
+				var cfg = mri.getDefinition().getConfig();
+				// Notify以外の場合
+				if(cfg.getNotify() == null) {
+					// 実行後にリビジョンが上がるので+1しておく。
+					ori.setRevision(im.getObjRevision() + 1);
+					// 履歴に追加
+					histories.add(MessageHistory.of(im, received));
+					if(histories.size() >= spec.getMaxLog()) {
+						histories.remove(0);
+					}
 				}
-*/				ori.setRevision(im.getObjRevision() + 1);
 				mri.onInvoked();
-				// 履歴に追加
-				histories.add(MessageHistory.of(im, received));
-				if(histories.size() >= spec.getMaxLog()) {
-					histories.remove(0);
-				}
 				// 送信
-				var md = mri.getDefinition();
-				var cfg = md.getConfig();
-				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
+				if(((cfg.getShare() != null) && cfg.getShare().getType().equals(SharingType.beforeExec)) ||
+						((cfg.getNotify() != null) && cfg.getNotify().getType().equals(NotifyType.beforeExec))){
 					forwardBroadcast(im);
 				} else {
 					forwardOthercast(im);

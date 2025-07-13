@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -20,6 +21,10 @@ import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.config.FunctionConfig;
+import edu.kcg.futurelab.madoi.core.message.config.MethodConfig;
+import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig;
+import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig.NotifyType;
+import edu.kcg.futurelab.madoi.core.message.config.ShareClassConfig;
 import edu.kcg.futurelab.madoi.core.message.config.ShareConfig;
 import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
 import edu.kcg.futurelab.madoi.core.message.definition.FunctionDefinition;
@@ -177,6 +182,56 @@ public class DefaultRoomTest {
 		assertArrayEquals(
 				new Object[] {"messageCast", "room1", "OTHERCAST", new String[]{}, "InvokeFunction"},
 				Arrays.copyOf(el.getEvents().get(4), 5));
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Test
+	public void test_invocationOfShareAndNotify() throws Throwable{
+		var el = new OnMemoryEventLogger();
+		var room = new DefaultRoom("room1", null, null, el);
+		var peer = new MockPeer("peer1", "Peer1", room);
+
+		// 1つめのpeerがログインしてshareFunc,notifyFunc,shareFuncを実行
+		peer.peerArriveAndLoginRoom();
+		peer.peerMessage(new DefineObject(new ObjectDefinition(
+				1, "TestClass", new ShareClassConfig("TestClass"),
+				List.of(
+					new MethodDefinition(1, "shareFunc", new MethodConfig(new ShareConfig(SharingType.beforeExec, -1))),
+					new MethodDefinition(2, "notifyFunc", new MethodConfig(new NotifyConfig(NotifyType.beforeExec)))
+				)
+			)));
+		peer.peerMessage(new InvokeMethod(1, 0, 1));
+		peer.peerMessage(new InvokeMethod(1, 0, 2));
+		peer.peerMessage(new InvokeMethod(1, 1, 1));
+
+		// 1つめのpeerが受け取るメッセージは4つ
+		assertEquals(4, peer.getSentMessages().size());
+		assertEquals("EnterRoomAllowed", peer.getSentMessages().get(0).getType());
+		assertEquals("InvokeMethod", peer.getSentMessages().get(1).getType());
+		assertEquals(1, ((InvokeMethod)peer.getSentMessages().get(1)).getMethodId());
+		assertEquals("InvokeMethod", peer.getSentMessages().get(2).getType());
+		assertEquals(2, ((InvokeMethod)peer.getSentMessages().get(2)).getMethodId());
+		assertEquals("InvokeMethod", peer.getSentMessages().get(3).getType());
+		assertEquals(1, ((InvokeMethod)peer.getSentMessages().get(3)).getMethodId());
+
+		// roomに蓄積されるオブジェクト履歴は2つ
+		var histories = room.getMessageHistories();
+		assertEquals(2, histories.size());
+		assertEquals("InvokeMethod", histories.get(0).getMessageType());
+		assertEquals(1, ((InvokeMethod)histories.get(0).getMessage()).getMethodId());
+		assertEquals("InvokeMethod", histories.get(1).getMessageType());
+		assertEquals(1, ((InvokeMethod)histories.get(1).getMessage()).getMethodId());
+
+		// 2つめのpeerがログインするとオブジェクト履歴2つのEnterRoomAllowedを受け取る
+		var peer2 = new MockPeer("peer1", "Peer1", room);
+		peer2.peerArriveAndLoginRoom();
+		assertEquals("EnterRoomAllowed", peer2.getSentMessages().get(0).getType());
+		var hist = ((EnterRoomAllowed)peer2.getSentMessageAt(0)).getHistories();
+		assertEquals(2, hist.size());
+		assertEquals("InvokeMethod", ((Map)hist.get(0)).get("type"));
+		assertEquals(1, ((Map)hist.get(0)).get("methodId"));
+		assertEquals("InvokeMethod", ((Map)hist.get(1)).get("type"));
+		assertEquals(1, ((Map)hist.get(1)).get("methodId"));
 	}
 
 	/*

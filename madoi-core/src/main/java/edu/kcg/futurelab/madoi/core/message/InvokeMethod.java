@@ -6,6 +6,9 @@ package edu.kcg.futurelab.madoi.core.message;
 public class InvokeMethod extends Message {
 	public InvokeMethod(){
 	}
+	public InvokeMethod(int objId, int objRevision, int methodId){
+		this(objId, objRevision, methodId, new Object[] {});
+	}
 	public InvokeMethod(int objId, int objRevision, int methodId, Object[] args){
 		this.objId = objId;
 		this.objRevision = objRevision;

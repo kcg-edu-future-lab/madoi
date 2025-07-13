@@ -8,6 +8,9 @@ public class MethodConfig extends Message{
 	public MethodConfig(ShareConfig share) {
 		this.share = share;
 	}
+	public MethodConfig(NotifyConfig notify) {
+		this.notify = notify;
+	}
 	public MethodConfig(GetStateConfig getState) {
 		this.getState = getState;
 	}
@@ -19,6 +22,12 @@ public class MethodConfig extends Message{
 	}
 	public void setShare(ShareConfig share) {
 		this.share = share;
+	}
+	public NotifyConfig getNotify() {
+		return notify;
+	}
+	public void setNotify(NotifyConfig notify) {
+		this.notify = notify;
 	}
 	public GetStateConfig getGetState() {
 		return getState;
@@ -34,6 +43,7 @@ public class MethodConfig extends Message{
 	}
 
 	private ShareConfig share;
+	private NotifyConfig notify;
 	private GetStateConfig getState;
 	private SetStateConfig setState;
 }
