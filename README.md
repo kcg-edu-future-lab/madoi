@@ -1,10 +1,21 @@
-# Madoi - an Open Source Messaging Server for Serverless Development of Collaboration Tools
+# Madoi - a Distributed Information Sharing Infrastructure for Serverless Development of Collaboration Tools
 
 Madoiは、分散共有アプリケーション用の通信基盤です。チャットやホワイトボードなどのコラボレーションツールを宣言的に作成できます。通信にはWebsocketを使用しており、状態の共有やオブジェクトへの変更操作が、同じセッションに参加しているアプリケーションに通知されます。
 
 "Madoi" という名前は、親しい人が集まって語らい楽しい時間を過ごす "円居"、と、多人数が参加するコラボレーションツールを実現するための複雑なプログラミングに苦悩する開発者の"惑い"、の両方を意味しています。
 
 Madoiは、サーバーレスのコラボレーションツール開発基盤を目指して設計されています。Madoiを利用することで、アプリケーション側での通信のためのプログラミングや、サーバ側でのメッセージ配信や状態管理のためのプログラミング無しに、コラボレーションツールを開発できます。
+
+
+## 関連リポジトリ
+
+* [madoi-client-ts-js](https://github.com/kcg-edu-future-lab/madoi-client-ts-js)
+  * MadoiのTypeScript/JavaScript向けクライアントライブラリ
+* [madoi-client-react](https://github.com/kcg-edu-future-lab/madoi-client-react)
+  * MadoiのReact向けクライアントライブラリ
+* [Presence](https://github.com/kcg-edu-future-lab/presence)
+  * Madoiを使用して開発したビデオ会議機能付きコラボレーションツール
+
 
 ## 機能概要
 
@@ -15,7 +26,8 @@ block-beta
   columns 5
   block:client1:1
     columns 1
-    c12["Webアプリ"]
+    c12["クライアントアプリ"]
+    c13["共有オブジェクト"]
     c11["Madoiクライアント"]
   end
   space
@@ -24,30 +36,40 @@ block-beta
     columns 1
     l4["Madoiサーバ"]
       columns 1
-      l3["オブジェクト管理"]
+      l3["共有オブジェクト管理"]
       l2["ルーム管理"]
       l1["メッセージ配信"]
   end
   style l4 fill:#ffff,stroke-width:0
-  c11<--"Websocket"-->server
-  server--"Websocket"-->c11
+  c11--"Websocket"-->l1
+  l1--"Websocket"-->c11
   space
   block:client2:1
     columns 1
-    c22["Webアプリ"]
+    c22["クライアントアプリ"]
+    c23["共有オブジェクト"]
     c21["Madoiクライアント"]
   end
   style c22 fill:#ffff,stroke-width:0
-  c21--"Websocket"-->server
-  server--"Websocket"-->c21
+  c21--"Websocket"-->l1
+  l1--"Websocket"-->c21
 ```
 
-* メッセージ配信
-  * 一斉送信(Broadcast)や個別送信(Unicast, Multicast)などのメッセージ配信を行います。
-* ルーム管理
-  * 参加者の入退室管理や、メッセージ履歴の管理(記録と新規ユーザへの送信)を行います。
-* オブジェクト管理
-  * クライアントアプリケーション内のオブジェクトの状態や変更の管理を行います。
+* クライアントアプリ
+  * 共有オブジェクト
+    * 他のWebアプリと共有する状態を保持するオブジェクト。状態の変更や状態の取得・設定を行う。
+  * Madoiクライアント
+    * Madoiサーバと接続し、状態共有のための通信や共有メソッドの実行、各種イベントのアプリへの通知を行います。
+* Madoiサーバ
+  * 共有オブジェクト管理
+    * クライアントアプリケーション内の共有オブジェクトの状態や変更の管理を行います。
+  * ルーム管理
+    * 参加者の入退室管理や、メッセージ履歴の管理(記録と新規ユーザへの送信)を行います。
+  * メッセージ配信
+    * 一斉送信(Broadcast)や個別送信(Unicast, Multicast)などのメッセージ配信を行います。
+
+Madoiサーバでは、共有オブジェクトの管理を行いますが、共有オブジェクトの実装には関与しません。あくまで共有オブジェクトのメタデータ(クラス名や共有対象メソッド等)、共有オブジェクトから取得した状態(JSON形式)や変更メソッドの呼び出し(メソッド名+パラメータをJSON形式に変換したもの)を扱い、それらの管理と他の参加者への配信を担います。そのため、クライアントアプリの実装に依存しない、汎用的なサーバとして利用できます。
+
 
 ## サーバの起動方法
 
