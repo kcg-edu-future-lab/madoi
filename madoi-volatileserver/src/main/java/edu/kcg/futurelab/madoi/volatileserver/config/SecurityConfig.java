@@ -65,7 +65,10 @@ public class SecurityConfig {
 					.anyRequest()
 							.authenticated())
 			.addFilterBefore(
-					new AuthTokenAuthenticationFilter(authTokens.toArray(new String[] {}), contextPath, "/rooms"),
+					new AuthTokenAuthenticationFilter(
+							authTokens.toArray(new String[] {}),
+							contextPath,
+							"/rooms", "/skyWayToken"),
 					AnonymousAuthenticationFilter.class)
 			.formLogin(Customizer.withDefaults())
 			.logout(Customizer.withDefaults())

@@ -8,3 +8,5 @@ services:
       MADOI_ALLOWED_ORIGINS: http://localhost:[*],null  # localhostとfile://, data:// を許可。本番運用時は変更してください。
       MADOI_WEBSOCKET_MAXTEXTMESSAGEBUFFERSIZE: 10485760  # 10 * 1024 * 1024
       MADOI_WEBSOCKET_MAXBINARYMESSAGEBUFFERSIZE: 10485760  # 10 * 1024 * 1024
+      SKYWAY_APP_ID: ${SKYWAY_APP_ID}
+      SKYWAY_SECRET: ${SKYWAY_SECRET}
