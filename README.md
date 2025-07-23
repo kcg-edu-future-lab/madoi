@@ -16,6 +16,7 @@ block-beta
   block:client1:1
     columns 1
     c12["Webアプリ"]
+    c13["共有オブジェクト"]
     c11["Madoiクライアント"]
   end
   space
@@ -24,22 +25,23 @@ block-beta
     columns 1
     l4["Madoiサーバ"]
       columns 1
-      l3["オブジェクト管理"]
+      l3["共有オブジェクト管理"]
       l2["ルーム管理"]
       l1["メッセージ配信"]
   end
   style l4 fill:#ffff,stroke-width:0
-  c11<--"Websocket"-->server
-  server--"Websocket"-->c11
+  c11--"Websocket"-->l1
+  l1--"Websocket"-->c11
   space
   block:client2:1
     columns 1
     c22["Webアプリ"]
+    c23["共有オブジェクト"]
     c21["Madoiクライアント"]
   end
   style c22 fill:#ffff,stroke-width:0
-  c21--"Websocket"-->server
-  server--"Websocket"-->c21
+  c21--"Websocket"-->l1
+  l1--"Websocket"-->c21
 ```
 
 * メッセージ配信
