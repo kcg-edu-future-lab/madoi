@@ -38,8 +38,8 @@ public class SkyWayAuthTokenService {
 			.sign(Algorithm.HMAC256(secret));
 	}
 
-	@Value("${skyWay.appId}")
+	@Value("${madoi.skyWay.appId}")
 	private String appId;
-	@Value("${skyWay.secret}")
+	@Value("${madoi.skyWay.secret}")
 	private String secret;
 }
