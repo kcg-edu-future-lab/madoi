@@ -11,7 +11,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 
 @Service
 public class SkyWayAuthTokenService {
-	@SuppressWarnings("serial")
 	public String generate() {
 		var jti = UUID.randomUUID().toString();
 		var iat = new Date().getTime() / 1000;
