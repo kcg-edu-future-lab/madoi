@@ -112,7 +112,7 @@ madoi_volatileserver-1  | 2024-06-16T14:20:06.153Z  INFO 7 --- [           main]
 madoi_volatileserver-1  | 2024-06-16T14:20:06.170Z  INFO 7 --- [           main] e.k.f.madoi.volatileserver.Application   : Started Application in 3.427 seconds (process running for 3.999)
 ```
 
-`Start Application`と出力されると、サーバが起動しています。この状態で `http://localhost:8080/madoi/chat_by_sendrecv.html` にブラウザでアクセスすると、チャットサンプルが表示されます。
+`Started Application`と出力されると、サーバが起動しています。この状態で `http://localhost:8080/madoi/chat_by_sendrecv.html` にブラウザでアクセスすると、チャットサンプルが表示されます。
 
 注: デフォルトでは、volatileserverは localhost と null(file://やdata://)からのリクエストを受け付ける状態になっています。キーも固定の文字列が設定されています。インターネット上にサーバを公開する場合は、特定のオリジンからのリクエストのみを受け付けるよう、[docker-compose.yml](docker-compose.yml)内の設定`MADOI_ALLOWED_ORIGINS`を変更し、キーも別の文字列に変更してください。
 
