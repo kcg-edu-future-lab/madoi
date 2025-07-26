@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 public class ObjectDetail {
 	private ObjectDefinition definition;
 	private Object state;
-	private int revision = -1;
+	// 最後に受け取ったUpdateObjectStateのobjRevision
+	private int lastReceivedRevision = -1;
+	// 最後に送信したInvokeMethodのserverObjRevision
+	private int lastSentRevision = -1;
 	private Collection<MethodDetail> methods = new ArrayList<>();
 }

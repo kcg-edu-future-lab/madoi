@@ -8,16 +8,21 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import edu.kcg.futurelab.madoi.core.message.definition.ObjectDefinition;
 
+/**
+ * ルーム内のオブジェクトの情報を格納する。
+ */
 public class ObjectRuntimeInfo {
 	private ObjectDefinition definition;
 	private Object state;
-	private int revision = 0;
+	// 最新のUpdateObjectStateのリビジョン
+	private int lastRecvUosObjRevision = 0;
+	// 最新のInvokeMethodに設定したserverObjRevision;
+	private int lastSentImServerObjRevision = 0;
 	private Map<Integer, MethodRuntimeInfo> methodRuntimeInfos = new LinkedHashMap<>();
-	public ObjectRuntimeInfo(ObjectDefinition definition, Object state, int revision,
+	public ObjectRuntimeInfo(ObjectDefinition definition, Object state,
 			Map<Integer, MethodRuntimeInfo> methodRuntimeInfos) {
 		this(definition);
 		this.state = state;
-		this.revision = revision;
 		this.methodRuntimeInfos.putAll(methodRuntimeInfos);
 	}
 	public ObjectRuntimeInfo(ObjectDefinition definition) {
@@ -41,13 +46,23 @@ public class ObjectRuntimeInfo {
 	public void setState(Object state) {
 		this.state = state;
 	}
-	public int getRevision() {
-		return revision;
+	public int getLastRecvUosObjRevision() {
+		return lastRecvUosObjRevision;
 	}
-	public void setRevision(int revision) {
-		this.revision = revision;
+	public void setLastRecvUosObjRevision(int lastRecvUosObjRevision) {
+		this.lastRecvUosObjRevision = lastRecvUosObjRevision;
+	}
+	public int getLastSentImServerObjRevision() {
+		return lastSentImServerObjRevision;
+	}
+	public void setLastSentImServerObjRevision(int lastSentImServerObjRevision) {
+		this.lastSentImServerObjRevision = lastSentImServerObjRevision;
 	}
 	public Map<Integer, MethodRuntimeInfo> getMethods(){
 		return methodRuntimeInfos;
+	}
+
+	public int incrementAndGetImServerObjRevision(){
+		return ++lastSentImServerObjRevision;
 	}
 }

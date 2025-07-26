@@ -1,5 +1,13 @@
 package edu.kcg.futurelab.madoi.core.message;
 
+/**
+ * オブジェクトの状態を通知するメッセージ。
+ * オブジェクト状態は、objId, state, objRevisionから構成される。
+ * objIdはオブジェクト毎に振られる連番(Madoiクライアントに登録される際に振られる)。
+ * stateはオブジェクトの状態をJSON化した文字列。
+ * objRevisionは変更操作が適用された回数。
+ * 変更操作はMadoiサーバにより順番が固定されるため、同じobjId, objRevisionのオブジェクトのstateは同じになる。
+ */
 public class UpdateObjectState extends Message {
 	public UpdateObjectState() {
 	}

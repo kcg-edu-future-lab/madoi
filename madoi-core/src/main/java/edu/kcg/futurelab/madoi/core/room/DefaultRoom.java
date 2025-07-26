@@ -295,12 +295,13 @@ public class DefaultRoom implements Room{
 			}
 			case "DefineFunction": {
 				var def = decodeAndSetSender(peer, message, DefineFunction.class).getDefinition();
-				functionRuntimeInfos.put(def.getFuncId(), new FunctionRuntimeInfo(def));
+				functionRuntimeInfos.putIfAbsent(def.getFuncId(), new FunctionRuntimeInfo(def));
 				break;
 			}
 			case "DefineObject": {
+				// 既存の定義と突き合わせて不一致を検出する?
 				var def = decodeAndSetSender(peer, message, DefineObject.class).getDefinition();
-				objectRuntimeInfos.put(def.getObjId(), new ObjectRuntimeInfo(def));
+				objectRuntimeInfos.putIfAbsent(def.getObjId(), new ObjectRuntimeInfo(def));
 				break;
 			}
 			case "InvokeFunction": {
@@ -330,75 +331,11 @@ public class DefaultRoom implements Room{
 				break;
 			}
 			case "UpdateObjectState": {
-				var uos = decodeAndSetSender(peer, message, UpdateObjectState.class);
-				var ori = objectRuntimeInfos.get(uos.getObjId());
-				if(ori == null) {
-					var msg = String.format("unknown object id: %d", uos.getObjId());
-					logger.warning(msg);
-					castFromServerToPeer(newError(msg), peer);
-					return;
-				}
-				if(ori.getRevision() <= uos.getObjRevision()) {
-					// 同じか新しいリビジョンの情報であれば受け入れる。
-					ori.setState(uos.getState());
-					ori.setRevision(uos.getObjRevision());
-					// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
-					var it = histories.iterator();
-					while(it.hasNext()) {
-						var h = it.next();
-						if(h.getMessage() instanceof UpdateObjectState) {
-							var uo = (UpdateObjectState)h.getMessage();
-							if(uo.getObjId() == uos.getObjId()) it.remove();
-						} else if(h.getMessage() instanceof InvokeMethod) {
-							var imh = (InvokeMethod)h.getMessage();
-							if(imh.getObjId() == uos.getObjId()) it.remove();
-						}
-					}
-					uos.setCastType(CastType.SERVERTOPEER);
-					histories.add(MessageHistory.of(uos, received));
-					if(histories.size() >= spec.getMaxLog()) {
-						histories.remove(0);
-					}
-				}
+				handleUpdateObjectState(peer, message, received);
 				break;
 			}
 			case "InvokeMethod": {
-				var im = decodeAndSetSender(peer, message, InvokeMethod.class);
-				var ori = objectRuntimeInfos.get(im.getObjId());
-				if(ori == null) {
-					var msg = String.format("unknown object id: %d", im.getObjId());
-					logger.warning(msg);
-					castFromServerToPeer(newError(msg), peer);
-					return;
-				}
-				var mri = ori.getMethods().get(im.getMethodId());
-				if(mri == null) {
-					var msg = String.format(
-							"Method not found. objId: %d, methodId: %d.",
-							im.getObjId(), im.getMethodId());
-					logger.warning(msg);
-					castFromServerToPeer(newError(msg), peer);
-					break;
-				}
-				var cfg = mri.getDefinition().getConfig();
-				// Notify以外の場合
-				if(cfg.getNotify() == null) {
-					// 実行後にリビジョンが上がるので+1しておく。
-					ori.setRevision(im.getObjRevision() + 1);
-					// 履歴に追加
-					histories.add(MessageHistory.of(im, received));
-					if(histories.size() >= spec.getMaxLog()) {
-						histories.remove(0);
-					}
-				}
-				mri.onInvoked();
-				// 送信
-				if(((cfg.getShare() != null) && cfg.getShare().getType().equals(SharingType.beforeExec)) ||
-						((cfg.getNotify() != null) && cfg.getNotify().getType().equals(NotifyType.beforeExec))){
-					forwardBroadcast(im);
-				} else {
-					forwardOthercast(im);
-				}
+				handleInvokeMethod(peer, message, received);
 				break;
 			}
 			default:{
@@ -410,6 +347,90 @@ public class DefaultRoom implements Room{
 				break;
 			}
 		}
+	}
+
+	private void handleUpdateObjectState(Peer peer, String message, Date received) {
+		var uos = decodeAndSetSender(peer, message, UpdateObjectState.class);
+		var ori = objectRuntimeInfos.get(uos.getObjId());
+		if(ori == null) {
+			var msg = String.format("unknown object id: %d", uos.getObjId());
+			logger.warning(msg);
+			castFromServerToPeer(newError(msg), peer);
+			return;
+		}
+		if(ori.getLastRecvUosObjRevision() < uos.getObjRevision()) {
+			ori.setState(uos.getState());
+			ori.setLastRecvUosObjRevision(uos.getObjRevision());
+			// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
+			int i = 0;
+			while(i < histories.size()) {
+				var h = histories.get(i);
+				if(h.getMessage() instanceof UpdateObjectState uosm) {
+					// UpdateObjectStateは削除
+					if(uosm.getObjId() == uos.getObjId()) histories.remove(i);
+				} else if(h.getMessage() instanceof InvokeMethod imm) {
+					// InvokeMethodはrevisionが同じか小さい場合削除
+					if(imm.getObjId() == uos.getObjId()) {
+						if(imm.getServerObjRevision() <= uos.getObjRevision()) {
+							histories.remove(i);
+						} else {
+							break;
+						}
+					}
+				}
+			}
+			uos.setCastType(CastType.SERVERTOPEER);
+			histories.add(i, MessageHistory.of(uos, received));
+			if(histories.size() >= spec.getMaxLog()) {
+				histories.remove(0);
+			}
+		} else {
+			logger.warning("UpdateObjectState was discarded because inconsistent revision." +
+					" received revision: " + uos.getObjRevision() + ", server object revision: " +
+					ori.getLastRecvUosObjRevision());
+		}
+	}
+
+	private void handleInvokeMethod(Peer peer, String message, Date received) {
+		var im = decodeAndSetSender(peer, message, InvokeMethod.class);
+		var ori = objectRuntimeInfos.get(im.getObjId());
+		if(ori == null) {
+			sendError(peer, "Object not found. objId: %d", im.getObjId());
+			return;
+		}
+		var mri = ori.getMethods().get(im.getMethodId());
+		if(mri == null) {
+			sendError(peer, "Method not found. objId: %d, methodId: %d.",
+					im.getObjId(), im.getMethodId());
+			return;
+		}
+		var cfg = mri.getDefinition().getConfig();
+		// Notify以外の場合
+		if(cfg.getNotify() == null) {
+			// オブジェクトのリビジョンを増やす
+			var rev = ori.incrementAndGetImServerObjRevision();
+			// InvokeMethodにも追加
+			im.setServerObjRevision(rev);
+			// 履歴に追加
+			histories.add(MessageHistory.of(im, received));
+			if(histories.size() >= spec.getMaxLog()) {
+				histories.remove(0);
+			}
+		}
+		mri.onInvoked();
+		// 送信
+		if(((cfg.getShare() != null) && cfg.getShare().getType().equals(SharingType.beforeExec)) ||
+				((cfg.getNotify() != null) && cfg.getNotify().getType().equals(NotifyType.beforeExec))){
+			forwardBroadcast(im);
+		} else {
+			forwardOthercast(im);
+		}
+	}
+
+	private void sendError(Peer peer, String format, Object...args) {
+		var msg = String.format(format, args);
+		logger.severe(msg);
+		castFromServerToPeer(newError(msg), peer);
 	}
 
 	@Override

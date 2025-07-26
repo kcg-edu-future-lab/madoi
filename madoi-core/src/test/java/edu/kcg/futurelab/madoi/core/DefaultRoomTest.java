@@ -39,7 +39,7 @@ public class DefaultRoomTest {
 	@Test
 	public void test_peerArriveThenLogin() throws Throwable{
 		var room = new DefaultRoom("room1", new RoomSpec(),null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
+		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArriveAndLoginRoom();
 		assertEquals(1, peer1.getSentMessageCount());
 		assertEquals("EnterRoomAllowed", peer1.getSentMessageAt(0).getType());
@@ -49,8 +49,8 @@ public class DefaultRoomTest {
 	@Test
 	public void test_2peersEntered() throws Throwable{
 		var room = new DefaultRoom("room1", new RoomSpec(),null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
 		assertEquals(2, peer1.getSentMessageCount());
@@ -66,8 +66,8 @@ public class DefaultRoomTest {
 	@Test
 	public void test_waitingPeer() throws Throwable{
 		var room = new DefaultRoom("room1", new RoomSpec(), null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArrive();
 		peer1.getConnection().send(new InvokeMethod(1, 1, 1, new Object[] {}));
@@ -86,9 +86,9 @@ public class DefaultRoomTest {
 	@Test
 	public void test_peerLeaved() throws Throwable{
 		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
-		var peer3 = new MockPeer("peer3", "Peer3", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
+		var peer3 = new MockPeer("peer3", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
 		peer1.peerLeave();
@@ -106,9 +106,9 @@ public class DefaultRoomTest {
 	@Test
 	public void test_updatePeerProfile() throws Throwable{
 		var room = new DefaultRoom("room1", new RoomSpec(), null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
-		var peer3 = new MockPeer("peer3", "Peer3", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
+		var peer3 = new MockPeer("peer3", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
 		peer1.updatePeerProfileChangeName("Peer1NewName");
@@ -129,8 +129,8 @@ public class DefaultRoomTest {
 	@Test
 	public void test_enterRoom() throws Throwable{
 		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
 		assertTrue(peer1.getSentMessages().get(0) instanceof EnterRoomAllowed);
@@ -157,7 +157,7 @@ public class DefaultRoomTest {
 	public void test_execAndSend() throws Throwable{
 		var el = new OnMemoryEventLogger();
 		var room = new DefaultRoom("room1", null, null, el);
-		var peer = new MockPeer("peer1", "Peer1", room);
+		var peer = new MockPeer("peer1", room);
 
 		peer.peerArriveAndLoginRoom();
 		peer.peerMessage(new DefineFunction(new FunctionDefinition(
@@ -189,7 +189,7 @@ public class DefaultRoomTest {
 	public void test_invocationOfShareAndNotify() throws Throwable{
 		var el = new OnMemoryEventLogger();
 		var room = new DefaultRoom("room1", null, null, el);
-		var peer = new MockPeer("peer1", "Peer1", room);
+		var peer = new MockPeer("peer1", room);
 
 		// 1つめのpeerがログインしてshareFunc,notifyFunc,shareFuncを実行
 		peer.peerArriveAndLoginRoom();
@@ -206,24 +206,24 @@ public class DefaultRoomTest {
 
 		// 1つめのpeerが受け取るメッセージは4つ
 		assertEquals(4, peer.getSentMessages().size());
-		assertEquals("EnterRoomAllowed", peer.getSentMessages().get(0).getType());
-		assertEquals("InvokeMethod", peer.getSentMessages().get(1).getType());
+		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer.getSentMessages().get(0).getType());
+		assertEquals(InvokeMethod.class.getSimpleName(), peer.getSentMessages().get(1).getType());
 		assertEquals(1, ((InvokeMethod)peer.getSentMessages().get(1)).getMethodId());
-		assertEquals("InvokeMethod", peer.getSentMessages().get(2).getType());
+		assertEquals(InvokeMethod.class.getSimpleName(), peer.getSentMessages().get(2).getType());
 		assertEquals(2, ((InvokeMethod)peer.getSentMessages().get(2)).getMethodId());
-		assertEquals("InvokeMethod", peer.getSentMessages().get(3).getType());
+		assertEquals(InvokeMethod.class.getSimpleName(), peer.getSentMessages().get(3).getType());
 		assertEquals(1, ((InvokeMethod)peer.getSentMessages().get(3)).getMethodId());
 
 		// roomに蓄積されるオブジェクト履歴は2つ
 		var histories = room.getMessageHistories();
 		assertEquals(2, histories.size());
-		assertEquals("InvokeMethod", histories.get(0).getMessageType());
+		assertEquals(InvokeMethod.class.getSimpleName(), histories.get(0).getMessageType());
 		assertEquals(1, ((InvokeMethod)histories.get(0).getMessage()).getMethodId());
-		assertEquals("InvokeMethod", histories.get(1).getMessageType());
+		assertEquals(InvokeMethod.class.getSimpleName(), histories.get(1).getMessageType());
 		assertEquals(1, ((InvokeMethod)histories.get(1).getMessage()).getMethodId());
 
 		// 2つめのpeerがログインするとオブジェクト履歴2つのEnterRoomAllowedを受け取る
-		var peer2 = new MockPeer("peer1", "Peer1", room);
+		var peer2 = new MockPeer("peer1", room);
 		peer2.peerArriveAndLoginRoom();
 		assertEquals("EnterRoomAllowed", peer2.getSentMessages().get(0).getType());
 		var hist = ((EnterRoomAllowed)peer2.getSentMessageAt(0)).getHistories();
@@ -234,33 +234,92 @@ public class DefaultRoomTest {
 		assertEquals(1, ((Map)hist.get(1)).get("methodId"));
 	}
 
-	/*
-	 * ObjectStateが送られてきたら，それまでのInvocationのログがクリアされるはず。
+	/**
+	 * InvokeMethodを送った後にUpdateObjectState(revision=1)を受け取ると正常に処理される。
+	 * InvokeMethodを受け取った際にはseqNoに1が設定されていることも確かめる。
+	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	public void test_eliminateLogs() throws Throwable{
+	public void test_invokeThenUpdateObject() throws Throwable{
 		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
+		var oid = 0;
+		var mid = 0;
+		var defObj = new DefineObject(new ObjectDefinition(
+				oid, "Test", new ShareClassConfig(), Arrays.asList(
+						new MethodDefinition(mid, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+
+		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec, 1000))
-				))));
-		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
-		assertEquals(1, room.getMessageHistories().size());
-		assertEquals(1, room.getObjectRuntimeInfos().get(0).getRevision());
-		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
-		peer1.peerMessage(new UpdateObjectState(0, "", 1));
-		assertEquals(1, room.getMessageHistories().size());
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		peer1.peerMessage(defObj);
+		peer1.peerMessage(new InvokeMethod(oid, 0, mid, new Object[] {}));
+		// peer1がInvokeMethodを受け取ると、oidのオブジェクトのrevisionは1になる
+		peer1.peerMessage(new UpdateObjectState(oid, null, 1));
+
+		var peer2 = new MockPeer("peer2", room);
 		peer2.peerArriveAndLoginRoom();
-		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed) {
-			EnterRoomAllowed er = (EnterRoomAllowed)peer2.getSentMessages().get(0);
+		peer2.peerMessage(defObj);
+
+		// peer1が受け取るのは EnterRoomAllowed, InvokeMethod, PeerEntered の2つ
+		assertEquals(3, peer1.getSentMessageCount());
+		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer1.getSentMessageAt(0).getType());
+		assertEquals(InvokeMethod.class.getSimpleName(), peer1.getSentMessageAt(1).getType());
+		assertEquals(PeerEntered.class.getSimpleName(), peer1.getSentMessageAt(2).getType());
+		// peer2が受け取るのは EnterRoomAllowed のみ
+		assertEquals(1, peer2.getSentMessageCount());
+		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer2.getSentMessageAt(0).getType());
+		if(peer2.getSentMessages().get(0) instanceof EnterRoomAllowed er) {
 			assertEquals(1, er.getHistories().size());
 			assertEquals("UpdateObjectState", ((Map<String, Object>)er.getHistories().get(0)).get("type"));
 		} else {
 			fail();
 		}
+	}
+
+	/*
+	 * UpdateObjectStateが送られてきたら、不要になった履歴がクリアされるはず。
+	 * 不要かどうかはUpdateObjectStateのrevisionで判断され、既存のUpdateObjectStateと、revisionと
+	 * 同じが小さいseqNoを持つInvokeMethodが消去される。
+	 * revisionより大きいseqNoを持つInvokeMethodが存在する場合、その直前にUpdateObjectStateが挿入される。
+	 */
+	@Test
+	public void test_eliminateLogs() throws Throwable{
+		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
+		var oid = 0;
+		var mid = 0;
+		var defObj = new DefineObject(new ObjectDefinition(
+				oid, "Test", new ShareClassConfig(), Arrays.asList(
+						new MethodDefinition(mid, "foo", new ShareConfig(SharingType.beforeExec, 1000))
+				)));
+		var peer1 = new MockPeer("peer1", room);
+		peer1.peerArriveAndLoginRoom();
+		peer1.peerMessage(defObj);
+
+		var peer2 = new MockPeer("peer2", room);
+		peer2.peerArriveAndLoginRoom();
+		peer2.peerMessage(defObj);
+
+		peer2.peerMessage(new InvokeMethod(oid, 0, mid, new Object[] {}));
+		peer2.peerMessage(new InvokeMethod(oid, 1, mid, new Object[] {}));
+		peer1.peerMessage(new UpdateObjectState(oid, null, 1));
+
+		// Roomの履歴を検証する
+		// InvokeMethodのseqNoは2になり、UpdateObjectStateのrevisionは1なので、2番目のInvokeMethodは削除されないはず。
+		assertEquals(2, room.getMessageHistorySize());
+		assertEquals(UpdateObjectState.class.getSimpleName(), room.getMessageHistoryAt(0).getMessageType());
+		assertEquals(InvokeMethod.class.getSimpleName(), room.getMessageHistoryAt(1).getMessageType());
+		if(room.getMessageHistories().get(1).getMessage() instanceof InvokeMethod im) {
+			assertEquals(2, im.getServerObjRevision());
+		} else {
+			fail();
+		}
+
+		// Roomのオブジェクト情報を検証する
+		// 最後に受け取ったUpdateObjectStateのリビジョンは1
+		assertEquals(1, room.getObjectRuntimeInfos().get(oid).getLastRecvUosObjRevision());
+		// InvokeMethod用のリビジョン(受け取るたびに+1)は2
+		assertEquals(2, room.getObjectRuntimeInfos().get(oid).getLastSentImServerObjRevision());
 	}
 
 	/*
@@ -270,8 +329,8 @@ public class DefaultRoomTest {
 	@Test
 	public void test_eliminateLogs2() throws Throwable{
 		var room = new DefaultRoom("room1", new RoomSpec(), null, new NullRoomEventLogger());
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
 
 		peer1.peerArriveAndLoginRoom();
 		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
@@ -312,8 +371,8 @@ public class DefaultRoomTest {
 	public void test_peerLeaveOnIOE() throws Throwable{
 		var el = new OnMemoryEventLogger();
 		var room = new DefaultRoom("room1", null, null, el);
-		var peer1 = new MockPeer("peer1", "Peer1", room);
-		var peer2 = new MockPeer("peer2", "Peer2", room);
+		var peer1 = new MockPeer("peer1", room);
+		var peer2 = new MockPeer("peer2", room);
 
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();

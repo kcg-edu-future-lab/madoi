@@ -33,6 +33,14 @@ public interface Room {
 	Map<Integer, ObjectRuntimeInfo> getObjectRuntimeInfos();
 	List<History> getMessageHistories();
 
+	default int getMessageHistorySize() {
+		return getMessageHistories().size();
+	}
+
+	default History getMessageHistoryAt(int index) {
+		return getMessageHistories().get(index);
+	}
+
 	void onRoomCreated();
 	void onRoomDestroyed();
 	void onPeerArrive(Peer peer);

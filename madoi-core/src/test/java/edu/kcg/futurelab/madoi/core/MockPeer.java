@@ -33,10 +33,9 @@ import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.Room;
 
 public class MockPeer implements Peer {
-	@SuppressWarnings("serial")
-	public MockPeer(String id, String name, Room room){
+	public MockPeer(String id, Room room){
 		this.id = id;
-		this.profile = new HashMap<>(){{ put("name", name);}};
+		this.profile = new HashMap<>();
 		this.room = room;
 		this.state = State.CONNECTED;
 	}

@@ -47,7 +47,8 @@ public class Util {
 			return new ObjectDetail(
 					ori.getDefinition(),
 					ori.getState(),
-					ori.getRevision(),
+					ori.getLastRecvUosObjRevision(),
+					ori.getLastSentImServerObjRevision(),
 					ms.map(Util::detail).toList());
 		}
 	}
