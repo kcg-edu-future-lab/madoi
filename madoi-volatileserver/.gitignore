@@ -3,3 +3,4 @@
 /docker/madoi-server/*.jar
 /madoidb.mv.db
 /madoidb.trace.db
+/application.yml

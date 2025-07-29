@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+div#log{
+  border: 1px solid;
+  border-radius: 4px;
+  min-height: 300px;
+}
+.action_effect {
+  animation: action_effect 1s;
+}
+@keyframes action_effect {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-12%);
+  }
+}
+#svg{
+  display: inline-block;
+}
+</style>
+</head>
+<body>
+<form id="form">
+  <label>message:
+    <input id="input" type="text" autofocus placeholder="enter to send">
+  </label>
+</form>
+  <button id="reaction">‼️</button>
+  <svg id="svg" height="24"></svg><br/>
+<div id="log"></div>
+<script src="./js/madoi.js"></script>
+<script>
+window.addEventListener("load", ()=>{
+  // Madoiクライアントを作成しサーバに接続する。
+  // 引数は任意のルームIDとAuthToken。
+  // 第一引数にルームのID("ws[s]://"から始まらない文字列)を指定すると、ページの コンテキストパス/rooms/ルームID に接続しにいく。
+  const m = new madoi.Madoi("chat_by_class_with_notify_slkjf2sas", "ahfuTep6ooDi7Oa4");
+
+  // Chatクラスのインスタンスを作成する
+  const c = new Chat("form", "input", "reaction", "log");
+
+  // Maodiに登録する。chatメソッドを共有するよう指定する。
+  // c.chatメソッドは、呼び出しの通知をサーバにBroadcastする代替メソッドで置き換えられる。
+  // レシーバも内部で用意され、通知がサーバから届くと本来のchatメソッドが実行される。
+  m.register(c, [
+    {method: c.chat, share: {maxLog: 1000}},
+    {method: c.reaction, notify: {}},
+    {method: c.getState, getState: {maxInterval: 3000}},
+    {method: c.setState, setState: {}}
+  ]);
+});
+
+//チャット処理を実装するクラス。
+class Chat{
+  constructor(formId, inputId, reactionButtonId, logId){
+    this.id = 0;
+    this.chatLog = [];
+    this.logDiv = document.getElementById(logId);
+    // フォームがsubmitされると、テキストボックスに入っている内容を
+    // 取り出しchatメソッドを呼び出す。
+    document.getElementById(formId).addEventListener("submit", e=>{
+      e.preventDefault();
+      const input = document.getElementById(inputId);
+      this.chat(input.value);
+      input.value = "";
+    });
+    document.getElementById(reactionButtonId).addEventListener("click", e=>{
+      e.preventDefault();
+      console.log("click");
+      this.reaction(e.currentTarget.textContent);
+    });
+  }
+  // チャットメッセージを送信する
+  chat(message){
+    this.addChatLog(`chatlog_${this.id++}`, message);
+  }
+  // リアクション(その場で再生され履歴に残らない)を送信する
+  reaction(text){
+    this.doReaction(text);
+  }
+  // 状態取得のため定期的に呼び出される
+  getState(){
+    return this.chatLog;
+  }
+  // 状態設定のため参加時に一度だけ呼び出される
+  setState(state){
+    for(const l of state){
+      this.addChatLog(l.id, l.message);
+    }
+  }
+  addChatLog(id, message){
+    // チャットログに追加(getStateで返す用)
+    this.chatLog.push({id: id, message: message});
+    // メッセージを表示するdivを作成して追加
+    this.logDiv.innerHTML += `<div id="chatlog_${id}">${message}</div>\n`;
+    // メッセージが100件を超えていたら古いものを削除
+    if(this.chatLog.length > 100){
+      document.getElementById(`chatlog_${this.chatLog[0].id}`).remove();
+      this.chatLog.shift();
+    }
+  }
+  doReaction(text){
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      r.textContent = text;
+      r.setAttribute("x", `0`);
+      r.setAttribute("y", `20`);
+      r.setAttribute("width", "64");
+      r.setAttribute("height", "32");
+      r.classList.add("action_effect");
+      r.addEventListener("animationend", ()=>{
+          r.remove();
+      });
+      document.getElementById("svg").appendChild(r);
+  }
+}
+</script>
+</body>
+</html>
