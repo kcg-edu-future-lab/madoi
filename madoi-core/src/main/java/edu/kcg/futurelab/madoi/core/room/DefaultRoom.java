@@ -363,16 +363,20 @@ public class DefaultRoom implements Room{
 			ori.setLastRecvUosObjRevision(uos.getObjRevision());
 			// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
 			int i = 0;
-			while(i < histories.size()) {
+			for(; i < histories.size(); i++) {
 				var h = histories.get(i);
 				if(h.getMessage() instanceof UpdateObjectState uosm) {
 					// UpdateObjectStateは削除
-					if(uosm.getObjId() == uos.getObjId()) histories.remove(i);
+					if(uosm.getObjId() == uos.getObjId()) {
+						histories.remove(i);
+						i--;
+					}
 				} else if(h.getMessage() instanceof InvokeMethod imm) {
 					// InvokeMethodはrevisionが同じか小さい場合削除
 					if(imm.getObjId() == uos.getObjId()) {
 						if(imm.getServerObjRevision() <= uos.getObjRevision()) {
 							histories.remove(i);
+							i--;
 						} else {
 							break;
 						}
