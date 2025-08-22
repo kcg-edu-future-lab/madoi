@@ -358,40 +358,71 @@ public class DefaultRoom implements Room{
 			castFromServerToPeer(newError(msg), peer);
 			return;
 		}
-		if(ori.getLastRecvUosObjRevision() < uos.getObjRevision()) {
-			ori.setState(uos.getState());
-			ori.setLastRecvUosObjRevision(uos.getObjRevision());
-			// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除
-			int i = 0;
-			for(; i < histories.size(); i++) {
-				var h = histories.get(i);
-				if(h.getMessage() instanceof UpdateObjectState uosm) {
-					// UpdateObjectStateは削除
-					if(uosm.getObjId() == uos.getObjId()) {
-						histories.remove(i);
-						i--;
-					}
-				} else if(h.getMessage() instanceof InvokeMethod imm) {
-					// InvokeMethodはrevisionが同じか小さい場合削除
-					if(imm.getObjId() == uos.getObjId()) {
-						if(imm.getServerObjRevision() <= uos.getObjRevision()) {
-							histories.remove(i);
-							i--;
-						} else {
-							break;
-						}
-					}
-				}
-			}
-			uos.setCastType(CastType.SERVERTOPEER);
-			histories.add(i, MessageHistory.of(uos, received));
-			if(histories.size() >= spec.getMaxLog()) {
-				histories.remove(0);
-			}
-		} else {
+		var lastObjRev = ori.getLastRecvUosObjRevision();
+		var curObjRev = uos.getObjRevision();
+		if(lastObjRev >= curObjRev) {
 			logger.warning("UpdateObjectState was discarded because inconsistent revision." +
 					" received revision: " + uos.getObjRevision() + ", server object revision: " +
 					ori.getLastRecvUosObjRevision());
+			return;
+		}
+		ori.setState(uos.getState());
+		ori.setLastRecvUosObjRevision(curObjRev);
+		// リビジョンの差が削除すべきInvomeMethodメッセージの数
+		var immCount = curObjRev - lastObjRev;
+		if(immCount == 0) {
+			logger.warning("History consistency error. No InvokeMethod message");
+			return;
+		}
+		// 更新されたオブジェクトに対するUpdateObjectStateとInvokeMethod履歴を削除する
+		// まず末尾から要素をたどり自身の(UpdateObjectStateを送ってきたピアの)InvokeMethodを削除
+		var it = histories.listIterator(histories.size());
+		while(it.hasPrevious()) {
+			var h = it.previous();
+			if(h.getMessage() instanceof UpdateObjectState uosm) {
+				// UpdateObjectStateは削除。また、先頭に位置するのでそれ以上は辿らない。
+				if(uosm.getObjId() == uos.getObjId()) {
+					it.remove();
+					break;
+				}
+			}
+			if(!(h.getMessage() instanceof InvokeMethod imm)) continue;
+			if(!imm.getSender().equals(uos.getSender())) continue;
+			if(imm.getObjId() != uos.getObjId()) continue;
+			it.remove();
+			immCount--;
+		}
+		// 次に残りのInvokeMethodでUpdateObjectState送信者のものではないものを削除する。ただしimmCount個だけ。
+		if(immCount > 0) {
+			while(it.hasNext()) {
+				var h = it.next();
+				if(!(h.getMessage() instanceof InvokeMethod imm)) continue;
+				if(imm.getSender().equals(uos.getSender())) continue;
+				if(imm.getObjId() != uos.getObjId()) continue;
+				it.remove();
+				immCount--;
+				if(immCount == 0) break;
+			}
+		}
+		if(immCount > 0) {
+			logger.warning("Inconsistent history. " + immCount +
+					" InvokeMethod messages should be deleted but not found.");
+		}
+		// 残りのInvokeMethodがまだあれば、その直前にUpdateObjectStateを挿入する。なければ末尾
+		var newUosIndex = histories.size();
+		while(it.hasNext()) {
+			var i = it.nextIndex();
+			var h = it.next();
+			if(!(h.getMessage() instanceof InvokeMethod imm)) continue;
+			if(imm.getObjId() != uos.getObjId()) continue;
+			newUosIndex = i;
+			break;
+		}
+		uos.setCastType(CastType.SERVERTOPEER);
+		histories.add(newUosIndex, MessageHistory.of(uos, received));
+
+		if(histories.size() >= spec.getMaxLog()) {
+			histories.remove(0);
 		}
 	}
 

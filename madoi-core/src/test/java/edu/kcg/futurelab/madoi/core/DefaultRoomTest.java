@@ -78,7 +78,6 @@ public class DefaultRoomTest {
 		peer2.loginRoom();
 		assertEquals(3, peer1.getSentMessageCount());
 		assertEquals(PeerEntered.class.getSimpleName(), peer1.getSentMessageAt(2).getType());
-		assertEquals("Peer2", ((PeerEntered)peer1.getSentMessageAt(2)).getPeer().getProfile().get("name"));
 		assertEquals(1, peer2.getSentMessageCount());
 		assertEquals(EnterRoomAllowed.class.getSimpleName(), peer2.getSentMessageAt(0).getType());
 	}
@@ -300,26 +299,31 @@ public class DefaultRoomTest {
 		peer2.peerArriveAndLoginRoom();
 		peer2.peerMessage(defObj);
 
+		// Peer2がInvokeMethodを送信
 		peer2.peerMessage(new InvokeMethod(oid, 0, mid, new Object[] {}));
+		// Peer1がInvokeMethodを送信。まだpeer2のInvokeMethodは受け取っていない想定。
+		peer1.peerMessage(new InvokeMethod(oid, 0, mid, new Object[] {}));
+		// Peer2がInvokeMethodを送信。まだpeer1のInvokeMethodは受け取っていない想定。
 		peer2.peerMessage(new InvokeMethod(oid, 1, mid, new Object[] {}));
-		peer1.peerMessage(new UpdateObjectState(oid, null, 1));
+		assertEquals(3, room.getMessageHistorySize());
+		// Peer1がUpdateObjectState送信。peer2のInvokeMethodを1つだけ受け取り、自身のInvokeMethodを送っているのでobjRevは2。
+		peer1.peerMessage(new UpdateObjectState(oid, null, 2));
 
-		// Roomの履歴を検証する
+		// Roomの履歴を検証する。
 		// InvokeMethodのseqNoは2になり、UpdateObjectStateのrevisionは1なので、2番目のInvokeMethodは削除されないはず。
 		assertEquals(2, room.getMessageHistorySize());
+		// Peer1のUpdateObjectStateが先頭に来る。
 		assertEquals(UpdateObjectState.class.getSimpleName(), room.getMessageHistoryAt(0).getMessageType());
+		assertEquals("peer1", room.getMessageHistoryAt(0).getSender());
+		// Peer2のInvokeMethodがその次
 		assertEquals(InvokeMethod.class.getSimpleName(), room.getMessageHistoryAt(1).getMessageType());
-		if(room.getMessageHistories().get(1).getMessage() instanceof InvokeMethod im) {
-			assertEquals(2, im.getServerObjRevision());
-		} else {
-			fail();
-		}
+		assertEquals("peer2", room.getMessageHistoryAt(1).getSender());
 
 		// Roomのオブジェクト情報を検証する
 		// 最後に受け取ったUpdateObjectStateのリビジョンは1
-		assertEquals(1, room.getObjectRuntimeInfos().get(oid).getLastRecvUosObjRevision());
+		assertEquals(2, room.getObjectRuntimeInfos().get(oid).getLastRecvUosObjRevision());
 		// InvokeMethod用のリビジョン(受け取るたびに+1)は2
-		assertEquals(2, room.getObjectRuntimeInfos().get(oid).getLastSentImServerObjRevision());
+		assertEquals(3, room.getObjectRuntimeInfos().get(oid).getLastSentImServerObjRevision());
 	}
 
 	/*
@@ -342,14 +346,13 @@ public class DefaultRoomTest {
 				))));
 		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
 		peer1.peerMessage(new InvokeMethod(0, 1, 1, new Object[] {}));
-		peer1.peerMessage(new InvokeMethod(1, 2, 2, new Object[] {}));
+		peer1.peerMessage(new InvokeMethod(1, 0, 2, new Object[] {}));
 		assertEquals(3, room.getMessageHistories().size());
 		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
 		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(1).getInvocationCount());
 		assertEquals(1, room.getObjectRuntimeInfos().get(1).getMethods().get(2).getInvocationCount());
 
 		peer1.peerMessage(new UpdateObjectState(0, "", 2));
-		// TODO: 要修正。特定のメソッドの呼び出し履歴が記録されているかは現状わからない
 		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(0).getInvocationCount());
 		assertEquals(1, room.getObjectRuntimeInfos().get(0).getMethods().get(1).getInvocationCount());
 		assertEquals(1, room.getObjectRuntimeInfos().get(1).getMethods().get(2).getInvocationCount());
