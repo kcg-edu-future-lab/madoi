@@ -570,11 +570,18 @@ public class DefaultRoom implements Room{
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void castMessage(Map<String, Object> message) {
-		var recipients = (String[])message.get("recipients");
+		var recipients = message.get("recipients");
+		if(recipients == null) {
+			recipients = Collections.emptyList();
+		}
+		if(recipients instanceof String[] re) {
+			recipients = Arrays.asList(re);
+		}
 		castMessage(
 				CastType.valueOf(message.get("castType").toString()),
-				recipients != null ? Arrays.asList(recipients) : Collections.emptyList(),
+				(List<String>)recipients,
 				message.get("sender").toString(),
 				message.get("type").toString(),
 				encode(message));
@@ -719,9 +726,12 @@ public class DefaultRoom implements Room{
 		public CastType getCastType() {
 			return CastType.valueOf(message.get("castType").toString());
 		}
+		@SuppressWarnings("unchecked")
 		@Override
 		public String[] getRecipients() {
-			return (String[])message.get("recipients");
+			var recipients = message.get("recipients");
+			if(recipients instanceof String[] r) return r;
+			return ((List<String>)recipients).toArray(new String[] {});
 		}
 		@Override
 		public Date getReceived() {
