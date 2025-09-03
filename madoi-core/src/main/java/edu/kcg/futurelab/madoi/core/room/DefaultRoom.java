@@ -339,10 +339,6 @@ public class DefaultRoom implements Room{
 				break;
 			}
 			default:{
-				histories.add(new SOMHistory(m, received));
-				if(histories.size() >= spec.getMaxLog()) {
-					histories.remove(0);
-				}
 				castMessage(m);
 				break;
 			}
