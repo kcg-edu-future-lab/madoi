@@ -1,30 +1,11 @@
-/*
- * Copyright 2017 Takao Nakaguchi
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package edu.kcg.futurelab.madoi.core.websocket;
 
 import java.io.EOFException;
-import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import edu.kcg.futurelab.madoi.core.message.Message;
-import edu.kcg.futurelab.madoi.core.room.DefaultRoomManager;
 import edu.kcg.futurelab.madoi.core.room.Connection;
 import edu.kcg.futurelab.madoi.core.room.Peer;
 import edu.kcg.futurelab.madoi.core.room.RoomManager;
+import edu.kcg.futurelab.madoi.core.room.impl.DefaultRoomManager;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
 import jakarta.websocket.OnMessage;
@@ -38,21 +19,7 @@ public class WebSocketServer {
 	@OnOpen
 	public void onOpen(Session session, @PathParam("roomId") String roomId) {
 		try {
-			var om = new ObjectMapper();
-			var peer = getRoomManager().onPeerOpen(roomId, new Connection() {
-				@Override
-				public void sendText(String message) throws IOException {
-					session.getBasicRemote().sendText(message);
-				}
-				@Override
-				public void send(Message message) throws IOException{
-					session.getBasicRemote().sendText(om.writeValueAsString(message));
-				}
-				@Override
-				public void close() throws IOException {
-					session.close();
-				}
-			});
+			var peer = getRoomManager().onPeerOpen(roomId, createConnection(session));
 			session.getUserProperties().put("peer", peer);
 		} catch(Error | RuntimeException e) {
 			e.printStackTrace();
@@ -123,6 +90,10 @@ public class WebSocketServer {
 
 	protected RoomManager createRoomManager() {
 		return new DefaultRoomManager();
+	}
+	
+	protected Connection createConnection(Session session) {
+		return new WebSocketConnection(session);
 	}
 
 	private RoomManager roomManager;

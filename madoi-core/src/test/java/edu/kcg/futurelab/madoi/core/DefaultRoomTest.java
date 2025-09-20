@@ -31,7 +31,7 @@ import edu.kcg.futurelab.madoi.core.message.definition.FunctionDefinition;
 import edu.kcg.futurelab.madoi.core.message.definition.MethodDefinition;
 import edu.kcg.futurelab.madoi.core.message.definition.ObjectDefinition;
 import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
-import edu.kcg.futurelab.madoi.core.room.DefaultRoom;
+import edu.kcg.futurelab.madoi.core.room.impl.DefaultRoom;
 import edu.kcg.futurelab.madoi.core.room.logger.NullRoomEventLogger;
 import edu.kcg.futurelab.madoi.core.room.logger.OnMemoryEventLogger;
 

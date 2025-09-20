@@ -1,7 +1,10 @@
-package edu.kcg.futurelab.madoi.core.room;
+package edu.kcg.futurelab.madoi.core.room.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import edu.kcg.futurelab.madoi.core.room.Connection;
+import edu.kcg.futurelab.madoi.core.room.Peer;
 
 public class DefaultPeer implements Peer{
 	public DefaultPeer(Connection conneciton){

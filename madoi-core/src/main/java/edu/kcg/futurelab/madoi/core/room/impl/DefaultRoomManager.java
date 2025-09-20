@@ -1,4 +1,4 @@
-package edu.kcg.futurelab.madoi.core.room;
+package edu.kcg.futurelab.madoi.core.room.impl;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import edu.kcg.futurelab.madoi.core.room.Connection;
+import edu.kcg.futurelab.madoi.core.room.Peer;
+import edu.kcg.futurelab.madoi.core.room.Room;
+import edu.kcg.futurelab.madoi.core.room.RoomManager;
 import edu.kcg.futurelab.madoi.core.room.logger.PrintRoomEventLogger;
 
 public class DefaultRoomManager implements RoomManager{
@@ -92,8 +96,8 @@ public class DefaultRoomManager implements RoomManager{
 
 	@Override
 	public Room getOrCreateRoom(String roomId){
-		return rooms.computeIfAbsent(roomId, ri->{
-			var r = newRoom(roomId);
+		return rooms.computeIfAbsent(roomId, rid->{
+			var r = newRoom(rid);
 			r.onRoomCreated();
 			return r;
 		});

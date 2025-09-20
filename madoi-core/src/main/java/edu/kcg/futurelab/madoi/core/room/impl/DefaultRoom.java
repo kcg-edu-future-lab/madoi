@@ -1,19 +1,4 @@
-/*
- * Copyright 2020 Takao Nakaguchi
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.kcg.futurelab.madoi.core.room;
+package edu.kcg.futurelab.madoi.core.room.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,12 +41,18 @@ import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
 import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
+import edu.kcg.futurelab.madoi.core.room.FunctionRuntimeInfo;
+import edu.kcg.futurelab.madoi.core.room.ObjectRuntimeInfo;
+import edu.kcg.futurelab.madoi.core.room.Peer;
+import edu.kcg.futurelab.madoi.core.room.Room;
+import edu.kcg.futurelab.madoi.core.room.RoomEventLogger;
 import edu.kcg.futurelab.madoi.core.util.StringUtil;
 
 /**
- * Peerは最初は入室待ち状態になる。
- * PeerはRoomにEnterRoomメッセージを送り、承認されればEnterRoomAllowedメッセージが送られ、
- * 参加状態になる。この際、既存のPeerにはPeerEnteredメッセージが送られる。
+ * Roomのデフォルト実装。
+ * Peerを入室待ちと入室後にわけ、別個に管理する。
+ * 最初は入室待ちとして扱い、PeerからEnterRoomメッセージが届き、入室可能かをチェックし可能であれば、入室後として扱う。
+ * この際、入室しようとしているPeerにはEnterRoomAllowedメッセージが送られ、既存のPeerにはPeerEnteredメッセージが送られる。
  */
 public class DefaultRoom implements Room{
 	public DefaultRoom(String id, RoomSpec spec, Map<String, Object> profile, RoomEventLogger eventLogger) {
