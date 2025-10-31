@@ -20,13 +20,10 @@ import edu.kcg.futurelab.madoi.core.message.PeerEntered;
 import edu.kcg.futurelab.madoi.core.message.PeerLeaved;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
+import edu.kcg.futurelab.madoi.core.message.config.ChangeStateConfig;
+import edu.kcg.futurelab.madoi.core.message.config.DistributedConfig;
 import edu.kcg.futurelab.madoi.core.message.config.FunctionConfig;
 import edu.kcg.futurelab.madoi.core.message.config.MethodConfig;
-import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig;
-import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig.NotifyType;
-import edu.kcg.futurelab.madoi.core.message.config.ShareClassConfig;
-import edu.kcg.futurelab.madoi.core.message.config.ShareConfig;
-import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
 import edu.kcg.futurelab.madoi.core.message.definition.FunctionDefinition;
 import edu.kcg.futurelab.madoi.core.message.definition.MethodDefinition;
 import edu.kcg.futurelab.madoi.core.message.definition.ObjectDefinition;
@@ -153,14 +150,44 @@ public class DefaultRoomTest {
 	}
 
 	@Test
-	public void test_execAndSend() throws Throwable{
+	public void test_serializedDistributedFunction() throws Throwable{
 		var el = new OnMemoryEventLogger();
 		var room = new DefaultRoom("room1", null, null, el);
 		var peer = new MockPeer("peer1", room);
 
 		peer.peerArriveAndLoginRoom();
-		peer.peerMessage(new DefineFunction(new FunctionDefinition(
-				1, "foo", new FunctionConfig(new ShareConfig(SharingType.afterExec)))));
+		peer.peerMessage(newDefineFunction(1, "foo"));
+		peer.peerMessage(new InvokeFunction(1, new Object[]{"arg1"}));
+
+		assertEquals(2, peer.getSentMessages().size());
+		assertEquals("EnterRoomAllowed", peer.getSentMessages().get(0).getType());
+		assertEquals("InvokeFunction", peer.getSentMessages().get(1).getType());
+		assertEquals(5, el.getEvents().size());
+		assertArrayEquals(
+				new Object[]{"peerOpen", "room1", "peer1"},
+				el.getEvents().get(0));
+		assertArrayEquals(
+				new Object[] {"messageCast", "room1", "SERVERTOPEER", new String[] {"peer1"}, "EnterRoomAllowed"},
+				Arrays.copyOf(el.getEvents().get(1), 5));
+		assertArrayEquals(
+				new Object[] {"peerMessage", "room1", "peer1", "DefineFunction"},
+				Arrays.copyOf(el.getEvents().get(2), 4));
+		assertArrayEquals(
+				new Object[] {"peerMessage", "room1", "peer1", "InvokeFunction"},
+				Arrays.copyOf(el.getEvents().get(3), 4));
+		assertArrayEquals(
+				new Object[] {"messageCast", "room1", "BROADCAST", new String[]{"peer1"}, "InvokeFunction"},
+				Arrays.copyOf(el.getEvents().get(4), 5));
+	}
+
+	@Test
+	public void test_unserializedDistributedFunction() throws Throwable{
+		var el = new OnMemoryEventLogger();
+		var room = new DefaultRoom("room1", null, null, el);
+		var peer = new MockPeer("peer1", room);
+
+		peer.peerArriveAndLoginRoom();
+		peer.peerMessage(newDefineFunction(1, "foo", false));
 		peer.peerMessage(new InvokeFunction(1, new Object[]{"arg1"}));
 
 		assertEquals(1, peer.getSentMessages().size());
@@ -185,20 +212,17 @@ public class DefaultRoomTest {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	public void test_invocationOfShareAndNotify() throws Throwable{
+	public void test_invocationOfDistributed() throws Throwable{
 		var el = new OnMemoryEventLogger();
 		var room = new DefaultRoom("room1", null, null, el);
 		var peer = new MockPeer("peer1", room);
 
 		// 1つめのpeerがログインしてshareFunc,notifyFunc,shareFuncを実行
 		peer.peerArriveAndLoginRoom();
-		peer.peerMessage(new DefineObject(new ObjectDefinition(
-				1, "TestClass", new ShareClassConfig("TestClass"),
-				List.of(
-					new MethodDefinition(1, "shareFunc", new MethodConfig(new ShareConfig(SharingType.beforeExec))),
-					new MethodDefinition(2, "notifyFunc", new MethodConfig(new NotifyConfig(NotifyType.beforeExec)))
-				)
-			)));
+		peer.peerMessage(newDefineObject(1, "TestClass", List.of(
+				newDistributedStateMethod(1, "distributedStateFunc"),
+				newDistributedMethod(2, "distributedFunc")
+				)));
 		peer.peerMessage(new InvokeMethod(1, 0, 1));
 		peer.peerMessage(new InvokeMethod(1, 0, 2));
 		peer.peerMessage(new InvokeMethod(1, 1, 1));
@@ -244,10 +268,9 @@ public class DefaultRoomTest {
 		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var oid = 0;
 		var mid = 0;
-		var defObj = new DefineObject(new ObjectDefinition(
-				oid, "Test", new ShareClassConfig(), Arrays.asList(
-						new MethodDefinition(mid, "foo", new ShareConfig(SharingType.beforeExec))
-				)));
+		var defObj = newDefineObject(oid, "Test", List.of(
+				newDistributedMethod(mid, "foo")
+				));
 
 		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArriveAndLoginRoom();
@@ -287,14 +310,11 @@ public class DefaultRoomTest {
 		var room = new DefaultRoom("room1", null, null, new NullRoomEventLogger());
 		var oid = 0;
 		var mid = 0;
-		var defObj = new DefineObject(new ObjectDefinition(
-				oid, "Test", new ShareClassConfig(), Arrays.asList(
-						new MethodDefinition(mid, "foo", new ShareConfig(SharingType.beforeExec))
-				)));
+		var defObj = newDefineObject(oid, "Test", List.of(
+				newDistributedStateMethod(mid, "foo")));
 		var peer1 = new MockPeer("peer1", room);
 		peer1.peerArriveAndLoginRoom();
 		peer1.peerMessage(defObj);
-
 		var peer2 = new MockPeer("peer2", room);
 		peer2.peerArriveAndLoginRoom();
 		peer2.peerMessage(defObj);
@@ -337,13 +357,13 @@ public class DefaultRoomTest {
 		var peer2 = new MockPeer("peer2", room);
 
 		peer1.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec)),
-				new MethodDefinition(1, "bar", new ShareConfig(SharingType.beforeExec))
-				))));
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(1, "Test2", null, Arrays.asList(
-				new MethodDefinition(2, "foo2", new ShareConfig(SharingType.beforeExec))
-				))));
+		peer1.peerMessage(newDefineObject(0, "Test", List.of(
+				newDistributedStateMethod(0, "foo"),
+				newDistributedStateMethod(1, "bar")
+				)));
+		peer1.peerMessage(newDefineObject(1, "Test2", List.of(
+				newDistributedStateMethod(2, "foo2")
+				)));
 		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
 		peer1.peerMessage(new InvokeMethod(0, 1, 1, new Object[] {}));
 		peer1.peerMessage(new InvokeMethod(1, 0, 2, new Object[] {}));
@@ -379,12 +399,13 @@ public class DefaultRoomTest {
 
 		peer1.peerArriveAndLoginRoom();
 		peer2.peerArriveAndLoginRoom();
-		peer1.peerMessage(new DefineObject(new ObjectDefinition(0, "Test", null, Arrays.asList(
-				new MethodDefinition(0, "foo", new ShareConfig(SharingType.beforeExec))
-				))));
+		peer1.peerMessage(newDefineObject(0, "Test", List.of(
+				newDistributedMethod(0, "foo")
+				)));
 		peer1.peerMessage(new InvokeMethod(0, 0, 0, new Object[] {}));
 		peer2.setIoeOnSend(true);
 		peer1.peerMessage(new InvokeMethod(0, 1, 0, new Object[] {}));
+
 		{
 			var msgs = peer1.getSentMessages();
 			assertEquals(5, msgs.size());
@@ -416,5 +437,35 @@ public class DefaultRoomTest {
 			assertEquals("messageCast", events.get(9)[0]);
 			assertEquals("PeerLeave", events.get(9)[4]);
 		}
+	}
+
+	private DefineObject newDefineObject(int objId, String className,
+			List<MethodDefinition> methods) {
+		return new DefineObject(new ObjectDefinition(objId, className, null, methods));
+	}
+
+	private MethodDefinition newDistributedStateMethod(int mid, String name) {
+		return newDistributedStateMethod(mid, name, true);
+	}
+
+	private MethodDefinition newDistributedStateMethod(int mid, String name, boolean serialized) {
+		return new MethodDefinition(mid, name, new MethodConfig(new DistributedConfig(serialized), new ChangeStateConfig()));
+	}
+
+	private MethodDefinition newDistributedMethod(int mid, String name) {
+		return newDistributedMethod(mid, name, true);
+	}
+
+	private MethodDefinition newDistributedMethod(int mid, String name, boolean serialized) {
+		return new MethodDefinition(mid, name, new MethodConfig(new DistributedConfig(serialized)));
+	}
+
+	private DefineFunction newDefineFunction(int fid, String name) {
+		return newDefineFunction(fid, name, true);
+	}
+
+	private DefineFunction newDefineFunction(int fid, String name, boolean serialized) {
+		return new DefineFunction(
+				new FunctionDefinition(fid, name, new FunctionConfig(new DistributedConfig(serialized))));
 	}
 }

@@ -5,11 +5,12 @@ import edu.kcg.futurelab.madoi.core.message.Message;
 public class MethodConfig extends Message{
 	public MethodConfig() {
 	}
-	public MethodConfig(ShareConfig share) {
-		this.share = share;
+	public MethodConfig(DistributedConfig distributed, ChangeStateConfig changeState) {
+		this.distributed = distributed;
+		this.changeState = changeState;
 	}
-	public MethodConfig(NotifyConfig notify) {
-		this.notify = notify;
+	public MethodConfig(DistributedConfig distributed) {
+		this.distributed = distributed;
 	}
 	public MethodConfig(GetStateConfig getState) {
 		this.getState = getState;
@@ -17,17 +18,17 @@ public class MethodConfig extends Message{
 	public MethodConfig(SetStateConfig setState) {
 		this.setState = setState;
 	}
-	public ShareConfig getShare() {
-		return share;
+	public DistributedConfig getDistributed() {
+		return distributed;
 	}
-	public void setShare(ShareConfig share) {
-		this.share = share;
+	public void setDistributed(DistributedConfig distributed) {
+		this.distributed = distributed;
 	}
-	public NotifyConfig getNotify() {
-		return notify;
+	public ChangeStateConfig getChangeState() {
+		return changeState;
 	}
-	public void setNotify(NotifyConfig notify) {
-		this.notify = notify;
+	public void setChangeState(ChangeStateConfig changeState) {
+		this.changeState = changeState;
 	}
 	public GetStateConfig getGetState() {
 		return getState;
@@ -42,8 +43,8 @@ public class MethodConfig extends Message{
 		this.setState = setState;
 	}
 
-	private ShareConfig share;
-	private NotifyConfig notify;
+	private DistributedConfig distributed;
+	private ChangeStateConfig changeState;
 	private GetStateConfig getState;
 	private SetStateConfig setState;
 }
