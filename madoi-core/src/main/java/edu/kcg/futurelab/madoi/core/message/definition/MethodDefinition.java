@@ -1,7 +1,7 @@
 package edu.kcg.futurelab.madoi.core.message.definition;
 
 import edu.kcg.futurelab.madoi.core.message.config.MethodConfig;
-import edu.kcg.futurelab.madoi.core.message.config.ShareConfig;
+import edu.kcg.futurelab.madoi.core.message.config.DistributedConfig;
 
 public class MethodDefinition {
 	public MethodDefinition() {
@@ -11,7 +11,7 @@ public class MethodDefinition {
 		this.name = name;
 		this.config = config;
 	}
-	public MethodDefinition(int methodId, String name, ShareConfig config) {
+	public MethodDefinition(int methodId, String name, DistributedConfig config) {
 		this.methodId = methodId;
 		this.name = name;
 		this.config = new MethodConfig(config);

@@ -9,6 +9,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import edu.kcg.futurelab.madoi.core.message.CastType;
 import edu.kcg.futurelab.madoi.core.message.EnterRoom;
@@ -170,7 +171,9 @@ public class MockPeer implements Peer {
 	private Room room;
 	private State state = State.CONNECTED;
 	private List<Message> messages = new ArrayList<>();
-	private ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	private ObjectMapper om = new ObjectMapper()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
 	private boolean ioeOnSend;
 }

@@ -5,15 +5,26 @@ import edu.kcg.futurelab.madoi.core.message.Message;
 public class FunctionConfig extends Message{
 	public FunctionConfig() {
 	}
-	public FunctionConfig(ShareConfig share) {
-		this.share = share;
+	public FunctionConfig(DistributedConfig distributed, ChangeStateConfig changeState) {
+		this.distributed = distributed;
+		this.changeState = changeState;
 	}
-	public ShareConfig getShare() {
-		return share;
+	public FunctionConfig(DistributedConfig share) {
+		this.distributed = share;
 	}
-	public void setShare(ShareConfig share) {
-		this.share = share;
+	public DistributedConfig getDistributed() {
+		return distributed;
+	}
+	public void setDistributed(DistributedConfig distributed) {
+		this.distributed = distributed;
+	}
+	public ChangeStateConfig getChangeState() {
+		return changeState;
+	}
+	public void setChangeState(ChangeStateConfig changeState) {
+		this.changeState = changeState;
 	}
 
-	private ShareConfig share;
+	private DistributedConfig distributed;
+	private ChangeStateConfig changeState;
 }

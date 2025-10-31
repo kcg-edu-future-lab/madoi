@@ -36,8 +36,6 @@ import edu.kcg.futurelab.madoi.core.message.Pong;
 import edu.kcg.futurelab.madoi.core.message.UpdateObjectState;
 import edu.kcg.futurelab.madoi.core.message.UpdatePeerProfile;
 import edu.kcg.futurelab.madoi.core.message.UpdateRoomProfile;
-import edu.kcg.futurelab.madoi.core.message.config.NotifyConfig.NotifyType;
-import edu.kcg.futurelab.madoi.core.message.config.ShareConfig.SharingType;
 import edu.kcg.futurelab.madoi.core.message.info.PeerInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomInfo;
 import edu.kcg.futurelab.madoi.core.message.info.RoomSpec;
@@ -306,15 +304,18 @@ public class DefaultRoom implements Room{
 					castFromServerToPeer(newError(msg), peer);
 					break;
 				}
-				// 履歴に追加
-				histories.add(MessageHistory.of(ifn, received));
-				if(histories.size() >= spec.getMaxLog()) {
-					histories.remove(0);
+				var cfg = fri.getDefinition().getConfig();
+				if(cfg.getChangeState() != null) {
+					// 履歴に追加
+					histories.add(MessageHistory.of(ifn, received));
+					if(histories.size() >= spec.getMaxLog()) {
+						histories.remove(0);
+					}
 				}
 				// 送信
-				var fd = fri.getDefinition();
-				var cfg = fd.getConfig();
-				if((cfg.getShare() == null) || cfg.getShare().getType().equals(SharingType.beforeExec)) {
+				// distributedが指定されていないのにInvokeFunctionが送信されることは想定されていないが、
+				// serialized==trueで指定されていたとして扱う。
+				if(cfg.getDistributed() == null || cfg.getDistributed().isSerialized()) {
 					forwardBroadcast(ifn);
 				} else {
 					forwardOthercast(ifn);
@@ -427,8 +428,8 @@ public class DefaultRoom implements Room{
 			return;
 		}
 		var cfg = mri.getDefinition().getConfig();
-		// Notify以外の場合
-		if(cfg.getNotify() == null) {
+		// ChangeStateが指定されている場合、状態管理対象にする。
+		if(cfg.getChangeState() != null) {
 			// オブジェクトのリビジョンを増やす
 			var rev = ori.incrementAndGetImServerObjRevision();
 			// InvokeMethodにも追加
@@ -441,8 +442,9 @@ public class DefaultRoom implements Room{
 		}
 		mri.onInvoked();
 		// 送信
-		if(((cfg.getShare() != null) && cfg.getShare().getType().equals(SharingType.beforeExec)) ||
-				((cfg.getNotify() != null) && cfg.getNotify().getType().equals(NotifyType.beforeExec))){
+		// distributedが指定されていないのにInvokeFunctionが送信されることは想定されていないが、
+		// serialized==trueで指定されていたとして扱う。
+		if(cfg.getDistributed() == null || cfg.getDistributed().isSerialized()){
 			forwardBroadcast(im);
 		} else {
 			forwardOthercast(im);

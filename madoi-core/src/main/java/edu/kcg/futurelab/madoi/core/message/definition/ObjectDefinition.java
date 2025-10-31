@@ -3,13 +3,13 @@ package edu.kcg.futurelab.madoi.core.message.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.kcg.futurelab.madoi.core.message.config.ShareClassConfig;
+import edu.kcg.futurelab.madoi.core.message.config.ClassName;
 
 public class ObjectDefinition {
 	public ObjectDefinition() {
 	}
 	public ObjectDefinition(int objId, String className,
-			ShareClassConfig config, List<MethodDefinition> methods) {
+			ClassName config, List<MethodDefinition> methods) {
 		this.objId = objId;
 		this.className = className;
 		this.config = config;
@@ -27,10 +27,10 @@ public class ObjectDefinition {
 	public void setClassName(String className) {
 		this.className = className;
 	}
-	public ShareClassConfig getConfig() {
+	public ClassName getConfig() {
 		return config;
 	}
-	public void setConfig(ShareClassConfig config) {
+	public void setConfig(ClassName config) {
 		this.config = config;
 	}
 	public List<MethodDefinition> getMethods() {
@@ -42,6 +42,6 @@ public class ObjectDefinition {
 
 	private int objId;
 	private String className;
-	private ShareClassConfig config;
+	private ClassName config;
 	private List<MethodDefinition> methods = new ArrayList<>();
 }
