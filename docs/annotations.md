@@ -25,7 +25,7 @@ Method Decorator|説明
 
 Method Decorator|説明
 -|-
-@MessageArrived({type: string})|unicast, broadcast等で送信されたメッセージを受け取るメソッドを指定する。実行時の引数: `(detail: UserMessageDetail, madoi: Madoi)`。
+@UserMessageArrived({type: string})|unicast, broadcast等で送信されたメッセージを受け取るメソッドを指定する。実行時の引数: `(detail: UserMessageDetail, madoi: Madoi)`。
 
 ## 分散共有オブジェクト
 
