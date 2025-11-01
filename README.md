@@ -1,10 +1,10 @@
 # Madoi - a Distributed Information Sharing Infrastructure for Serverless Development of Collaboration Tools
 
-Madoiは、分散共有アプリケーション用の通信基盤です。チャットやホワイトボードなどのコラボレーションツールを宣言的に作成できます。通信にはWebsocketを使用しており、状態の共有やオブジェクトへの変更操作が、同じセッションに参加しているアプリケーションに通知されます。
+Madoiは、分散共有アプリケーション用の通信基盤です。チャットやホワイトボードなどのコラボレーションツールを宣言的な記述で開発できます。通信にはWebsocketを使用しており、状態の共有やオブジェクトへの変更操作が、同じセッションに参加しているアプリケーションに通知されます。
 
 "Madoi" という名前は、親しい人が集まって語らい楽しい時間を過ごす "円居"、と、多人数が参加するコラボレーションツールを実現するための複雑なプログラミングに苦悩する開発者の"惑い"、の両方を意味しています。
 
-Madoiは、サーバーレスのコラボレーションツール開発基盤を目指して設計されています。Madoiを利用することで、アプリケーション側での通信のためのプログラミングや、サーバ側でのメッセージ配信や状態管理のためのプログラミング無しに、コラボレーションツールを開発できます。
+Madoiは、サーバーレスのコラボレーションツール開発基盤を目指して設計されています。Madoiを利用することで、サーバ側でのメッセージ配信や状態管理のためのプログラミングが不要になります。また、アプリケーション側でも通信のためのプログラミングの殆どをクライアントライブラリが行なってくれるため、従来よりも簡単にコラボレーションツールを開発できます
 
 
 ## 関連リポジトリ
@@ -458,7 +458,7 @@ window.addEventListener("load", ()=>{
 });
 
 //チャット処理を実装するクラス。
-@ShareClass({className="Chat"})
+@ClassName("Chat")
 class Chat{
   private id: number;
   private chatLog: {id: string, message: string}[];
@@ -476,7 +476,8 @@ class Chat{
       input.value = "";
     });
   }
-  @Share({maxLog: 1000})
+  @Distributed()
+  @ChangeState()
   chat(message: string){
     this.addChatLog(`chatlog_${this.id++}`, message);
   }
